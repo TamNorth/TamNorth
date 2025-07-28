@@ -1,12 +1,12 @@
 ## Hello World!
 
-I'm Tam, a full-stack software developer. I'm a recent [Northcoders](https://www.northcoders.com/) alum, now looking for full-time junior developer roles - check out my [LinkedIn](linkedin.com/in/t-n-ba5a003b/)!
+I'm Tam (she/they), a full-stack software developer. I'm a recent [Northcoders](https://www.northcoders.com/) alum, now looking for full-time junior developer roles - check out my [LinkedIn](linkedin.com/in/t-n-ba5a003b/)!
 
-## My Languages and Skills
+## My languages and skills
 
 [![My Skills](https://skillicons.dev/icons?i=js,nodejs,npm,html,css,react,express,jest,postgres,git,github,vite,styledcomponents,threejs,vscode&perline=10)](https://skillicons.dev)
 
-## My Work
+## My work
 
 Click below to see my projects
 
@@ -22,33 +22,22 @@ Click below to see my projects
   </a>
 </div>
 
-## My Background
+## My background
 
-- Natural Sciences graduate from the University of Cambridge
-- Published author in meteoritics, and planetary science researcher
-- Manager of the [Professionals Climate Charter](https://professionalsclimatecharter.org/) at E3G
+- 👩‍🎓 Natural Sciences graduate from the University of Cambridge
+- 🪐 Planetary science researcher, and published author in meteoritics
+- 🌍 Manager of the [Professionals Climate Charter](https://professionalsclimatecharter.org/) at E3G
+
+## What I'm working on
+
+Working my way through (and really enjoying!) [Bruno Simon's Three.js Journey](https://threejs-journey.com/), so I can bring 3D and animation to the front-end, and also make nifty games in my free time.
 
 ## And by night...
 
-- I'm a beginner skateboarder - now working on my shuvits
-- I run TTRPGs - currently Slugblaster, with Shadowdark in the pipeline
-- I love helping out at my local community kitchen
-- I also climb outdoors and ski, when I get time!
-
-<!--
-**TamNorth/TamNorth** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-
-Here are some ideas to get you started:
-
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+- 🛹 I'm a beginner skateboarder - now working on my shuvits
+- 🎲 I run TTRPGs - currently Slugblaster, with Shadowdark in the pipeline
+- 🍲 I love helping out at my local community kitchen
+- 🧗‍♀️ I also climb outdoors and ski, when I get time!
 
 <!-- Definitions -->
 
