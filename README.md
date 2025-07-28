@@ -2,8 +2,14 @@
 
 ## My work
 
-[![Tuse](./images/Tuse-badge.png)][Tuse-github]
-[![Tuse](./images/Tea-news-badge.png)][Tea-News-github]
+<div align="center">
+  <a href="https://github.com/TamNorth/tea-news#readme">
+    <img src="images/Tea-news-badge.png" alt="Tea News badge"> 
+  </a>
+  <a href="https://github.com/uimran19/Tuse#readme">
+    <img src="images/Tuse-badge.png" alt="Tuse badge"> 
+  </a>
+</div>
 
 <!--
 **TamNorth/TamNorth** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
