@@ -1,0 +1,50 @@
+body {
+  background-color: grey;
+  --color-light: rgb(200, 200, 200);
+  --color-dark: rgb(32, 32, 32);
+}
+
+.badge-wrapper {
+  background-color: var(--color-dark);
+  display: grid;
+  grid-template-columns: min-content auto auto;
+  grid-template-rows: auto;
+  width: max-content;
+  /* justify-content: center; */
+  align-items: center;
+  border-radius: 10px;
+  box-shadow: black 0 -20px 20px -10px inset,
+    rgba(255, 255, 255, 0.2) 0 20px 20px -10px inset;
+}
+
+.badge-wrapper > img {
+  display: inline;
+  height: 50px;
+  grid-column: 1 / span 1;
+  grid-row: 1 / span 1;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.divider {
+  grid-column: 2 / span 1;
+  grid-row: 1 / span 1;
+  height: 100%;
+  width: 2px;
+  background: radial-gradient(
+    rgba(from var(--color-light) r g b / 1),
+    transparent 75%
+  );
+}
+
+.badge-wrapper > span {
+  grid-column: 3 / span 1;
+  grid-row: 1 / span 1;
+  color: var(--color-light);
+  padding: 20px;
+  margin: auto;
+  font-family: "Sansation", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: x-large;
+}
