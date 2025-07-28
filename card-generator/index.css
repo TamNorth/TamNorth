@@ -1,28 +1,35 @@
 body {
-  background-color: grey;
   --color-light: rgb(200, 200, 200);
   --color-dark: rgb(32, 32, 32);
+  /* background-color: var(--color-dark); */
+  background-color: red;
+  width: max-content;
 }
 
 .badge-wrapper {
   background-color: var(--color-dark);
   display: grid;
-  grid-template-columns: min-content auto auto;
+  grid-template-columns: min-content min-content auto;
   grid-template-rows: auto;
-  width: max-content;
+  width: 100%;
+  margin: 10px;
   /* justify-content: center; */
   align-items: center;
-  border-radius: 10px;
-  box-shadow: black 0 -20px 20px -10px inset,
-    rgba(255, 255, 255, 0.2) 0 20px 20px -10px inset;
+  /* border-radius: 10px; */
+  /* box-shadow: black 0 -20px 20px -10px inset,
+    rgba(255, 255, 255, 0.2) 0 20px 20px -10px inset; */
+  --shadow-color: rgb(0, 255, 195);
+  box-shadow: rgba(from var(--shadow-color) r g b / 0.6) 0 0 0 1.5px,
+    rgba(from var(--shadow-color) r g b / 0.4) 1.5px 1.5px 0 1.5px,
+    rgba(from var(--shadow-color) r g b / 0.2) 3px 3px 0 1.5px;
 }
 
 .badge-wrapper > img {
   display: inline;
-  height: 50px;
+  height: 30px;
   grid-column: 1 / span 1;
   grid-row: 1 / span 1;
-  padding: 10px;
+  padding: 5px;
   border-radius: 10px;
 }
 
@@ -41,7 +48,7 @@ body {
   grid-column: 3 / span 1;
   grid-row: 1 / span 1;
   color: var(--color-light);
-  padding: 20px;
+  padding: 0 20px;
   margin: auto;
   font-family: "Sansation", sans-serif;
   font-weight: 400;

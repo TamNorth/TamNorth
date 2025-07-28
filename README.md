@@ -2,6 +2,9 @@
 
 ## My work
 
+[![Tuse](./images/Tuse-badge.png)][Tuse-github]
+[![Tuse](./images/Tea-news-badge.png)][Tea-News-github]
+
 <!--
 **TamNorth/TamNorth** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
@@ -16,3 +19,8 @@ Here are some ideas to get you started:
 - 😄 Pronouns: ...
 - ⚡ Fun fact: ...
 -->
+
+<!-- Definitions -->
+
+[Tuse-github]: https://github.com/uimran19/Tuse#readme
+[Tea-News-github]: https://github.com/TamNorth/tea-news#readme
