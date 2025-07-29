@@ -23,7 +23,7 @@ const scene = new THREE.Scene();
 // OBJECTS
 // Crane Group
 const crane = new THREE.Group();
-crane.position.x = 5;
+crane.position.x = 8;
 scene.add(crane);
 const craneMaterial = new THREE.MeshBasicMaterial({
   color: 0xff0000,
@@ -35,10 +35,10 @@ const craneSizes = {
     width: 0.05,
   },
   mast: {
-    length: 10,
+    length: 15,
   },
   jib: {
-    length: 10,
+    length: 20,
   },
 };
 craneSizes.wire.length = (-4 * craneSizes.mast.length) / 5;
@@ -85,10 +85,12 @@ hook.position.y = craneSizes.wire.length;
 jibGroup.add(hook);
 
 // Cable Mesh
-const cable = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.05, 0.05, craneSizes.wire.length),
-  craneMaterial
+const cableGeometry = new THREE.CylinderGeometry(
+  0.05,
+  0.05,
+  craneSizes.wire.length
 );
+const cable = new THREE.Mesh(cableGeometry, craneMaterial);
 cable.position.x = (-3 * craneSizes.jib.length) / 5;
 cable.position.y = 0.5 * craneSizes.wire.length;
 jibGroup.add(cable);
@@ -134,8 +136,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.z = craneSizes.mast.length;
-camera.position.y = craneSizes.mast.length / 2 + 2;
+camera.position.z = (craneSizes.mast.length * 2) / 3;
+camera.rotation.x = Math.PI * 0.2;
 scene.add(camera);
 
 // RENDERER
@@ -147,12 +149,26 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // ANIMATE
 const clock = new THREE.Clock();
+const cursorPositionCoefficient = 3;
+const cursorPositionOffset = 0.4;
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
 
   //Update objects
-  jibGroup.rotation.y = cursor.x * Math.PI + 0.25 * Math.PI;
+  jibGroup.rotation.y = cursor.x * Math.PI * 0.6;
+
+  const cableDrop = -Math.min(
+    -Math.min(cursor.y - cursorPositionOffset, 0) *
+      cursorPositionCoefficient *
+      craneSizes.mast.length,
+    craneSizes.mast.length
+  );
+  console.log(cursor.x);
+  //   console.log(Math.min(cursor.y - 0.25, 0));
+  //   cableGeometry.setAttribute("height", craneSizes.wire.length + cableDrop);
+  hook.position.y = cableDrop;
+  cable.position.y = -0.5 * craneSizes.wire.length + cableDrop;
 
   // Render
   renderer.render(scene, camera);
