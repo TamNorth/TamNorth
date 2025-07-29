@@ -41,7 +41,6 @@ const craneSizes = {
     length: 20,
   },
 };
-craneSizes.wire.length = (-4 * craneSizes.mast.length) / 5;
 
 // Mast Mesh
 const mast = new THREE.Mesh(
@@ -81,18 +80,17 @@ jibGroup.add(jib);
 // Hook Mesh
 const hook = new THREE.Mesh(new THREE.SphereGeometry(0.2, 5, 5), craneMaterial);
 hook.position.x = (-3 * craneSizes.jib.length) / 5;
-hook.position.y = craneSizes.wire.length;
 jibGroup.add(hook);
 
 // Cable Mesh
 const cableGeometry = new THREE.CylinderGeometry(
   0.05,
   0.05,
-  craneSizes.wire.length
+  craneSizes.mast.length
 );
 const cable = new THREE.Mesh(cableGeometry, craneMaterial);
 cable.position.x = (-3 * craneSizes.jib.length) / 5;
-cable.position.y = 0.5 * craneSizes.wire.length;
+cable.position.y = 0.5 * craneSizes.mast.length;
 jibGroup.add(cable);
 
 // // Text
@@ -165,10 +163,9 @@ const tick = () => {
     craneSizes.mast.length
   );
   console.log(cursor.x);
-  //   console.log(Math.min(cursor.y - 0.25, 0));
-  //   cableGeometry.setAttribute("height", craneSizes.wire.length + cableDrop);
+  //   cableGeometry.scale(1, 1, 1);
   hook.position.y = cableDrop;
-  cable.position.y = -0.5 * craneSizes.wire.length + cableDrop;
+  cable.position.y = 0.5 * craneSizes.mast.length + cableDrop;
 
   // Render
   renderer.render(scene, camera);
