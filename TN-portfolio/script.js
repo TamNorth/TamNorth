@@ -6,11 +6,16 @@ import { FontLoader } from "three/addons/loaders/FontLoader.js";
 const cursor = {
   x: 0,
   y: 0,
+  wheel: 0,
 };
 
 window.addEventListener("mousemove", (event) => {
   cursor.x = event.clientX / sizes.width - 0.5;
   cursor.y = -(event.clientY / sizes.width - 0.5);
+});
+
+window.addEventListener("wheel", (event) => {
+  cursor.wheel = event.deltaY / 238;
 });
 
 // BASE
@@ -77,10 +82,14 @@ const jib = new THREE.Mesh(
 jib.position.x = -(craneSizes.jib.length / 5);
 jibGroup.add(jib);
 
+// Hoist Group
+const hoistGroup = new THREE.Group();
+hoistGroup.position.x = (-3 * craneSizes.jib.length) / 5;
+jibGroup.add(hoistGroup);
+
 // Hook Mesh
 const hook = new THREE.Mesh(new THREE.SphereGeometry(0.2, 5, 5), craneMaterial);
-hook.position.x = (-3 * craneSizes.jib.length) / 5;
-jibGroup.add(hook);
+hoistGroup.add(hook);
 
 // Cable Mesh
 const cableGeometry = new THREE.CylinderGeometry(
@@ -89,9 +98,8 @@ const cableGeometry = new THREE.CylinderGeometry(
   craneSizes.mast.length
 );
 const cable = new THREE.Mesh(cableGeometry, craneMaterial);
-cable.position.x = (-3 * craneSizes.jib.length) / 5;
 cable.position.y = 0.5 * craneSizes.mast.length;
-jibGroup.add(cable);
+hoistGroup.add(cable);
 
 // // Text
 // const fontLoader = new FontLoader();
@@ -162,7 +170,19 @@ const tick = () => {
       craneSizes.mast.length,
     craneSizes.mast.length
   );
-  console.log(cursor.x);
+
+  if (
+    cursor.wheel < 0 &&
+    hoistGroup.position.x >= (-3 * craneSizes.jib.length) / 5
+  ) {
+    hoistGroup.position.x += cursor.wheel;
+    cursor.wheel = 0;
+  } else if (cursor.wheel > 0 && hoistGroup.position.x <= -3) {
+    hoistGroup.position.x += cursor.wheel;
+    cursor.wheel = 0;
+  }
+  console.log(hoistGroup.position.x);
+
   //   cableGeometry.scale(1, 1, 1);
   hook.position.y = cableDrop;
   cable.position.y = 0.5 * craneSizes.mast.length + cableDrop;
