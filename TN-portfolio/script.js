@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
+import { FontLoader } from "three/addons/loaders/FontLoader.js";
 
 // CURSOR
 const cursor = {
@@ -29,6 +31,9 @@ const craneMaterial = new THREE.MeshBasicMaterial({
 });
 const craneSizes = {
   width: 1,
+  wire: {
+    width: 0.05,
+  },
   mast: {
     length: 10,
   },
@@ -36,6 +41,7 @@ const craneSizes = {
     length: 10,
   },
 };
+craneSizes.wire.length = (-4 * craneSizes.mast.length) / 5;
 
 // Mast Mesh
 const mast = new THREE.Mesh(
@@ -71,6 +77,38 @@ const jib = new THREE.Mesh(
 );
 jib.position.x = -(craneSizes.jib.length / 5);
 jibGroup.add(jib);
+
+// Hook Mesh
+const hook = new THREE.Mesh(new THREE.SphereGeometry(0.2, 5, 5), craneMaterial);
+hook.position.x = (-3 * craneSizes.jib.length) / 5;
+hook.position.y = craneSizes.wire.length;
+jibGroup.add(hook);
+
+// Cable Mesh
+const cable = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.05, 0.05, craneSizes.wire.length),
+  craneMaterial
+);
+cable.position.x = (-3 * craneSizes.jib.length) / 5;
+cable.position.y = 0.5 * craneSizes.wire.length;
+jibGroup.add(cable);
+
+// // Text
+// const fontLoader = new FontLoader();
+// fontLoader.load("fonts/helvetiker_regular.typeface.json", function (font) {
+//   const text = new TextGeometry("Under Construction", {
+//     font: font,
+//     size: 80,
+//     depth: 5,
+//     curveSegments: 12,
+//     bevelEnabled: true,
+//     bevelThickness: 10,
+//     bevelSize: 8,
+//     bevelOffset: 0,
+//     bevelSegments: 5,
+//   });
+//   scene.add(text);
+// });
 
 // SIZES
 const sizes = {
