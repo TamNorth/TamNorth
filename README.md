@@ -32,6 +32,8 @@ Click below to see my projects
 
 Working my way through (and really enjoying!) [Bruno Simon's Three.js Journey](https://threejs-journey.com/), so I can bring 3D and animation to the front-end, and also make nifty games in my free time.
 
+I'm also just starting work on my portfolio site, which you can find within this repository. I'll be using this project to learn TypeScript and consolidate my Three.js learning.
+
 ## And by night...
 
 - 🛹 I'm a beginner skateboarder - now working on my shuvits
