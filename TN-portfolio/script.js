@@ -33,6 +33,7 @@ const scene = new THREE.Scene();
 const crane = new THREE.Group();
 crane.position.x = 8;
 scene.add(crane);
+
 const craneMaterial = new THREE.MeshBasicMaterial({
   color: 0xff0000,
   wireframe: true,
@@ -52,7 +53,6 @@ const craneSizes = {
   },
 };
 
-// NEW OBJECTS
 const makeCranePart = (numOfSegments, numOfSides) => {
   const segments = [];
   let currentHeight = 0;
@@ -69,13 +69,11 @@ const makeCranePart = (numOfSegments, numOfSides) => {
 
 // mast
 const mast = makeCranePart(craneSizes.mast.length / 2, craneSizes.mast.sides);
-mast.position.x = craneSizes.mast.length / 2;
-scene.add(mast);
+crane.add(mast);
 
 // jib
 const jibGroup = new THREE.Group();
-scene.add(jibGroup);
-jibGroup.position.x = (2 * craneSizes.jib.length) / 5;
+crane.add(jibGroup);
 jibGroup.position.y = craneSizes.mast.length;
 
 const jib = makeCranePart(craneSizes.jib.length / 2, craneSizes.jib.sides);
