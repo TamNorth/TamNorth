@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import makeCraneSegment from "./meshes/crane-segment";
 
 // CURSOR
 const cursor = {
@@ -26,6 +28,7 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 // OBJECTS
+
 // Crane Group
 const crane = new THREE.Group();
 crane.position.x = 8;
@@ -47,20 +50,20 @@ const craneSizes = {
   },
 };
 
-// Mast Mesh
-const mast = new THREE.Mesh(
-  new THREE.BoxGeometry(
-    craneSizes.width,
-    craneSizes.mast.length,
-    craneSizes.width,
-    craneSizes.width,
-    craneSizes.mast.length,
-    craneSizes.width
-  ),
-  craneMaterial
-);
-mast.position.y = craneSizes.mast.length / 2;
-crane.add(mast);
+// // Mast Mesh
+// const mast = new THREE.Mesh(
+//   new THREE.BoxGeometry(
+//     craneSizes.width,
+//     craneSizes.mast.length,
+//     craneSizes.width,
+//     craneSizes.width,
+//     craneSizes.mast.length,
+//     craneSizes.width
+//   ),
+//   craneMaterial
+// );
+// mast.position.y = craneSizes.mast.length / 2;
+// crane.add(mast);
 
 // Jib Group
 const jibGroup = new THREE.Group();
@@ -101,6 +104,32 @@ const cable = new THREE.Mesh(cableGeometry, craneMaterial);
 cable.position.y = 0.5 * craneSizes.mast.length;
 hoistGroup.add(cable);
 
+// NEW OBJECTS
+// craneSegmentGroup
+const craneSegmentGroup = makeCraneSegment(4);
+craneSegmentGroup.position.y = 3;
+craneSegmentGroup.position.z = 5;
+
+// mastGroup
+const makeCranePart = (numOfSegments, numOfSides) => {
+  const segments = [];
+  let currentHeight = 0;
+  for (let i = 0; i < numOfSegments; i++) {
+    const segment = makeCraneSegment(numOfSides);
+    segment.position.y = currentHeight;
+    segments.push(segment);
+    currentHeight += 2;
+  }
+  const cranePart = new THREE.Group();
+  cranePart.add(...segments);
+  return cranePart;
+};
+
+const mast = makeCranePart(8, 4);
+mast.position.y = 0;
+mast.position.x = 8;
+scene.add(mast);
+
 // // Text
 // const fontLoader = new FontLoader();
 // fontLoader.load("fonts/helvetiker_regular.typeface.json", function (font) {
@@ -135,6 +164,17 @@ window.addEventListener("resize", () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
+// ENVIRONMENT MAP
+const rgbeLoader = new RGBELoader();
+rgbeLoader.load(
+  "./static/textures/environmentMap/quarry_01_1k.hdr",
+  (environmentMap) => {
+    environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = environmentMap;
+    scene.environment = environmentMap;
+  }
+);
+
 // CAMERA
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -143,7 +183,7 @@ const camera = new THREE.PerspectiveCamera(
   100
 );
 camera.position.z = (craneSizes.mast.length * 2) / 3;
-camera.rotation.x = Math.PI * 0.2;
+camera.rotation.x = Math.PI * 0.225;
 scene.add(camera);
 
 // RENDERER
