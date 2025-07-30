@@ -43,46 +43,45 @@ const craneSizes = {
     width: 0.05,
   },
   mast: {
-    length: 15,
+    sides: 4,
+    length: 16,
   },
   jib: {
-    length: 20,
+    sides: 3,
+    length: 22,
   },
 };
 
-// // Mast Mesh
-// const mast = new THREE.Mesh(
-//   new THREE.BoxGeometry(
-//     craneSizes.width,
-//     craneSizes.mast.length,
-//     craneSizes.width,
-//     craneSizes.width,
-//     craneSizes.mast.length,
-//     craneSizes.width
-//   ),
-//   craneMaterial
-// );
-// mast.position.y = craneSizes.mast.length / 2;
-// crane.add(mast);
+// NEW OBJECTS
+const makeCranePart = (numOfSegments, numOfSides) => {
+  const segments = [];
+  let currentHeight = 0;
+  for (let i = 0; i < numOfSegments; i++) {
+    const segment = makeCraneSegment(numOfSides);
+    segment.position.y = currentHeight;
+    segments.push(segment);
+    currentHeight += 2;
+  }
+  const cranePart = new THREE.Group();
+  cranePart.add(...segments);
+  return cranePart;
+};
 
-// Jib Group
+// mast
+const mast = makeCranePart(craneSizes.mast.length / 2, craneSizes.mast.sides);
+mast.position.x = craneSizes.mast.length / 2;
+scene.add(mast);
+
+// jib
 const jibGroup = new THREE.Group();
-jibGroup.position.y = craneSizes.mast.length + craneSizes.width / 2;
-crane.add(jibGroup);
+scene.add(jibGroup);
+jibGroup.position.x = (2 * craneSizes.jib.length) / 5;
+jibGroup.position.y = craneSizes.mast.length;
 
-// Jib Mesh
-const jib = new THREE.Mesh(
-  new THREE.BoxGeometry(
-    craneSizes.jib.length,
-    craneSizes.width,
-    craneSizes.width,
-    craneSizes.jib.length,
-    craneSizes.width,
-    craneSizes.width
-  ),
-  craneMaterial
-);
-jib.position.x = -(craneSizes.jib.length / 5);
+const jib = makeCranePart(craneSizes.jib.length / 2, craneSizes.jib.sides);
+jib.rotation.x = Math.PI / 2;
+jib.rotation.z = Math.PI / 2;
+jib.position.x = (1 * craneSizes.jib.length) / 5;
 jibGroup.add(jib);
 
 // Hoist Group
@@ -103,32 +102,6 @@ const cableGeometry = new THREE.CylinderGeometry(
 const cable = new THREE.Mesh(cableGeometry, craneMaterial);
 cable.position.y = 0.5 * craneSizes.mast.length;
 hoistGroup.add(cable);
-
-// NEW OBJECTS
-// craneSegmentGroup
-const craneSegmentGroup = makeCraneSegment(4);
-craneSegmentGroup.position.y = 3;
-craneSegmentGroup.position.z = 5;
-
-// mastGroup
-const makeCranePart = (numOfSegments, numOfSides) => {
-  const segments = [];
-  let currentHeight = 0;
-  for (let i = 0; i < numOfSegments; i++) {
-    const segment = makeCraneSegment(numOfSides);
-    segment.position.y = currentHeight;
-    segments.push(segment);
-    currentHeight += 2;
-  }
-  const cranePart = new THREE.Group();
-  cranePart.add(...segments);
-  return cranePart;
-};
-
-const mast = makeCranePart(8, 4);
-mast.position.y = 0;
-mast.position.x = 8;
-scene.add(mast);
 
 // // Text
 // const fontLoader = new FontLoader();
