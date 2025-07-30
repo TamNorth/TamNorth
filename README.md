@@ -4,7 +4,7 @@ I'm Tam (she/they), a full-stack software developer. I'm a recent [Northcoders](
 
 ## My languages and skills
 
-[![My Skills](https://skillicons.dev/icons?i=js,nodejs,npm,html,css,react,express,jest,postgres,git,github,vite,styledcomponents,threejs,vscode&perline=10)](https://skillicons.dev)
+[![My Skills](https://skillicons.dev/icons?i=js,nodejs,npm,html,css,react,express,jest,postgres,git,github,vite,styledcomponents,threejs,vscode&perline=15)](https://skillicons.dev)
 
 ## My work
 
