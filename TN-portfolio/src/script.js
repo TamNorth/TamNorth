@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import makeCraneSegment from "./meshes/crane-segment";
+// import makeCraneSegment from "./meshes/crane-segment";
 
 // CURSOR
 const cursor = {
@@ -29,6 +29,78 @@ const scene = new THREE.Scene();
 
 // OBJECTS
 
+const multiClone = (geometry, numOfClones) => {
+  const clones = [];
+  for (let i = 0; i < numOfClones; i++) {
+    clones.push(geometry.clone());
+  }
+  return clones;
+};
+
+const makeCraneSegment = (numOfSides, material) => {
+  const craneSegmentSide = new THREE.Group();
+
+  // Pillar
+  const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2, 0.15), material);
+  pillar.position.x = 0.5;
+  craneSegmentSide.add(pillar);
+
+  // Strut
+  const strut = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.05, 1.41),
+    material
+  );
+  const [strut1, strut2] = multiClone(strut, 2);
+  strut1.rotation.z = Math.PI * 0.25;
+  strut1.position.y = -0.4;
+  strut2.rotation.z = Math.PI * -0.25;
+  strut2.position.y = 0.4;
+  craneSegmentSide.add(strut1, strut2);
+
+  // Base plate
+  const basePlateThickness = 0.04;
+  const basePlate = new THREE.Mesh(
+    new THREE.BoxGeometry(1, basePlateThickness, 0.15),
+    material
+  );
+  const [basePlate1, basePlate2] = multiClone(basePlate, 2);
+  basePlate1.position.y = -1 + basePlateThickness / 1.9;
+  basePlate2.position.y = 1 - basePlateThickness / 1.9;
+  craneSegmentSide.add(basePlate1, basePlate2);
+
+  // Segment
+  const sides = [];
+  let currentAngle = 0;
+  for (let i = 0; i < numOfSides; i++) {
+    console.log(
+      Math.sqrt(
+        Math.sin((2 * Math.PI) / numOfSides) ** 2 +
+          Math.cos((2 * Math.PI) / numOfSides) ** 2
+      )
+    );
+    const side = craneSegmentSide.clone();
+    const xDisplacement = Math.sin(currentAngle);
+    const zDisplacement = Math.cos(currentAngle);
+    const hypotenuseDenominator = 0.5 / Math.tan(Math.PI / numOfSides);
+    side.rotation.y = currentAngle;
+    side.position.x = xDisplacement * hypotenuseDenominator;
+    side.position.z = zDisplacement * hypotenuseDenominator;
+    sides.push(side);
+    currentAngle += (Math.PI * 2) / numOfSides;
+  }
+  const segment = new THREE.Group();
+  segment.add(...sides);
+  return segment;
+};
+
+const textureLoader = new THREE.TextureLoader();
+const paintTexture = textureLoader.load(
+  "./textures/matcaps/matcap-red_lacquer-512px.png"
+);
+const paintMaterial = new THREE.MeshMatcapMaterial({
+  matcap: paintTexture,
+});
+
 // Crane Group
 const crane = new THREE.Group();
 crane.position.x = 8;
@@ -53,11 +125,11 @@ const craneSizes = {
   },
 };
 
-const makeCranePart = (numOfSegments, numOfSides) => {
+const makeCranePart = (numOfSegments, numOfSides, material) => {
   const segments = [];
   let currentHeight = 0;
   for (let i = 0; i < numOfSegments; i++) {
-    const segment = makeCraneSegment(numOfSides);
+    const segment = makeCraneSegment(numOfSides, material);
     segment.position.y = currentHeight;
     segments.push(segment);
     currentHeight += 2;
@@ -68,7 +140,11 @@ const makeCranePart = (numOfSegments, numOfSides) => {
 };
 
 // mast
-const mast = makeCranePart(craneSizes.mast.length / 2, craneSizes.mast.sides);
+const mast = makeCranePart(
+  craneSizes.mast.length / 2,
+  craneSizes.mast.sides,
+  paintMaterial
+);
 crane.add(mast);
 
 // jib
@@ -76,11 +152,39 @@ const jibGroup = new THREE.Group();
 crane.add(jibGroup);
 jibGroup.position.y = craneSizes.mast.length;
 
-const jib = makeCranePart(craneSizes.jib.length / 2, craneSizes.jib.sides);
+const jib = makeCranePart(
+  craneSizes.jib.length / 2,
+  craneSizes.jib.sides,
+  paintMaterial
+);
 jib.rotation.x = Math.PI / 2;
 jib.rotation.z = Math.PI / 2;
 jib.position.x = (1 * craneSizes.jib.length) / 5;
 jibGroup.add(jib);
+
+// slewingUnit
+const slewingUnitScale = 1.4;
+const slewingUnit = new THREE.Group();
+slewingUnit.position.y = craneSizes.mast.length - 1;
+crane.add(slewingUnit);
+
+const slewingUnitBase = new THREE.Mesh(
+  new THREE.BoxGeometry(slewingUnitScale, 0.1, slewingUnitScale),
+  paintMaterial
+);
+
+const slewingConeHeight = 0.5;
+const slewingUnitCone = new THREE.Mesh(
+  new THREE.CylinderGeometry(
+    slewingUnitScale / 2,
+    slewingUnitScale / 2,
+    slewingConeHeight
+  ),
+  paintMaterial
+);
+slewingUnitCone.position.y = slewingConeHeight / 2;
+
+slewingUnit.add(slewingUnitBase, slewingUnitCone);
 
 // Hoist Group
 const hoistGroup = new THREE.Group();
@@ -88,7 +192,10 @@ hoistGroup.position.x = (-3 * craneSizes.jib.length) / 5;
 jibGroup.add(hoistGroup);
 
 // Hook Mesh
-const hook = new THREE.Mesh(new THREE.SphereGeometry(0.2, 5, 5), craneMaterial);
+const hook = new THREE.Mesh(
+  new THREE.SphereGeometry(0.2, 10, 10),
+  paintMaterial
+);
 hoistGroup.add(hook);
 
 // Cable Mesh
@@ -138,7 +245,7 @@ window.addEventListener("resize", () => {
 // ENVIRONMENT MAP
 const rgbeLoader = new RGBELoader();
 rgbeLoader.load(
-  "./static/textures/environmentMap/quarry_01_1k.hdr",
+  "./textures/environmentMap/quarry_01_1k.hdr",
   (environmentMap) => {
     environmentMap.mapping = THREE.EquirectangularReflectionMapping;
     scene.background = environmentMap;
