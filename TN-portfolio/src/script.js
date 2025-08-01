@@ -192,10 +192,30 @@ hoistGroup.position.x = (-3 * craneSizes.jib.length) / 5;
 jibGroup.add(hoistGroup);
 
 // Hook Mesh
+const hookShapeLength = 0.3,
+  hookShapeWidth = 0.2;
+
+const shape = new THREE.Shape();
+shape.moveTo(-hookShapeLength / 2, -hookShapeWidth / 2);
+shape.lineTo(-hookShapeLength / 2, hookShapeWidth / 2);
+shape.lineTo(hookShapeLength / 2, hookShapeWidth / 2);
+shape.lineTo(hookShapeLength / 2, -hookShapeWidth / 2);
+shape.lineTo(-hookShapeLength / 2, -hookShapeWidth / 2);
+
+const extrudeSettings = {
+  steps: 1,
+  depth: 0.01,
+  bevelEnabled: true,
+  bevelThickness: 0.5,
+  bevelSize: 0.1,
+  bevelOffset: -0.01,
+  bevelSegments: 10,
+};
 const hook = new THREE.Mesh(
-  new THREE.SphereGeometry(0.2, 10, 10),
+  new THREE.ExtrudeGeometry(shape, extrudeSettings),
   paintMaterial
 );
+hook.rotation.x = Math.PI / 2;
 hoistGroup.add(hook);
 
 // Cable Mesh
