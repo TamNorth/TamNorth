@@ -192,27 +192,32 @@ hoistGroup.position.x = (-3 * craneSizes.jib.length) / 5;
 jibGroup.add(hoistGroup);
 
 // Hook Mesh
-const hookShapeLength = 0.3,
-  hookShapeWidth = 0.2;
+const hookSizes = {
+  scale: 0.7,
+  width: 0.3,
+  depth: 0.2,
+};
+hookSizes.width = hookSizes.width * hookSizes.scale;
+hookSizes.depth = hookSizes.depth * hookSizes.scale;
 
-const shape = new THREE.Shape();
-shape.moveTo(-hookShapeLength / 2, -hookShapeWidth / 2);
-shape.lineTo(-hookShapeLength / 2, hookShapeWidth / 2);
-shape.lineTo(hookShapeLength / 2, hookShapeWidth / 2);
-shape.lineTo(hookShapeLength / 2, -hookShapeWidth / 2);
-shape.lineTo(-hookShapeLength / 2, -hookShapeWidth / 2);
+const hookShape = new THREE.Shape();
+hookShape.moveTo(-hookSizes.width / 2, -hookSizes.depth / 2);
+hookShape.lineTo(-hookSizes.width / 2, hookSizes.depth / 2);
+hookShape.lineTo(hookSizes.width / 2, hookSizes.depth / 2);
+hookShape.lineTo(hookSizes.width / 2, -hookSizes.depth / 2);
+hookShape.lineTo(-hookSizes.width / 2, -hookSizes.depth / 2);
 
 const extrudeSettings = {
   steps: 1,
-  depth: 0.01,
+  depth: 0.01 * hookSizes.scale,
   bevelEnabled: true,
-  bevelThickness: 0.5,
-  bevelSize: 0.1,
+  bevelThickness: 0.5 * hookSizes.scale,
+  bevelSize: 0.1 * hookSizes.scale,
   bevelOffset: -0.01,
   bevelSegments: 10,
 };
 const hook = new THREE.Mesh(
-  new THREE.ExtrudeGeometry(shape, extrudeSettings),
+  new THREE.ExtrudeGeometry(hookShape, extrudeSettings),
   paintMaterial
 );
 hook.rotation.x = Math.PI / 2;
