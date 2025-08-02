@@ -1,8 +1,8 @@
 import "./App.css";
-import UnderConstructionPage from "./components/pages/UnderConstructionPage";
+import Header from "./components/sections/Header";
 
 function App() {
-  return <UnderConstructionPage />;
+  return <Header />;
 }
 
 export default App;

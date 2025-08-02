@@ -1,6 +1,6 @@
 ## Hello World!
 
-I'm Tam (she/they), a full-stack software developer. I'm a recent [Northcoders](https://www.northcoders.com/) alum, now looking for full-time junior developer roles - check out my [LinkedIn](linkedin.com/in/t-n-ba5a003b/)!
+I'm Tam (she/they), a full-stack software developer. I'm a recent [Northcoders](https://www.northcoders.com/) alum, now looking for full-time junior developer roles - check out my [personal site](https://tamnorth.github.io/TamNorth/), and my [LinkedIn](linkedin.com/in/t-n-ba5a003b/)!
 
 ## My languages and skills
 

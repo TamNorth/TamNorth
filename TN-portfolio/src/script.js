@@ -72,12 +72,6 @@ const makeCraneSegment = (numOfSides, material) => {
   const sides = [];
   let currentAngle = 0;
   for (let i = 0; i < numOfSides; i++) {
-    console.log(
-      Math.sqrt(
-        Math.sin((2 * Math.PI) / numOfSides) ** 2 +
-          Math.cos((2 * Math.PI) / numOfSides) ** 2
-      )
-    );
     const side = craneSegmentSide.clone();
     const xDisplacement = Math.sin(currentAngle);
     const zDisplacement = Math.cos(currentAngle);
@@ -324,7 +318,6 @@ const tick = () => {
     hoistGroup.position.x += cursor.wheel;
     cursor.wheel = 0;
   }
-  console.log(hoistGroup.position.x);
 
   //   cableGeometry.scale(1, 1, 1);
   hook.position.y = cableDrop;
