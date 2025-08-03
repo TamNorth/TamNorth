@@ -40,12 +40,12 @@ export default function Header() {
   const buttonPadding = "p-6";
   const headerOpacity = "20";
   const subMenuStyle =
-    "absolute mt-3 *:pt-2 *:nth-1:pt-0 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5";
+    "mt-3 *:pt-2 *:nth-1:pt-0 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5";
   const logo = (
     <a
       href="/"
       aria-label="Tam North homepage"
-      className={`flex items-center text-2xl whitespace-pre`}
+      className={`flex items-center text-2xl whitespace-pre hover:scale-110 transition`}
     >
       <span>tam </span>
       <span className="text-4xl">N</span>
@@ -83,7 +83,7 @@ export default function Header() {
           `opacity-${headerOpacity} group-hover:opacity-100`
         }`}
       >
-        <ul className="grid grid-cols-[1fr_auto_1fr] gap-20 text-center items-center *:hover:scale-110 *:transition">
+        <ul className="grid grid-cols-[1fr_auto_1fr] gap-20 text-center items-center">
           <li>
             <button
               type="button"
@@ -91,13 +91,17 @@ export default function Header() {
                 setShowAbout(!showAbout);
               }}
               ref={aboutRef}
+              className="hover:scale-110 transition cursor-pointer"
             >
               about
             </button>
             {showAbout && (
-              <article className={subMenuStyle} ref={aboutDropdownRef}>
-                <h2>Welcome to my site!</h2>
-                <p>
+              <article
+                className={`fixed left-1/2 -translate-x-1/2 w-[90vw] m-3 ${subMenuStyle}`}
+                ref={aboutDropdownRef}
+              >
+                <h2 className="text-center">Welcome to my site!</h2>
+                <p className="text-justify">
                   Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt,
                   cupiditate. Perspiciatis commodi nulla nobis quos, recusandae
                   sed veritatis beatae voluptates. Voluptatem laborum cum
@@ -115,11 +119,12 @@ export default function Header() {
                 setShowLinks(!showLinks);
               }}
               ref={linksRef}
+              className="hover:scale-110 transition cursor-pointer"
             >
               links
             </button>
             {showLinks && (
-              <ul className={subMenuStyle} ref={linksDropdownRef}>
+              <ul className={`absolute ${subMenuStyle}`} ref={linksDropdownRef}>
                 <li>
                   <a href="https://github.com/TamNorth">github</a>
                 </li>
