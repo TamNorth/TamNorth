@@ -42,7 +42,7 @@ export default function Header() {
   const buttonPadding = "p-6";
   const headerOpacityStyle = `opacity-20 group-hover:opacity-100 transition duration-500`;
   const subMenuStyle =
-    "font-montserrat text-white/90 mt-6 *:pt-2 *:nth-1:pt-0 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5 inset-ring inset-ring-black/20 shadow-[0_-1px_0_rgba(0,0,0,0.5)_inset]";
+    "font-montserrat text-white/90 mt-6 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5 inset-ring inset-ring-black/20 shadow-[0_-1px_0_rgba(0,0,0,0.5)_inset]";
   const buttonStyle = "hover:scale-110 transition cursor-pointer";
   const logo = (
     <a
@@ -94,20 +94,33 @@ export default function Header() {
             </button>
             {showAbout && (
               <div
-                className={`fixed left-1/2 -translate-x-1/2 w-[90vw] m-3 grid grid-cols-[1fr_4fr] ${subMenuStyle} divide-x-2 divide-black/20`}
+                className={`fixed left-1/2 -translate-x-1/2 w-[90vw] m-3 grid gap-10 grid-cols-[1fr_5fr] ${subMenuStyle}`}
                 ref={aboutDropdownRef}
               >
                 <nav className="col-start-1 col-span-1">
-                  <ul className="divide-y-1 divide-black/20 *:p-2">
+                  <ul className="divide-y-1 divide-black/10 *:p-5">
                     <li>Projects</li>
                     <li>Skills</li>
                     <li>Experience</li>
                     <li>Education</li>
                   </ul>
                 </nav>
-                <article className="col-start-2">
-                  <h2 className="text-center">Welcome to my site!</h2>
-                  <p className="text-justify"></p>
+                <article className="col-start-2 border-l-2 border-black/20 *:pt-5 *:nth-1:pt-0 *:px-10">
+                  <h2 className="text-center text-xl">Welcome to my site!</h2>
+                  <p className="text-justify">
+                    I'm Tam, a full-stack software engineer from Cambridge in
+                    the UK. I'm moving on from a career in planetary science
+                    research and looking for junior developer roles.
+                  </p>
+                  <p className="text-justify">
+                    I'm experienced in JavaScript, Express, PostgreSQL, React,
+                    Tailwind, and more, and I'm currently learning Three.js and
+                    TypeScript.
+                  </p>
+                  <p className="text-justify">
+                    This site is a work in progress - please check back later
+                    for more!
+                  </p>
                 </article>
               </div>
             )}
