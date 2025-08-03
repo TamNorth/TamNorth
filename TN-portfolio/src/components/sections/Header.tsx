@@ -24,7 +24,7 @@ export default function Header() {
   );
 
   return (
-    <header className="group fixed inset-x-0 top-0 flex justify-between items-center bg-transparent text-white transition *:transition font-cinzel">
+    <header className="group fixed inset-x-0 top-0 flex justify-between items-center text-white *:transition font-cinzel bg-radial-[at_50%_0%] from-black/20 from-30% to-transparent transition to-70%">
       <button
         type="button"
         aria-label={`toggle menu visibility ${showMenu ? "off" : "on"}`}
@@ -32,7 +32,9 @@ export default function Header() {
           setShowMenu(!showMenu);
         }}
         className={`hover:scale-110 ${buttonPadding} ${
-          visibility || `opacity-${headerOpacity} group-hover:opacity-100`
+          visibility ||
+          showMenu ||
+          `opacity-${headerOpacity} group-hover:opacity-100`
         }`}
       >
         <MdOutlineMenu size={buttonSize} />
