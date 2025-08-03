@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MdOutlineVisibility,
   MdOutlineVisibilityOff,
@@ -10,6 +10,32 @@ export default function Header() {
   const [showMenu, setShowMenu] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
+  const aboutRef = useRef<null | HTMLButtonElement>(null);
+  const linksRef = useRef<null | HTMLButtonElement>(null);
+  const aboutDropdownRef = useRef<null | HTMLElement>(null);
+  const linksDropdownRef = useRef<null | HTMLUListElement>(null);
+
+  useEffect(() => {
+    document.body.addEventListener("click", (event: MouseEvent) => {
+      if (
+        aboutRef.current &&
+        !event.composedPath().includes(aboutRef.current) &&
+        aboutDropdownRef.current &&
+        !event.composedPath().includes(aboutDropdownRef.current)
+      ) {
+        setShowAbout(false);
+      }
+      if (
+        linksRef.current &&
+        !event.composedPath().includes(linksRef.current) &&
+        linksDropdownRef.current &&
+        !event.composedPath().includes(linksDropdownRef.current)
+      ) {
+        setShowLinks(false);
+      }
+    });
+  }, []);
+
   const buttonSize = 25;
   const buttonPadding = "p-6";
   const headerOpacity = "20";
@@ -36,7 +62,7 @@ export default function Header() {
     >
       <button
         type="button"
-        aria-label={`toggle menu visibility aid ${showMenu ? "off" : "on"}`}
+        aria-label={`toggle menu visibility ${showMenu ? "off" : "on"}`}
         onClick={() => {
           setShowMenu(!showMenu);
         }}
@@ -64,11 +90,12 @@ export default function Header() {
               onClick={() => {
                 setShowAbout(!showAbout);
               }}
+              ref={aboutRef}
             >
               about
             </button>
             {showAbout && (
-              <article className={subMenuStyle}>
+              <article className={subMenuStyle} ref={aboutDropdownRef}>
                 <h2>Welcome to my site!</h2>
                 <p>
                   Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt,
@@ -87,19 +114,20 @@ export default function Header() {
               onClick={() => {
                 setShowLinks(!showLinks);
               }}
+              ref={linksRef}
             >
               links
-              {showLinks && (
-                <ul className={subMenuStyle}>
-                  <li>
-                    <a href="https://github.com/TamNorth">github</a>
-                  </li>
-                  <li>
-                    <a href="https://linkedin.com/in/t-n-ba5a003b/">linkedin</a>
-                  </li>
-                </ul>
-              )}
             </button>
+            {showLinks && (
+              <ul className={subMenuStyle} ref={linksDropdownRef}>
+                <li>
+                  <a href="https://github.com/TamNorth">github</a>
+                </li>
+                <li>
+                  <a href="https://linkedin.com/in/t-n-ba5a003b/">linkedin</a>
+                </li>
+              </ul>
+            )}
           </li>
         </ul>
       </nav>
