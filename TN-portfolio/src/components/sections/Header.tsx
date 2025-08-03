@@ -14,7 +14,7 @@ export default function Header() {
   const [showContact, setShowContact] = useState(false);
   const aboutRef = useRef<null | HTMLButtonElement>(null);
   const linksRef = useRef<null | HTMLButtonElement>(null);
-  const aboutDropdownRef = useRef<null | HTMLElement>(null);
+  const aboutDropdownRef = useRef<null | HTMLDivElement>(null);
   const contactsDropdownRef = useRef<null | HTMLUListElement>(null);
 
   useEffect(() => {
@@ -42,13 +42,15 @@ export default function Header() {
   const buttonPadding = "p-6";
   const headerOpacityStyle = `opacity-20 group-hover:opacity-100 transition duration-500`;
   const subMenuStyle =
-    "mt-3 *:pt-2 *:nth-1:pt-0 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5";
+    "font-serif mt-6 *:pt-2 *:nth-1:pt-0 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5 inset-ring inset-ring-black/20 shadow-[0_-1px_0_rgba(0,0,0,0.5)_inset]";
   const buttonStyle = "hover:scale-110 transition cursor-pointer";
   const logo = (
     <a
       href="/"
       aria-label="Tam North homepage"
-      className={`flex items-center text-2xl whitespace-pre hover:scale-110 transition`}
+      className={`flex items-center text-2xl whitespace-pre hover:scale-110 transition ${buttonStyle} ${
+        visibility || headerOpacityStyle
+      }`}
     >
       <span>tam </span>
       <span className="text-4xl">N</span>
@@ -75,12 +77,7 @@ export default function Header() {
       >
         <MdOutlineMenu size={buttonSize} />
       </button>
-      <nav
-        aria-label="Main menu"
-        className={`col-start-3 ${
-          visibility || showAbout || showContact || headerOpacityStyle
-        }`}
-      >
+      <nav aria-label="Main menu" className={`col-start-3`}>
         <ul className="grid grid-cols-[1fr_auto_1fr] gap-20 text-center items-center">
           <li>
             <button
@@ -89,24 +86,30 @@ export default function Header() {
                 setShowAbout(!showAbout);
               }}
               ref={aboutRef}
-              className={buttonStyle}
+              className={`${buttonStyle} ${
+                visibility || showAbout || headerOpacityStyle
+              }`}
             >
               about
             </button>
             {showAbout && (
-              <article
-                className={`fixed left-1/2 -translate-x-1/2 w-[90vw] m-3 ${subMenuStyle}`}
+              <div
+                className={`fixed left-1/2 -translate-x-1/2 w-[90vw] m-3 grid grid-cols-[1fr_4fr] ${subMenuStyle} divide-x-2 divide-black/20`}
                 ref={aboutDropdownRef}
               >
-                <h2 className="text-center">Welcome to my site!</h2>
-                <p className="text-justify"></p>
-                <ul>
-                  <li>Projects</li>
-                  <li>Skills</li>
-                  <li>Education</li>
-                  <li>Experience</li>
-                </ul>
-              </article>
+                <nav className="col-start-1 col-span-1">
+                  <ul className="divide-y-1 divide-black/20 *:p-2">
+                    <li>Projects</li>
+                    <li>Skills</li>
+                    <li>Experience</li>
+                    <li>Education</li>
+                  </ul>
+                </nav>
+                <article className="col-start-2">
+                  <h2 className="text-center">Welcome to my site!</h2>
+                  <p className="text-justify"></p>
+                </article>
+              </div>
             )}
           </li>
           <li>{logo}</li>
@@ -117,7 +120,9 @@ export default function Header() {
                 setShowContact(!showContact);
               }}
               ref={linksRef}
-              className={buttonStyle}
+              className={`${buttonStyle} ${
+                visibility || showContact || headerOpacityStyle
+              }`}
             >
               contact
             </button>
