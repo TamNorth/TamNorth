@@ -42,7 +42,7 @@ export default function Header() {
   const buttonPadding = "p-6";
   const headerOpacityStyle = `opacity-20 group-hover:opacity-100 transition duration-500`;
   const subMenuStyle =
-    "font-serif mt-6 *:pt-2 *:nth-1:pt-0 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5 inset-ring inset-ring-black/20 shadow-[0_-1px_0_rgba(0,0,0,0.5)_inset]";
+    "font-montserrat text-white/90 mt-6 *:pt-2 *:nth-1:pt-0 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5 inset-ring inset-ring-black/20 shadow-[0_-1px_0_rgba(0,0,0,0.5)_inset]";
   const buttonStyle = "hover:scale-110 transition cursor-pointer";
   const logo = (
     <a
@@ -136,7 +136,7 @@ export default function Header() {
         ref={contactsDropdownRef}
       >
         <li>
-          <a href="https://github.com/TamNorth">
+          <a href="https://github.com/TamNorth" target="_blank">
             <FaGithub
               className={`inline mr-1 ${buttonStyle} ${
                 visibility || headerOpacityStyle
@@ -146,7 +146,7 @@ export default function Header() {
           </a>
         </li>
         <li>
-          <a href="https://linkedin.com/in/t-n-ba5a003b/">
+          <a href="https://linkedin.com/in/t-n-ba5a003b/" target="_blank">
             <FaLinkedin
               className={`inline mr-1 ${buttonStyle} ${
                 visibility || headerOpacityStyle
