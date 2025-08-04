@@ -21,9 +21,7 @@ export default function About({ buttonStyle }: { buttonStyle: string }) {
         }}
       >
         <div
-          className={`transition-all ${
-            aboutDisplay === topic && "translate-x-10"
-          }`}
+          className={`transition ${aboutDisplay === topic && "translate-x-10"}`}
         >
           {topicArray.shift()?.toUpperCase() + topicArray.join("")}
         </div>
@@ -61,7 +59,7 @@ export default function About({ buttonStyle }: { buttonStyle: string }) {
             <HiExternalLink className={"inline"} />
           </a>{" "}
           on Three.js. Where it goes from here - who knows? (Well, I do have
-          some ideas)
+          some ideas...)
         </p>
         <p>
           <a href="https://github.com/TamNorth/TamNorth" target="_blank">
@@ -77,16 +75,19 @@ export default function About({ buttonStyle }: { buttonStyle: string }) {
           </h2>
         </a>
         <p>
-          Earlier this year, some of my fellow students at{" "}
+          Over the course of two weeks earlier this year, some of my fellow
+          students at{" "}
           <a href="https://www.northcoders.com/blog/tuse/" target="_blank">
             Northcoders
             <HiExternalLink className={"inline"} />
           </a>{" "}
-          and I decided to build a web app where you can learn to draw with your
-          friends, on a shared online canvas. Tuse will automatically generate a
-          private room for you, which you can enjoy alone or share using a
+          and I decided to build a web app - a shared online canvas where you
+          can learn to draw with your friends. Tuse will automatically generate
+          a private room for you, which you can enjoy alone or share using a
           unique code. You can also start your canvas with an inspirational
-          artwork, provided daily from the Art Institute of Chicago.{" "}
+          artwork, provided daily from the Art Institute of Chicago. There's
+          still some rough spots, but I'm super proud of what we accomplished in
+          such a short time.{" "}
           <a
             href="https://youtu.be/LDEnuf4R4kg"
             target="_blank"

@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   MdOutlineVisibility,
   MdOutlineVisibilityOff,
-  MdOutlineMenu,
+  // MdOutlineMenu,
 } from "react-icons/md";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import About from "../elements/About";
@@ -10,7 +10,7 @@ import HeaderSubmenu from "../elements/HeaderSubmenu";
 
 export default function Header() {
   const [visibility, setVisibility] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  // const [showMenu, setShowMenu] = useState(false);
 
   const buttonSize = 25;
   const buttonPadding = "p-6";
@@ -39,7 +39,7 @@ export default function Header() {
         `bg-radial-[at_50%_0%] from-black/30 from-45% to-transparent transition to-70%`
       }`}
     >
-      <button
+      {/* <button
         type="button"
         aria-label={`toggle menu visibility ${showMenu ? "off" : "on"}`}
         onClick={() => {
@@ -53,7 +53,7 @@ export default function Header() {
             visibility || showMenu || headerOpacityStyle
           }`}
         />
-      </button>
+      </button> */}
       <nav aria-label="Main menu" className={`col-start-3`}>
         <ul className="grid grid-cols-[1fr_auto_1fr] gap-20 text-center items-center">
           <li>
@@ -112,7 +112,7 @@ export default function Header() {
         onClick={() => {
           setVisibility(!visibility);
         }}
-        className={`${buttonStyle} ${buttonPadding} bg-radial from-black/30 from-30% to-transparent to-40% bg-size-[${
+        className={`${buttonStyle} ${buttonPadding} bg-radial from-black/20 from-20% to-transparent to-40% bg-size-[${
           Number(buttonSize) * 3
         }px_${Number(buttonSize) * 2}px] bg-center bg-no-repeat`}
       >

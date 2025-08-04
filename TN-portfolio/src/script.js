@@ -101,7 +101,7 @@ crane.position.x = 8;
 scene.add(crane);
 
 const craneMaterial = new THREE.MeshBasicMaterial({
-  color: 0xff0000,
+  color: 0x555555,
   wireframe: true,
 });
 const craneSizes = {
@@ -117,7 +117,10 @@ const craneSizes = {
     sides: 3,
     length: 22,
   },
+  cable: {},
 };
+
+craneSizes.cable.length = craneSizes.mast.length * 0.9;
 
 const makeCranePart = (numOfSegments, numOfSides, material) => {
   const segments = [];
@@ -221,10 +224,11 @@ hoistGroup.add(hook);
 const cableGeometry = new THREE.CylinderGeometry(
   0.05,
   0.05,
-  craneSizes.mast.length
+  craneSizes.cable.length
 );
+cableGeometry.translate(0, -craneSizes.cable.length / 2, 0);
 const cable = new THREE.Mesh(cableGeometry, craneMaterial);
-cable.position.y = 0.5 * craneSizes.mast.length;
+// cable.position.y = 0.5 * craneSizes.cable.length;
 hoistGroup.add(cable);
 
 // // Text
@@ -301,12 +305,18 @@ const tick = () => {
   //Update objects
   jibGroup.rotation.y = cursor.x * Math.PI * 0.6;
 
-  const cableDrop = -Math.min(
-    -Math.min(cursor.y - cursorPositionOffset, 0) *
+  cable.geometry.computeBoundingBox();
+  const cableLengthCurrent =
+    cable.geometry.boundingBox.max.y - cable.geometry.boundingBox.min.y;
+
+  const cableLengthNew = Math.min(
+    -Math.min(cursor.y - cursorPositionOffset, -0.01) *
       cursorPositionCoefficient *
-      craneSizes.mast.length,
-    craneSizes.mast.length
+      craneSizes.cable.length,
+    craneSizes.cable.length
   );
+  // console.log(cableLengthNew / cableLengthCurrent);
+  console.log(cursor.y - cursorPositionOffset);
 
   if (
     cursor.wheel < 0 &&
@@ -319,9 +329,9 @@ const tick = () => {
     cursor.wheel = 0;
   }
 
-  //   cableGeometry.scale(1, 1, 1);
-  hook.position.y = cableDrop;
-  cable.position.y = 0.5 * craneSizes.mast.length + cableDrop;
+  cableGeometry.scale(1, cableLengthNew / cableLengthCurrent, 1);
+  hook.position.y = -cableLengthNew;
+  // cable.position.y = 0.5 * craneSizes.cable.length + cableLengthNew;
 
   // Render
   renderer.render(scene, camera);
