@@ -232,12 +232,6 @@ const cable = new THREE.Mesh(cableGeometry, craneMaterial);
 hoistGroup.add(cable);
 
 // Text
-// const loader = new TTFLoader();
-// const fontLoader = new FontLoader();
-// loader.load(
-//   "/fonts/Jaro/Jaro-Regular.ttf",
-//   (fnt) => (font = fontLoader.parse(fnt))
-// );
 const textParams = {
   size: 2.5,
   depth: 1,
@@ -254,7 +248,7 @@ fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
   const textGeometry = new TextGeometry("UNDER", { font, ...textParams });
   textGeometry.center();
   const text = new THREE.Mesh(textGeometry, paintMaterial);
-  text.position.y = textParams.size * 1.48;
+  text.position.y = textParams.size * 1.51;
   text.position.z = 2;
   scene.add(text);
 });
