@@ -16,19 +16,21 @@ export default function Header() {
   const buttonPadding = "p-6";
   const headerOpacityStyle = `opacity-20 group-hover:opacity-100 transition duration-500`;
   const buttonStyle = "hover:scale-110 transition cursor-pointer";
-  const logo = (
-    <a
-      href="/"
-      aria-label="Tam North homepage"
-      className={`flex items-center text-2xl whitespace-pre hover:scale-110 transition ${buttonStyle} ${
-        visibility || headerOpacityStyle
-      }`}
-    >
-      <span>tam </span>
-      <span className="text-4xl">N</span>
-      <span>orth</span>
-    </a>
-  );
+  const HomeButton = () => {
+    return (
+      <a
+        href="/"
+        aria-label="Tam North homepage"
+        className={`flex items-center text-2xl whitespace-pre hover:scale-110 transition ${buttonStyle} ${
+          visibility || headerOpacityStyle
+        }`}
+      >
+        <span>tam </span>
+        <span className="text-4xl">N</span>
+        <span>orth</span>
+      </a>
+    );
+  };
 
   return (
     <header
@@ -64,14 +66,18 @@ export default function Header() {
               <About buttonStyle={buttonStyle} />
             </HeaderSubmenu>
           </li>
-          <li>{logo}</li>
+          <li>
+            <HomeButton />
+          </li>
           <li>
             <HeaderSubmenu
               title="contact"
               visibility={visibility}
               buttonStyle={buttonStyle}
               headerOpacityStyle={headerOpacityStyle}
-            ></HeaderSubmenu>
+            >
+              <p>Section under construction</p>
+            </HeaderSubmenu>
           </li>
         </ul>
       </nav>

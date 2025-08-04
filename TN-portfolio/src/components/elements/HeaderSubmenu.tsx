@@ -18,7 +18,7 @@ export default function HeaderSubmenu({
   const dropdownRef = useRef<null | HTMLDivElement>(null);
 
   const subMenuStyle =
-    "font-montserrat text-white/90 mt-6 text-left rounded-2xl bg-black/20 backdrop-blur-sm p-5 inset-ring inset-ring-black/20 shadow-[0_-1px_0_rgba(0,0,0,0.5)_inset]";
+    "fixed left-1/2 -translate-x-1/2 w-[90vw] h-[80vh] m-3 grid gap-10 grid-cols-[1fr_5fr] font-montserrat text-white/90 mt-6 text-left rounded-2xl bg-black/40 backdrop-blur-sm p-5 inset-ring inset-ring-black/20 shadow-[0_-1px_0_rgba(0,0,0,0.5)_inset]";
 
   useEffect(() => {
     document.body.addEventListener("click", (event: MouseEvent) => {
@@ -46,10 +46,7 @@ export default function HeaderSubmenu({
         {title}
       </button>
       {show && (
-        <div
-          className={`fixed left-1/2 -translate-x-1/2 w-[90vw] m-3 grid gap-10 grid-cols-[1fr_5fr] ${subMenuStyle}`}
-          ref={dropdownRef}
-        >
+        <div className={`${subMenuStyle}`} ref={dropdownRef}>
           {children}
         </div>
       )}
