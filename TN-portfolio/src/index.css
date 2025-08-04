@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bellefair&family=Cinzel+Decorative:wght@400;700;900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
 /* @font-face {
@@ -12,6 +12,7 @@
 @theme {
   --font-cinzel: "Cinzel Decorative", sans-serif;
   --font-montserrat: "Montserrat", sans-serif;
+  --font-bellefair: "Bellefair", serif;
 }
 
 html,

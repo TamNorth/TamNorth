@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-import { FontLoader } from "three/addons/loaders/FontLoader.js";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 // import makeCraneSegment from "./meshes/crane-segment";
 
@@ -231,22 +231,45 @@ const cable = new THREE.Mesh(cableGeometry, craneMaterial);
 // cable.position.y = 0.5 * craneSizes.cable.length;
 hoistGroup.add(cable);
 
-// // Text
+// Text
+// const loader = new TTFLoader();
 // const fontLoader = new FontLoader();
-// fontLoader.load("fonts/helvetiker_regular.typeface.json", function (font) {
-//   const text = new TextGeometry("Under Construction", {
-//     font: font,
-//     size: 80,
-//     depth: 5,
-//     curveSegments: 12,
-//     bevelEnabled: true,
-//     bevelThickness: 10,
-//     bevelSize: 8,
-//     bevelOffset: 0,
-//     bevelSegments: 5,
-//   });
-//   scene.add(text);
-// });
+// loader.load(
+//   "/fonts/Jaro/Jaro-Regular.ttf",
+//   (fnt) => (font = fontLoader.parse(fnt))
+// );
+const textParams = {
+  size: 2.5,
+  depth: 1,
+  curveSegments: 5,
+  bevelEnabled: true,
+  bevelThickness: 0.05,
+  bevelSize: 0.05,
+  bevelOffset: 0,
+  bevelSegments: 2,
+};
+
+const fontLoader = new FontLoader();
+fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
+  const textGeometry = new TextGeometry("UNDER", { font, ...textParams });
+  textGeometry.center();
+  const text = new THREE.Mesh(textGeometry, paintMaterial);
+  text.position.y = textParams.size * 1.48;
+  text.position.z = 2;
+  scene.add(text);
+});
+
+fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
+  const textGeometry = new TextGeometry("CONSTRUCTION", {
+    font,
+    ...textParams,
+  });
+  textGeometry.center();
+  const text = new THREE.Mesh(textGeometry, paintMaterial);
+  text.position.y = textParams.size * 0.55;
+  text.position.z = 2;
+  scene.add(text);
+});
 
 // SIZES
 const sizes = {
@@ -315,8 +338,6 @@ const tick = () => {
       craneSizes.cable.length,
     craneSizes.cable.length
   );
-  // console.log(cableLengthNew / cableLengthCurrent);
-  console.log(cursor.y - cursorPositionOffset);
 
   if (
     cursor.wheel < 0 &&
