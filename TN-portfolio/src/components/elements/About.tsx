@@ -105,7 +105,10 @@ export default function About({ buttonStyle }: { buttonStyle: string }) {
           - built with React.js, Socket.io, Konva, Express, PostgreSQL and Jest
         </p>
         <a href="https://tea-news.netlify.app/" target="_blank">
-          <h2>Tea News</h2>
+          <h2>
+            Tea News
+            <HiExternalLink className={"inline"} />
+          </h2>
         </a>
         <p>
           Tea News was my first project, a full-stack news server where you can
