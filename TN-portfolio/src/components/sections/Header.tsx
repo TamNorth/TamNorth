@@ -38,7 +38,7 @@ export default function Header() {
     });
   }, []);
 
-  const buttonSize = "25";
+  const buttonSize = 25;
   const buttonPadding = "p-6";
   const headerOpacityStyle = `opacity-20 group-hover:opacity-100 transition duration-500`;
   const subMenuStyle =
@@ -71,11 +71,14 @@ export default function Header() {
         onClick={() => {
           setShowMenu(!showMenu);
         }}
-        className={`hover:scale-110 ${buttonPadding} ${
-          visibility || showMenu || headerOpacityStyle
-        }`}
+        className={buttonPadding}
       >
-        <MdOutlineMenu size={buttonSize} />
+        <MdOutlineMenu
+          size={buttonSize}
+          className={`${buttonStyle} ${
+            visibility || showMenu || headerOpacityStyle
+          }`}
+        />
       </button>
       <nav aria-label="Main menu" className={`col-start-3`}>
         <ul className="grid grid-cols-[1fr_auto_1fr] gap-20 text-center items-center">
@@ -175,7 +178,9 @@ export default function Header() {
         onClick={() => {
           setVisibility(!visibility);
         }}
-        className={`hover:scale-110 ${buttonPadding} bg-radial from-black/30 from-30% to-transparent to-50%`}
+        className={`${buttonStyle} ${buttonPadding} bg-radial from-black/30 from-30% to-transparent to-40% bg-size-[${
+          Number(buttonSize) * 3
+        }px_${Number(buttonSize) * 2}px] bg-center bg-no-repeat`}
       >
         {visibility ? (
           <MdOutlineVisibilityOff size={buttonSize} />
