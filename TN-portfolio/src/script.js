@@ -320,12 +320,15 @@ const tick = () => {
 
   if (
     cursor.wheel < 0 &&
-    hoistGroup.position.x > (-3 * craneSizes.jib.length) / 5
+    hoistGroup.position.x > craneSizes.jib.length * -0.7
   ) {
-    hoistGroup.position.x += cursor.wheel;
+    hoistGroup.position.x = Math.max(
+      hoistGroup.position.x + cursor.wheel,
+      craneSizes.jib.length * -0.7
+    );
     cursor.wheel = 0;
   } else if (cursor.wheel > 0 && hoistGroup.position.x < -2) {
-    hoistGroup.position.x += cursor.wheel;
+    hoistGroup.position.x = Math.min(hoistGroup.position.x + cursor.wheel, -2);
     cursor.wheel = 0;
   }
 
