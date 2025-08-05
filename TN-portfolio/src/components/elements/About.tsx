@@ -139,7 +139,7 @@ export default function About({ buttonStyle }: { buttonStyle: string }) {
   return (
     <>
       <nav className="col-start-1 col-span-1">
-        <ul className="divide-y-1 divide-black/10 *:*:p-5">
+        <ul className="divide-y-1 divide-black/20 *:*:p-5">
           <li>
             <AboutButton topic={"projects"} />
           </li>
@@ -151,7 +151,7 @@ export default function About({ buttonStyle }: { buttonStyle: string }) {
           </li>
         </ul>
       </nav>
-      <article className="col-start-2 border-l-2 border-black/20 *:pt-5 *:*:pt-5 *:nth-1:pt-0 px-10 overflow-y-auto [&_a]:hover:underline [&_a]:text-fuchsia-300 [&_h2]:text-2xl *:[&_h2]:text-2xl">
+      <article className="col-start-2 border-l-2 border-black/20 *:pt-5 *:*:pt-5 *:nth-1:pt-0 px-10 overflow-y-auto [&_a]:hover:underline [&_a]:text-fuchsia-300 [&_h2]:border-b [&_h2]:border-b-white/50 [&_h2]:text-2xl *:[&_h2]:text-2xl">
         {aboutSections?.[aboutDisplay] || aboutSections.intro}
       </article>
     </>
