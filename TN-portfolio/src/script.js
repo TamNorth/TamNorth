@@ -13,7 +13,7 @@ const cursor = {
 
 window.addEventListener("mousemove", (event) => {
   cursor.x = event.clientX / sizes.width - 0.5;
-  cursor.y = -(event.clientY / sizes.width - 0.5);
+  cursor.y = -(event.clientY / sizes.height - 0.5);
 });
 
 window.addEventListener("wheel", (event) => {
@@ -228,7 +228,6 @@ const cableGeometry = new THREE.CylinderGeometry(
 );
 cableGeometry.translate(0, -craneSizes.cable.length / 2, 0);
 const cable = new THREE.Mesh(cableGeometry, craneMaterial);
-// cable.position.y = 0.5 * craneSizes.cable.length;
 hoistGroup.add(cable);
 
 // Text
@@ -313,26 +312,36 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // ANIMATE
 const clock = new THREE.Clock();
-const cursorPositionCoefficient = 3;
-const cursorPositionOffset = 0.4;
+const cursorPositionCoefficient = 2;
+const cursorPositionOffset = 0.2;
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
 
-  //Update objects
+  // Update jib
   jibGroup.rotation.y = cursor.x * Math.PI * 0.6;
 
+  // Update cable & hook
   cable.geometry.computeBoundingBox();
   const cableLengthCurrent =
     cable.geometry.boundingBox.max.y - cable.geometry.boundingBox.min.y;
 
+  console.log(
+    -Math.min(cursor.y - cursorPositionOffset, -0.01) *
+      cursorPositionCoefficient *
+      craneSizes.cable.length
+  );
   const cableLengthNew = Math.min(
     -Math.min(cursor.y - cursorPositionOffset, -0.01) *
       cursorPositionCoefficient *
       craneSizes.cable.length,
-    craneSizes.cable.length
+    13
   );
 
+  cableGeometry.scale(1, cableLengthNew / cableLengthCurrent, 1);
+  hook.position.y = -cableLengthNew;
+
+  // Update hoist group position
   if (
     cursor.wheel < 0 &&
     hoistGroup.position.x > craneSizes.jib.length * -0.7
@@ -346,10 +355,6 @@ const tick = () => {
     hoistGroup.position.x = Math.min(hoistGroup.position.x + cursor.wheel, -2);
     cursor.wheel = 0;
   }
-
-  cableGeometry.scale(1, cableLengthNew / cableLengthCurrent, 1);
-  hook.position.y = -cableLengthNew;
-  // cable.position.y = 0.5 * craneSizes.cable.length + cableLengthNew;
 
   // Render
   renderer.render(scene, camera);
