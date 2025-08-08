@@ -2,7 +2,19 @@ import * as THREE from "three";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { GUI } from "lil-gui";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 // import makeCraneSegment from "./meshes/crane-segment";
+
+// BASE
+// Canvas
+const canvas = document.querySelector("canvas.webgl");
+
+// Scene
+const scene = new THREE.Scene();
+
+// Debug
+const gui = new GUI();
 
 // CURSOR
 const cursor = {
@@ -19,13 +31,6 @@ window.addEventListener("mousemove", (event) => {
 window.addEventListener("wheel", (event) => {
   cursor.wheel = event.deltaY / 238;
 });
-
-// BASE
-// Canvas
-const canvas = document.querySelector("canvas.webgl");
-
-// Scene
-const scene = new THREE.Scene();
 
 // OBJECTS
 
@@ -334,9 +339,18 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.z = (craneSizes.mast.length * 2) / 3;
-camera.rotation.x = Math.PI * 0.225;
 scene.add(camera);
+
+// Controls
+const controls = new OrbitControls(camera, canvas);
+controls.enabled = false;
+gui.add(controls, "enabled").name("Toggle orbit controls");
+
+// Position
+camera.position.z = (craneSizes.mast.length * 2) / 3;
+// camera.rotation.x = Math.PI * 0.225;
+controls.target.set(0, craneSizes.mast.length / 2 + 1, 0);
+controls.update();
 
 // RENDERER
 const renderer = new THREE.WebGLRenderer({
@@ -353,6 +367,9 @@ const cursorPositionOffset = 0.2;
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
 
+  // Update controls
+  controls.update();
+
   // Update jib
   jibGroup.rotation.y = cursor.x * Math.PI * 0.6;
 
@@ -361,11 +378,11 @@ const tick = () => {
   const cableLengthCurrent =
     cable.geometry.boundingBox.max.y - cable.geometry.boundingBox.min.y;
 
-  console.log(
-    -Math.min(cursor.y - cursorPositionOffset, -0.01) *
-      cursorPositionCoefficient *
-      craneSizes.cable.length
-  );
+  // console.log(
+  //   -Math.min(cursor.y - cursorPositionOffset, -0.01) *
+  //     cursorPositionCoefficient *
+  //     craneSizes.cable.length
+  // );
   const cableLengthNew = Math.min(
     -Math.min(cursor.y - cursorPositionOffset, -0.01) *
       cursorPositionCoefficient *
