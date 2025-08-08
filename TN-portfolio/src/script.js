@@ -29,6 +29,9 @@ if (config.debug) {
   guiFolders.positions = gui.addFolder("Positions");
   guiFolders.sky = gui.addFolder("Sky");
   guiFolders.lights = gui.addFolder("Lights");
+  for (let folder of gui.children) {
+    folder.close();
+  }
 }
 
 // CURSOR
