@@ -234,7 +234,8 @@ const craneSizes = {
   weights: {
     width: 0.8,
     depth: 1.2,
-    length: 1.4,
+    length: 0.2,
+    number: 7,
   },
 };
 
@@ -277,16 +278,23 @@ jib.rotation.z = Math.PI / 2;
 jib.position.x = craneSizes.jib.length * 0.2;
 jibGroup.add(jib);
 
-const weights = new THREE.Mesh(
-  new THREE.BoxGeometry(
-    craneSizes.weights.length,
-    craneSizes.weights.depth,
-    craneSizes.weights.width
-  ),
-  concreteMaterial
-);
+const weights = new THREE.Group();
+scene.add(weights);
+
+for (let i = 0; i < craneSizes.weights.number; i++) {
+  const weight = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      craneSizes.weights.length,
+      craneSizes.weights.depth,
+      craneSizes.weights.width
+    ),
+    concreteMaterial
+  );
+  weight.position.x = -i * (craneSizes.weights.length + 0.05);
+  weights.add(weight);
+}
 weights.position.y = craneSizes.weights.width / 2 - craneSizes.weights.depth;
-weights.position.x = jib.position.x;
+weights.position.x = jib.position.x + 0.7;
 jibGroup.add(weights);
 
 // slewingUnit
