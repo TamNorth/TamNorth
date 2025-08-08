@@ -116,7 +116,7 @@ for (let map in [
 testSphere.position.y = 2;
 testSphere.position.z = 8;
 testSphere.rotation.x = 0.5;
-// testSphere.visible = false;
+testSphere.visible = false;
 scene.add(testSphere);
 gui.add(testSphere, "visible").name("toggle testSphere");
 
