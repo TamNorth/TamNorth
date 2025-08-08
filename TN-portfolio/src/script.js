@@ -4,6 +4,7 @@ import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { GUI } from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Sky } from "three/addons/objects/Sky.js";
 // import makeCraneSegment from "./meshes/crane-segment";
 
 // BASE
@@ -32,7 +33,51 @@ window.addEventListener("wheel", (event) => {
   cursor.wheel = event.deltaY / 238;
 });
 
+// SIZES
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+};
+
+window.addEventListener("resize", () => {
+  sizes.width = window.innerWidth;
+  sizes.height = window.innerHeight;
+
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(sizes.width, sizes.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
+// TEXTURES
+
+const textureLoader = new THREE.TextureLoader();
+
+const paintTexture = textureLoader.load(
+  "./textures/matcaps/matcap-red_lacquer-512px.png"
+);
+const paintMaterial = new THREE.MeshMatcapMaterial({
+  matcap: paintTexture,
+});
+const concreteTexture = textureLoader.load(
+  "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_diff_1k.jpg"
+);
+const concreteRoughnessTexture = textureLoader.load(
+  "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_rough_1k.jpg"
+);
+const concreteMaterial = new THREE.MeshStandardMaterial({
+  matcap: concreteTexture,
+});
+const steelTexture = textureLoader.load(
+  "./textures/matcaps/matcap-polished_steel-512px.png"
+);
+const steelMaterial = new THREE.MeshMatcapMaterial({
+  matcap: steelTexture,
+});
+
 // OBJECTS
+// Utils
 
 const multiClone = (geometry, numOfClones) => {
   const clones = [];
@@ -41,6 +86,44 @@ const multiClone = (geometry, numOfClones) => {
   }
   return clones;
 };
+
+// Sky
+const sky = new Sky();
+sky.scale.setScalar(100);
+scene.add(sky);
+
+sky.material.uniforms["turbidity"].value = 10;
+sky.material.uniforms["rayleigh"].value = 3;
+sky.material.uniforms["mieCoefficient"].value = 0.1;
+sky.material.uniforms["mieDirectionalG"].value = 0.95;
+sky.material.uniforms["sunPosition"].value.set(-0.5, 0.24, 0.95);
+
+for (let dimension of ["x", "y", "z"]) {
+  gui
+    .add(sky.material.uniforms["sunPosition"].value, dimension)
+    .min(-1)
+    .max(1)
+    .step(0.01)
+    .name("Skybox sun position " + dimension);
+}
+gui
+  .add(sky.material.uniforms["rayleigh"], "value")
+  .min(0)
+  .max(10)
+  .step(0.1)
+  .name("Skybox Rayleigh");
+gui
+  .add(sky.material.uniforms["mieCoefficient"], "value")
+  .min(0)
+  .max(1)
+  .step(0.01)
+  .name("Skybox mieCoefficient");
+gui
+  .add(sky.material.uniforms["mieDirectionalG"], "value")
+  .min(0)
+  .max(1)
+  .step(0.01)
+  .name("Skybox mieDirectionalG");
 
 const makeCraneSegment = (numOfSides, material) => {
   const craneSegmentSide = new THREE.Group();
@@ -91,32 +174,6 @@ const makeCraneSegment = (numOfSides, material) => {
   segment.add(...sides);
   return segment;
 };
-
-// TEXTURES
-
-const textureLoader = new THREE.TextureLoader();
-
-const paintTexture = textureLoader.load(
-  "./textures/matcaps/matcap-red_lacquer-512px.png"
-);
-const paintMaterial = new THREE.MeshMatcapMaterial({
-  matcap: paintTexture,
-});
-const concreteTexture = textureLoader.load(
-  "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_diff_1k.jpg"
-);
-const concreteRoughnessTexture = textureLoader.load(
-  "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_rough_1k.jpg"
-);
-const concreteMaterial = new THREE.MeshStandardMaterial({
-  matcap: concreteTexture,
-});
-const steelTexture = textureLoader.load(
-  "./textures/matcaps/matcap-polished_steel-512px.png"
-);
-const steelMaterial = new THREE.MeshMatcapMaterial({
-  matcap: steelTexture,
-});
 
 // Crane Group
 const crane = new THREE.Group();
@@ -304,33 +361,16 @@ fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
   scene.add(text);
 });
 
-// SIZES
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-};
-
-window.addEventListener("resize", () => {
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
-
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(sizes.width, sizes.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-});
-
-// ENVIRONMENT MAP
-const rgbeLoader = new RGBELoader();
-rgbeLoader.load(
-  "./textures/environmentMap/quarry_01_1k.hdr",
-  (environmentMap) => {
-    environmentMap.mapping = THREE.EquirectangularReflectionMapping;
-    scene.background = environmentMap;
-    scene.environment = environmentMap;
-  }
-);
+// // ENVIRONMENT MAP
+// const rgbeLoader = new RGBELoader();
+// rgbeLoader.load(
+//   "./textures/environmentMap/quarry_01_1k.hdr",
+//   (environmentMap) => {
+//     environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+//     scene.background = environmentMap;
+//     scene.environment = environmentMap;
+//   }
+// );
 
 // CAMERA
 const camera = new THREE.PerspectiveCamera(
