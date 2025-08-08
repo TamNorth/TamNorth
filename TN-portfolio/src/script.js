@@ -8,6 +8,11 @@ import { Sky } from "three/addons/objects/Sky.js";
 // import makeCraneSegment from "./meshes/crane-segment";
 
 // BASE
+// Config
+const config = {
+  debug: window.location.hash === "#debug",
+};
+
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
 
@@ -15,10 +20,16 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 // Debug
-const gui = new GUI();
-const guiPositions = gui.addFolder("Positions");
-const guiSky = gui.addFolder("Sky");
-const guiLights = gui.addFolder("Lights");
+
+let gui = {};
+let guiFolders = {};
+
+if (config.debug) {
+  gui = new GUI();
+  guiFolders.positions = gui.addFolder("Positions");
+  guiFolders.sky = gui.addFolder("Sky");
+  guiFolders.lights = gui.addFolder("Lights");
+}
 
 // CURSOR
 const cursor = {
@@ -94,31 +105,18 @@ const multiClone = (geometry, numOfClones) => {
 };
 
 // Test
-const testSphere = new THREE.Mesh(
-  new THREE.SphereGeometry(1, 40, 40),
-  concreteMaterial
-);
-for (let map in [
-  "aoMap",
-  "bumpMap",
-  "emissiveMap",
-  "map",
-  "normalMap",
-  "roughnessMap",
-  "lightMap",
-  "metalnessMap",
-  "aoMap",
-]) {
-  if (testSphere.material[map]?.repeat) {
-    testSphere.material[map].repeat.set(10, 1);
-  }
+if (config.debug) {
+  const testSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 40, 40),
+    concreteMaterial
+  );
+  testSphere.position.y = 2;
+  testSphere.position.z = 8;
+  testSphere.rotation.x = 0.5;
+  testSphere.visible = false;
+  scene.add(testSphere);
+  gui.add(testSphere, "visible").name("toggle testSphere");
 }
-testSphere.position.y = 2;
-testSphere.position.z = 8;
-testSphere.rotation.x = 0.5;
-testSphere.visible = false;
-scene.add(testSphere);
-gui.add(testSphere, "visible").name("toggle testSphere");
 
 // Sky
 const sky = new Sky();
@@ -131,32 +129,34 @@ sky.material.uniforms["mieCoefficient"].value = 0.1;
 sky.material.uniforms["mieDirectionalG"].value = 0.95;
 sky.material.uniforms["sunPosition"].value.set(-0.5, 0.24, 0.95);
 
-for (let dimension of ["x", "y", "z"]) {
-  guiSky
-    .add(sky.material.uniforms["sunPosition"].value, dimension)
-    .min(-1)
+if (config.debug) {
+  for (let dimension of ["x", "y", "z"]) {
+    guiFolders.sky
+      .add(sky.material.uniforms["sunPosition"].value, dimension)
+      .min(-1)
+      .max(1)
+      .step(0.01)
+      .name("sunPosition " + dimension);
+  }
+  guiFolders.sky
+    .add(sky.material.uniforms["rayleigh"], "value")
+    .min(0)
+    .max(10)
+    .step(0.1)
+    .name("rayleigh");
+  guiFolders.sky
+    .add(sky.material.uniforms["mieCoefficient"], "value")
+    .min(0)
     .max(1)
     .step(0.01)
-    .name("sunPosition " + dimension);
+    .name("mieCoefficient");
+  guiFolders.sky
+    .add(sky.material.uniforms["mieDirectionalG"], "value")
+    .min(0)
+    .max(1)
+    .step(0.01)
+    .name("mieDirectionalG");
 }
-guiSky
-  .add(sky.material.uniforms["rayleigh"], "value")
-  .min(0)
-  .max(10)
-  .step(0.1)
-  .name("rayleigh");
-guiSky
-  .add(sky.material.uniforms["mieCoefficient"], "value")
-  .min(0)
-  .max(1)
-  .step(0.01)
-  .name("mieCoefficient");
-guiSky
-  .add(sky.material.uniforms["mieDirectionalG"], "value")
-  .min(0)
-  .max(1)
-  .step(0.01)
-  .name("mieDirectionalG");
 
 const makeCraneSegment = (numOfSides, material) => {
   const craneSegmentSide = new THREE.Group();
@@ -404,25 +404,26 @@ sunlight.position.y =
 sunlight.position.z =
   sky.material.uniforms["sunPosition"].value.z * sky.scale.z;
 scene.add(sunlight);
-guiLights
-  .add(sunlight, "intensity")
-  .min(0)
-  .max(3)
-  .step(0.1)
-  .name("sunlight intensity");
-guiLights.addColor(sunlight, "color");
-const sunlightHelper = new THREE.DirectionalLightHelper(sunlight);
-scene.add(sunlightHelper);
-
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-guiLights
-  .add(ambientLight, "intensity")
-  .min(0)
-  .max(1)
-  .step(0.01)
-  .name("ambientLight intensity");
-guiLights.addColor(ambientLight, "color");
 scene.add(ambientLight);
+if (config.debug) {
+  guiFolders.lights
+    .add(sunlight, "intensity")
+    .min(0)
+    .max(3)
+    .step(0.1)
+    .name("sunlight intensity");
+  guiFolders.lights.addColor(sunlight, "color");
+  const sunlightHelper = new THREE.DirectionalLightHelper(sunlight);
+  scene.add(sunlightHelper);
+  guiFolders.lights
+    .add(ambientLight, "intensity")
+    .min(0)
+    .max(1)
+    .step(0.01)
+    .name("ambientLight intensity");
+  guiFolders.lights.addColor(ambientLight, "color");
+}
 
 // // ENVIRONMENT MAP
 // const rgbeLoader = new RGBELoader();
@@ -447,7 +448,9 @@ scene.add(camera);
 // Controls
 const controls = new OrbitControls(camera, canvas);
 controls.enabled = false;
-gui.add(controls, "enabled").name("Toggle orbit controls");
+if (config.debug) {
+  gui.add(controls, "enabled").name("Toggle orbit controls");
+}
 
 // Position
 camera.position.z = (craneSizes.mast.length * 2) / 3;
