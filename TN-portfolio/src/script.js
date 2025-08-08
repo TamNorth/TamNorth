@@ -406,6 +406,7 @@ sunlight.position.z =
 scene.add(sunlight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambientLight);
+
 if (config.debug) {
   guiFolders.lights
     .add(sunlight, "intensity")
@@ -414,8 +415,6 @@ if (config.debug) {
     .step(0.1)
     .name("sunlight intensity");
   guiFolders.lights.addColor(sunlight, "color");
-  const sunlightHelper = new THREE.DirectionalLightHelper(sunlight);
-  scene.add(sunlightHelper);
   guiFolders.lights
     .add(ambientLight, "intensity")
     .min(0)
@@ -445,18 +444,18 @@ const camera = new THREE.PerspectiveCamera(
 );
 scene.add(camera);
 
-// Controls
-const controls = new OrbitControls(camera, canvas);
-controls.enabled = false;
-if (config.debug) {
-  gui.add(controls, "enabled").name("Toggle orbit controls");
-}
-
 // Position
 camera.position.z = (craneSizes.mast.length * 2) / 3;
-// camera.rotation.x = Math.PI * 0.225;
-controls.target.set(0, craneSizes.mast.length / 2 + 1, 0);
-controls.update();
+camera.rotation.x = Math.PI * 0.225;
+
+// Controls
+let controls = {};
+if (config.debug) {
+  controls = new OrbitControls(camera, canvas);
+  controls.target.set(0, craneSizes.mast.length / 2 + 1, 0);
+  controls.update();
+  gui.add(controls, "enabled").name("Toggle orbit controls");
+}
 
 // RENDERER
 const renderer = new THREE.WebGLRenderer({
@@ -475,7 +474,9 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
 
   // Update controls
-  controls.update();
+  if (controls?.update) {
+    controls.update();
+  }
 
   // Update jib
   jibGroup.rotation.y = cursor.x * Math.PI * 0.6;
