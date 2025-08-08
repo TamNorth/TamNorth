@@ -87,12 +87,30 @@ const makeCraneSegment = (numOfSides, material) => {
   return segment;
 };
 
+// TEXTURES
+
 const textureLoader = new THREE.TextureLoader();
+
 const paintTexture = textureLoader.load(
   "./textures/matcaps/matcap-red_lacquer-512px.png"
 );
 const paintMaterial = new THREE.MeshMatcapMaterial({
   matcap: paintTexture,
+});
+const concreteTexture = textureLoader.load(
+  "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_diff_1k.jpg"
+);
+const concreteRoughnessTexture = textureLoader.load(
+  "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_rough_1k.jpg"
+);
+const concreteMaterial = new THREE.MeshStandardMaterial({
+  matcap: concreteTexture,
+});
+const steelTexture = textureLoader.load(
+  "./textures/matcaps/matcap-polished_steel-512px.png"
+);
+const steelMaterial = new THREE.MeshMatcapMaterial({
+  matcap: steelTexture,
 });
 
 // Crane Group
@@ -118,6 +136,11 @@ const craneSizes = {
     length: 22,
   },
   cable: {},
+  weights: {
+    width: 0.8,
+    depth: 1.2,
+    length: 1.4,
+  },
 };
 
 craneSizes.cable.length = craneSizes.mast.length * 0.9;
@@ -156,8 +179,20 @@ const jib = makeCranePart(
 );
 jib.rotation.x = Math.PI / 2;
 jib.rotation.z = Math.PI / 2;
-jib.position.x = (1 * craneSizes.jib.length) / 5;
+jib.position.x = craneSizes.jib.length * 0.2;
 jibGroup.add(jib);
+
+const weights = new THREE.Mesh(
+  new THREE.BoxGeometry(
+    craneSizes.weights.length,
+    craneSizes.weights.depth,
+    craneSizes.weights.width
+  ),
+  concreteMaterial
+);
+weights.position.y = craneSizes.weights.width / 2 - craneSizes.weights.depth;
+weights.position.x = jib.position.x;
+jibGroup.add(weights);
 
 // slewingUnit
 const slewingUnitScale = 1.4;
@@ -215,7 +250,7 @@ const extrudeSettings = {
 };
 const hook = new THREE.Mesh(
   new THREE.ExtrudeGeometry(hookShape, extrudeSettings),
-  paintMaterial
+  steelMaterial
 );
 hook.rotation.x = Math.PI / 2;
 hoistGroup.add(hook);
