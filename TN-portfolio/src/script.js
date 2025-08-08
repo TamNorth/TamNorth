@@ -16,6 +16,9 @@ const scene = new THREE.Scene();
 
 // Debug
 const gui = new GUI();
+const guiPositions = gui.addFolder("Positions");
+const guiSky = gui.addFolder("Sky");
+const guiLights = gui.addFolder("Lights");
 
 // CURSOR
 const cursor = {
@@ -66,8 +69,11 @@ const concreteTexture = textureLoader.load(
 const concreteRoughnessTexture = textureLoader.load(
   "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_rough_1k.jpg"
 );
+concreteTexture.repeat.set(2, 1);
+concreteTexture.wrapS = THREE.RepeatWrapping;
 const concreteMaterial = new THREE.MeshStandardMaterial({
-  matcap: concreteTexture,
+  map: concreteTexture,
+  roughnessMap: concreteRoughnessTexture,
 });
 const steelTexture = textureLoader.load(
   "./textures/matcaps/matcap-polished_steel-512px.png"
@@ -87,6 +93,33 @@ const multiClone = (geometry, numOfClones) => {
   return clones;
 };
 
+// Test
+const testSphere = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 40, 40),
+  concreteMaterial
+);
+for (let map in [
+  "aoMap",
+  "bumpMap",
+  "emissiveMap",
+  "map",
+  "normalMap",
+  "roughnessMap",
+  "lightMap",
+  "metalnessMap",
+  "aoMap",
+]) {
+  if (testSphere.material[map]?.repeat) {
+    testSphere.material[map].repeat.set(10, 1);
+  }
+}
+testSphere.position.y = 2;
+testSphere.position.z = 8;
+testSphere.rotation.x = 0.5;
+// testSphere.visible = false;
+scene.add(testSphere);
+gui.add(testSphere, "visible").name("toggle testSphere");
+
 // Sky
 const sky = new Sky();
 sky.scale.setScalar(100);
@@ -99,31 +132,31 @@ sky.material.uniforms["mieDirectionalG"].value = 0.95;
 sky.material.uniforms["sunPosition"].value.set(-0.5, 0.24, 0.95);
 
 for (let dimension of ["x", "y", "z"]) {
-  gui
+  guiSky
     .add(sky.material.uniforms["sunPosition"].value, dimension)
     .min(-1)
     .max(1)
     .step(0.01)
-    .name("Skybox sun position " + dimension);
+    .name("sunPosition " + dimension);
 }
-gui
+guiSky
   .add(sky.material.uniforms["rayleigh"], "value")
   .min(0)
   .max(10)
   .step(0.1)
-  .name("Skybox Rayleigh");
-gui
+  .name("rayleigh");
+guiSky
   .add(sky.material.uniforms["mieCoefficient"], "value")
   .min(0)
   .max(1)
   .step(0.01)
-  .name("Skybox mieCoefficient");
-gui
+  .name("mieCoefficient");
+guiSky
   .add(sky.material.uniforms["mieDirectionalG"], "value")
   .min(0)
   .max(1)
   .step(0.01)
-  .name("Skybox mieDirectionalG");
+  .name("mieDirectionalG");
 
 const makeCraneSegment = (numOfSides, material) => {
   const craneSegmentSide = new THREE.Group();
@@ -360,6 +393,36 @@ fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
   text.position.z = 2;
   scene.add(text);
 });
+
+// LIGHTS
+
+const sunlight = new THREE.DirectionalLight(0xffffff, 3);
+sunlight.position.x =
+  sky.material.uniforms["sunPosition"].value.x * sky.scale.x;
+sunlight.position.y =
+  sky.material.uniforms["sunPosition"].value.y * sky.scale.y;
+sunlight.position.z =
+  sky.material.uniforms["sunPosition"].value.z * sky.scale.z;
+scene.add(sunlight);
+guiLights
+  .add(sunlight, "intensity")
+  .min(0)
+  .max(3)
+  .step(0.1)
+  .name("sunlight intensity");
+guiLights.addColor(sunlight, "color");
+const sunlightHelper = new THREE.DirectionalLightHelper(sunlight);
+scene.add(sunlightHelper);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+guiLights
+  .add(ambientLight, "intensity")
+  .min(0)
+  .max(1)
+  .step(0.01)
+  .name("ambientLight intensity");
+guiLights.addColor(ambientLight, "color");
+scene.add(ambientLight);
 
 // // ENVIRONMENT MAP
 // const rgbeLoader = new RGBELoader();
