@@ -458,9 +458,10 @@ controls.update();
 // RENDERER
 const renderer = new THREE.WebGLRenderer({
   canvas,
+  antialias: true,
 });
 renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio * 1.5, 2));
 
 // ANIMATE
 const clock = new THREE.Clock();
