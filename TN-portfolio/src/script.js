@@ -77,18 +77,43 @@ const paintTexture = textureLoader.load(
 const paintMaterial = new THREE.MeshMatcapMaterial({
   matcap: paintTexture,
 });
+
 const concreteTexture = textureLoader.load(
-  "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_diff_1k.jpg"
+  "./textures/grey_plaster_02_1k/grey_plaster_02_diff_1k.webp"
 );
-const concreteRoughnessTexture = textureLoader.load(
-  "./textures/concrete_floor_worn_001_1k/concrete_floor_worn_001_rough_1k.jpg"
+// const concreteDisplacement = textureLoader.load(
+//   "./textures/grey_plaster_02_1k/grey_plaster_02_disp_1k.webp"
+// );
+const concreteARM = textureLoader.load(
+  "./textures/grey_plaster_02_1k/grey_plaster_02_arm_1k.webp"
 );
-concreteTexture.repeat.set(2, 1);
+const concreteNormal = textureLoader.load(
+  "./textures/grey_plaster_02_1k/grey_plaster_02_nor_gl_1k.webp"
+);
+const concreteRepeat = [2, 1];
+concreteTexture.repeat.set(...concreteRepeat);
 concreteTexture.wrapS = THREE.RepeatWrapping;
+concreteTexture.wrapT = THREE.RepeatWrapping;
+concreteARM.repeat.set(...concreteRepeat);
+concreteARM.wrapS = THREE.RepeatWrapping;
+concreteARM.wrapT = THREE.RepeatWrapping;
+concreteNormal.repeat.set(...concreteRepeat);
+concreteNormal.wrapS = THREE.RepeatWrapping;
+concreteNormal.wrapT = THREE.RepeatWrapping;
+
 const concreteMaterial = new THREE.MeshStandardMaterial({
   map: concreteTexture,
-  roughnessMap: concreteRoughnessTexture,
+  // displacementMap: concreteDisplacement,
+  // displacementScale: 0,
+  aoMap: concreteARM,
+  roughnessMap: concreteARM,
+  metalnessMap: concreteARM,
+  normalMap: concreteNormal,
 });
+if (config.debug) {
+  gui.add(concreteMaterial, "displacementScale").min(0).max(1).step(0.01);
+}
+
 const steelTexture = textureLoader.load(
   "./textures/matcaps/matcap-polished_steel-512px.png"
 );
@@ -126,11 +151,21 @@ const sky = new Sky();
 sky.scale.setScalar(100);
 scene.add(sky);
 
+const sunPosition = new THREE.Vector3();
+const sunCoords = { elevation: Math.PI * 0.05, azimuth: Math.PI * 1.8 };
+sunPosition.setFromSphericalCoords(
+  1,
+  Math.PI * 0.5 - sunCoords.elevation,
+  sunCoords.azimuth
+);
+
 sky.material.uniforms["turbidity"].value = 10;
 sky.material.uniforms["rayleigh"].value = 3;
-sky.material.uniforms["mieCoefficient"].value = 0.1;
-sky.material.uniforms["mieDirectionalG"].value = 0.95;
-sky.material.uniforms["sunPosition"].value.set(-0.5, 0.24, 0.95);
+sky.material.uniforms["mieCoefficient"].value = 0.005;
+sky.material.uniforms["mieDirectionalG"].value = 0.7;
+// sky.material.uniforms["sunPosition"].value.set(-0.5, 0.24, 0.95);
+sky.material.uniforms["sunPosition"].value.copy(sunPosition);
+console.log(sky);
 
 if (config.debug) {
   for (let dimension of ["x", "y", "z"]) {
@@ -528,8 +563,28 @@ const tick = () => {
   }
 
   // Render
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.5;
   renderer.render(scene, camera);
   window.requestAnimationFrame(tick);
 };
 
 tick();
+
+/** NOTES
+ *
+ * https://threejs.org/examples/webgl_read_float_buffer
+ * rtTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType } );
+ * const read = new Float32Array( 4 );
+ * renderer.readRenderTargetPixels( rtTexture, windowHalfX + mouseX, windowHalfY - mouseY, 1, 1, read );
+ * valueNode.innerHTML = 'r:' + read[ 0 ] + '<br/>g:' + read[ 1 ] + '<br/>b:' + read[ 2 ];
+ *
+ * https://threejs.org/docs/index.html#api/en/renderers/WebGLRenderer.readRenderTargetPixels
+ * .readRenderTargetPixels ( renderTarget : WebGLRenderTarget, x : Float, y : Float, width : Float, height : Float, buffer : TypedArray, activeCubeFaceIndex : Integer ) : undefined
+ *
+ * https://threejs.org/docs/#api/en/renderers/WebGLRenderTarget
+ *  WebGLRenderTarget(width : Number, height : Number, options : Object)
+ * width - The width of the renderTarget. Default is 1.
+ * height - The height of the renderTarget. Default is 1.
+ * options - optional object that holds texture parameters for an auto-generated target texture and depthBuffer/stencilBuffer booleans.
+ */
