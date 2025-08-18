@@ -7,6 +7,42 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Sky } from "three/addons/objects/Sky.js";
 // import makeCraneSegment from "./meshes/crane-segment";
 
+function getSunRBGA() {
+  // Sun camera
+  const sunCamera = new THREE.OrthographicCamera();
+  sunCamera.lookAt(
+    sky.material.uniforms["sunPosition"].value.x * sky.scale.x,
+    sky.material.uniforms["sunPosition"].value.y * sky.scale.y,
+    sky.material.uniforms["sunPosition"].value.z * sky.scale.z
+  );
+  sunCamera.translateOnAxis(new THREE.Vector3(0, 0, -1), 20);
+  scene.add(sunCamera, new THREE.CameraHelper(sunCamera));
+
+  // Render target
+  let sunTexture = new THREE.WebGLRenderTarget(
+    window.innerWidth,
+    window.innerHeight,
+    {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.NearestFilter,
+      format: THREE.RGBAFormat,
+      type: THREE.FloatType,
+    }
+  );
+
+  // Renderer
+  renderer.setRenderTarget(sunTexture);
+  renderer.clear();
+  renderer.render(sky, sunCamera);
+  renderer.setRenderTarget(null);
+  // renderer.render(scene, camera);
+  const read = new Float32Array(4);
+  renderer.readRenderTargetPixels(sunTexture, 10, 10, 1, 1, read);
+  // console.log("r:" + read[0] + "<br/>g:" + read[1] + "<br/>b:" + read[2]);
+  console.log(read);
+  return read;
+}
+
 // BASE
 // Config
 const config = {
