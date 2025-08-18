@@ -2,66 +2,56 @@ import * as THREE from "three";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import { GUI } from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Sky } from "three/addons/objects/Sky.js";
+import Engine from "./Engine";
 // import makeCraneSegment from "./meshes/crane-segment";
 
-function getSunRBGA() {
-  // Sun camera
-  const sunCamera = new THREE.OrthographicCamera();
-  sunCamera.lookAt(
-    sky.material.uniforms["sunPosition"].value.x * sky.scale.x,
-    sky.material.uniforms["sunPosition"].value.y * sky.scale.y,
-    sky.material.uniforms["sunPosition"].value.z * sky.scale.z
-  );
-  sunCamera.translateOnAxis(new THREE.Vector3(0, 0, -1), 20);
-  scene.add(sunCamera, new THREE.CameraHelper(sunCamera));
+// function getSunRBGA() {
+//   // Sun camera
+//   const sunCamera = new THREE.OrthographicCamera();
+//   sunCamera.lookAt(
+//     sky.material.uniforms["sunPosition"].value.x * sky.scale.x,
+//     sky.material.uniforms["sunPosition"].value.y * sky.scale.y,
+//     sky.material.uniforms["sunPosition"].value.z * sky.scale.z
+//   );
+//   sunCamera.translateOnAxis(new THREE.Vector3(0, 0, -1), 20);
+//   scene.add(sunCamera, new THREE.CameraHelper(sunCamera));
 
-  // Render target
-  let sunTexture = new THREE.WebGLRenderTarget(
-    window.innerWidth,
-    window.innerHeight,
-    {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.NearestFilter,
-      format: THREE.RGBAFormat,
-      type: THREE.FloatType,
-    }
-  );
+//   // Render target
+//   let sunTexture = new THREE.WebGLRenderTarget(
+//     window.innerWidth,
+//     window.innerHeight,
+//     {
+//       minFilter: THREE.LinearFilter,
+//       magFilter: THREE.NearestFilter,
+//       format: THREE.RGBAFormat,
+//       type: THREE.FloatType,
+//     }
+//   );
 
-  // Renderer
-  renderer.setRenderTarget(sunTexture);
-  renderer.clear();
-  renderer.render(sky, sunCamera);
-  renderer.setRenderTarget(null);
-  // renderer.render(scene, camera);
-  const read = new Float32Array(4);
-  renderer.readRenderTargetPixels(sunTexture, 10, 10, 1, 1, read);
-  // console.log("r:" + read[0] + "<br/>g:" + read[1] + "<br/>b:" + read[2]);
-  console.log(read);
-  return read;
-}
+//   // Renderer
+//   renderer.setRenderTarget(sunTexture);
+//   renderer.clear();
+//   renderer.render(sky, sunCamera);
+//   renderer.setRenderTarget(null);
+//   // renderer.render(scene, camera);
+//   const read = new Float32Array(4);
+//   renderer.readRenderTargetPixels(sunTexture, 10, 10, 1, 1, read);
+//   // console.log("r:" + read[0] + "<br/>g:" + read[1] + "<br/>b:" + read[2]);
+//   console.log(read);
+//   return read;
+// }
 
 // BASE
-// Config
-const config = {
-  debug: window.location.hash === "#debug",
-};
-
-// Canvas
-const canvas = document.querySelector("canvas.webgl");
-
-// Scene
-const scene = new THREE.Scene();
+// Engine
+const engine = new Engine();
+engine.attach(document.querySelector("canvas.webgl"));
 
 // Debug
 
-let gui = {};
-let guiFolders = {};
-
-if (config.debug) {
-  gui = new GUI();
+if (engine.config.debug) {
+  const { gui, guiFolders } = engine;
   guiFolders.positions = gui.addFolder("Positions");
   guiFolders.sky = gui.addFolder("Sky");
   guiFolders.lights = gui.addFolder("Lights");
@@ -69,39 +59,6 @@ if (config.debug) {
     folder.close();
   }
 }
-
-// CURSOR
-const cursor = {
-  x: 0,
-  y: 0,
-  wheel: 0,
-};
-
-window.addEventListener("mousemove", (event) => {
-  cursor.x = event.clientX / sizes.width - 0.5;
-  cursor.y = -(event.clientY / sizes.height - 0.5);
-});
-
-window.addEventListener("wheel", (event) => {
-  cursor.wheel = event.deltaY / 238;
-});
-
-// SIZES
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-};
-
-window.addEventListener("resize", () => {
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
-
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(sizes.width, sizes.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-});
 
 // TEXTURES
 
@@ -146,8 +103,12 @@ const concreteMaterial = new THREE.MeshStandardMaterial({
   metalnessMap: concreteARM,
   normalMap: concreteNormal,
 });
-if (config.debug) {
-  gui.add(concreteMaterial, "displacementScale").min(0).max(1).step(0.01);
+if (engine.config.debug) {
+  engine.gui
+    .add(concreteMaterial, "displacementScale")
+    .min(0)
+    .max(1)
+    .step(0.01);
 }
 
 const steelTexture = textureLoader.load(
@@ -169,7 +130,7 @@ const multiClone = (geometry, numOfClones) => {
 };
 
 // Test
-if (config.debug) {
+if (engine.config.debug) {
   const testSphere = new THREE.Mesh(
     new THREE.SphereGeometry(1, 40, 40),
     concreteMaterial
@@ -178,14 +139,14 @@ if (config.debug) {
   testSphere.position.z = 8;
   testSphere.rotation.x = 0.5;
   testSphere.visible = false;
-  scene.add(testSphere);
-  gui.add(testSphere, "visible").name("toggle testSphere");
+  engine.scene.add(testSphere);
+  engine.gui.add(testSphere, "visible").name("toggle testSphere");
 }
 
 // Sky
 const sky = new Sky();
 sky.scale.setScalar(100);
-scene.add(sky);
+engine.scene.add(sky);
 
 const sunPosition = new THREE.Vector3();
 const sunCoords = { elevation: Math.PI * 0.05, azimuth: Math.PI * 1.8 };
@@ -201,9 +162,9 @@ sky.material.uniforms["mieCoefficient"].value = 0.005;
 sky.material.uniforms["mieDirectionalG"].value = 0.7;
 // sky.material.uniforms["sunPosition"].value.set(-0.5, 0.24, 0.95);
 sky.material.uniforms["sunPosition"].value.copy(sunPosition);
-console.log(sky);
 
-if (config.debug) {
+if (engine.config.debug) {
+  const { guiFolders } = engine;
   for (let dimension of ["x", "y", "z"]) {
     guiFolders.sky
       .add(sky.material.uniforms["sunPosition"].value, dimension)
@@ -285,7 +246,7 @@ const makeCraneSegment = (numOfSides, material) => {
 // Crane Group
 const crane = new THREE.Group();
 crane.position.x = 8;
-scene.add(crane);
+engine.scene.add(crane);
 
 const craneMaterial = new THREE.MeshBasicMaterial({
   color: 0x555555,
@@ -353,7 +314,7 @@ jib.position.x = craneSizes.jib.length * 0.2;
 jibGroup.add(jib);
 
 const weights = new THREE.Group();
-scene.add(weights);
+engine.scene.add(weights);
 
 for (let i = 0; i < craneSizes.weights.number; i++) {
   const weight = new THREE.Mesh(
@@ -461,7 +422,7 @@ fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
   const text = new THREE.Mesh(textGeometry, paintMaterial);
   text.position.y = textParams.size * 1.51;
   text.position.z = 2;
-  scene.add(text);
+  engine.scene.add(text);
 });
 
 fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
@@ -473,7 +434,7 @@ fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
   const text = new THREE.Mesh(textGeometry, paintMaterial);
   text.position.y = textParams.size * 0.55;
   text.position.z = 2;
-  scene.add(text);
+  engine.scene.add(text);
 });
 
 // LIGHTS
@@ -485,11 +446,12 @@ sunlight.position.y =
   sky.material.uniforms["sunPosition"].value.y * sky.scale.y;
 sunlight.position.z =
   sky.material.uniforms["sunPosition"].value.z * sky.scale.z;
-scene.add(sunlight);
+engine.scene.add(sunlight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-scene.add(ambientLight);
+engine.scene.add(ambientLight);
 
-if (config.debug) {
+if (engine.config.debug) {
+  const { guiFolders } = engine;
   guiFolders.lights
     .add(sunlight, "intensity")
     .min(0)
@@ -517,51 +479,31 @@ if (config.debug) {
 //   }
 // );
 
-// CAMERA
-const camera = new THREE.PerspectiveCamera(
-  75,
-  sizes.width / sizes.height,
-  0.1,
-  100
-);
-scene.add(camera);
-
 // Position
-camera.position.z = (craneSizes.mast.length * 2) / 3;
-camera.rotation.x = Math.PI * 0.225;
+engine.camera.position.z = (craneSizes.mast.length * 2) / 3;
+engine.camera.rotation.x = Math.PI * 0.225;
 
 // Controls
 let controls = {};
-if (config.debug) {
-  controls = new OrbitControls(camera, canvas);
+if (engine.config.debug) {
+  controls = new OrbitControls(engine.camera, engine.canvas);
   controls.target.set(0, craneSizes.mast.length / 2 + 1, 0);
   controls.update();
-  gui.add(controls, "enabled").name("Toggle orbit controls");
+  engine.gui.add(controls, "enabled").name("Toggle orbit controls");
 }
 
-// RENDERER
-const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true,
-});
-renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio * 1.5, 2));
-
 // ANIMATE
-const clock = new THREE.Clock();
 const cursorPositionCoefficient = 2;
 const cursorPositionOffset = 0.2;
 
 const tick = () => {
-  const elapsedTime = clock.getElapsedTime();
-
   // Update controls
   if (controls?.update) {
     controls.update();
   }
 
   // Update jib
-  jibGroup.rotation.y = cursor.x * Math.PI * 0.6;
+  jibGroup.rotation.y = engine.cursor.x * Math.PI * 0.6;
 
   // Update cable & hook
   cable.geometry.computeBoundingBox();
@@ -574,7 +516,7 @@ const tick = () => {
   //     craneSizes.cable.length
   // );
   const cableLengthNew = Math.min(
-    -Math.min(cursor.y - cursorPositionOffset, -0.01) *
+    -Math.min(engine.cursor.y - cursorPositionOffset, -0.01) *
       cursorPositionCoefficient *
       craneSizes.cable.length,
     13
@@ -585,23 +527,26 @@ const tick = () => {
 
   // Update hoist group position
   if (
-    cursor.wheel < 0 &&
+    engine.cursor.wheel < 0 &&
     hoistGroup.position.x > craneSizes.jib.length * -0.7
   ) {
     hoistGroup.position.x = Math.max(
-      hoistGroup.position.x + cursor.wheel,
+      hoistGroup.position.x + engine.cursor.wheel,
       craneSizes.jib.length * -0.7
     );
-    cursor.wheel = 0;
-  } else if (cursor.wheel > 0 && hoistGroup.position.x < -2) {
-    hoistGroup.position.x = Math.min(hoistGroup.position.x + cursor.wheel, -2);
-    cursor.wheel = 0;
+    engine.cursor.wheel = 0;
+  } else if (engine.cursor.wheel > 0 && hoistGroup.position.x < -2) {
+    hoistGroup.position.x = Math.min(
+      hoistGroup.position.x + engine.cursor.wheel,
+      -2
+    );
+    engine.cursor.wheel = 0;
   }
 
   // Render
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.5;
-  renderer.render(scene, camera);
+  // renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  // renderer.toneMappingExposure = 0.5;
+  engine.render();
   window.requestAnimationFrame(tick);
 };
 
