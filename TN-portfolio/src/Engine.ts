@@ -15,7 +15,7 @@ export default class Engine {
     wheel: 0,
   };
   public gui: GUI | undefined;
-  public guiFolders: { sky?: any; lights?: any } = {};
+  public guiFolders: { renderer?: any; sky?: any; lights?: any } = {};
   public physicsParams = {
     gravity: new THREE.Vector3(0, -9.81, 0),
   };
@@ -99,6 +99,14 @@ export default class Engine {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio * 1.5, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.5;
+
+    if (this.config.debug && this.gui) {
+      this.guiFolders.renderer
+        .add(renderer, "toneMappingExposure")
+        .min(0.1)
+        .max(1)
+        .step(0.01);
+    }
 
     return renderer;
   }
@@ -216,15 +224,25 @@ export default class Engine {
     }
   }
 
+  public enableDebug() {
+    this.gui = new GUI();
+    this.guiFolders.renderer = this.gui.addFolder("Renderer");
+    this.guiFolders.sky = this.gui.addFolder("Sky");
+    this.guiFolders.lights = this.gui.addFolder("Lights");
+  }
+
   public setOutdoorLighting(time: string) {}
 
   private getSunlight(): THREE.DirectionalLight {
+    // Position
     const sunlightPosition = { x: 0, y: 0, z: 0 };
     for (let dimension of ["x", "y", "z"]) {
       sunlightPosition[dimension] =
         (this.sky as Sky).material.uniforms["sunPosition"].value[dimension] *
         (this.sky as Sky).scale[dimension];
     }
+
+    // Color
     const [sunR, sunG, sunB] = this.getVectorRGBA(sunlightPosition);
     const sunlightColor = new THREE.Color().setRGB(
       sunR,
@@ -232,6 +250,8 @@ export default class Engine {
       sunB,
       THREE.SRGBColorSpace
     );
+
+    // Directional light
     const sunlight = new THREE.DirectionalLight(sunlightColor, 0.5);
     sunlight.position.set(
       sunlightPosition.x,
@@ -270,7 +290,13 @@ export default class Engine {
     z: number;
   }): Float32Array {
     // Camera
-    const orthoCamera = new THREE.OrthographicCamera();
+    const cameraSize = 0.5;
+    const orthoCamera = new THREE.OrthographicCamera(
+      -cameraSize,
+      cameraSize,
+      cameraSize,
+      -cameraSize
+    );
     orthoCamera.lookAt(x, y, z);
     orthoCamera.translateOnAxis(new THREE.Vector3(0, 0, -1), 20);
     this.scene.add(orthoCamera, new THREE.CameraHelper(orthoCamera));
@@ -296,12 +322,6 @@ export default class Engine {
     this.renderer.readRenderTargetPixels(skyTexture, 10, 10, 1, 1, read);
     console.log(read);
     return read;
-  }
-
-  public enableDebug() {
-    this.gui = new GUI();
-    this.guiFolders.sky = this.gui.addFolder("Sky");
-    this.guiFolders.lights = this.gui.addFolder("Lights");
   }
 
   public get time(): number {

@@ -386,33 +386,7 @@ fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
 });
 
 // SKY
-engine.createSkybox(10, 320, { directionalLight: true, hemisphereLight: true });
-
-// LIGHTS
-// const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-// engine.scene.add(ambientLight);
-
-// if (engine.config.debug) {
-//   const { guiFolders } = engine;
-//   guiFolders.lights
-//     .add(ambientLight, "intensity")
-//     .min(0)
-//     .max(1)
-//     .step(0.01)
-//     .name("ambientLight intensity");
-//   guiFolders.lights.addColor(ambientLight, "color");
-// }
-
-// // ENVIRONMENT MAP
-// const rgbeLoader = new RGBELoader();
-// rgbeLoader.load(
-//   "./textures/environmentMap/quarry_01_1k.hdr",
-//   (environmentMap) => {
-//     environmentMap.mapping = THREE.EquirectangularReflectionMapping;
-//     scene.background = environmentMap;
-//     scene.environment = environmentMap;
-//   }
-// );
+engine.createSkybox(15, 320, { directionalLight: true, hemisphereLight: true });
 
 // Position
 engine.camera.position.z = (craneSizes.mast.length * 2) / 3;
