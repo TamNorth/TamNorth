@@ -53,8 +53,6 @@ engine.attach(document.querySelector("canvas.webgl"));
 if (engine.config.debug) {
   const { gui, guiFolders } = engine;
   guiFolders.positions = gui.addFolder("Positions");
-  guiFolders.sky = gui.addFolder("Sky");
-  guiFolders.lights = gui.addFolder("Lights");
   for (let folder of gui.children) {
     folder.close();
   }
@@ -141,56 +139,6 @@ if (engine.config.debug) {
   testSphere.visible = false;
   engine.scene.add(testSphere);
   engine.gui.add(testSphere, "visible").name("toggle testSphere");
-}
-
-// Sky
-const sky = new Sky();
-sky.scale.setScalar(100);
-engine.scene.add(sky);
-
-const sunPosition = new THREE.Vector3();
-const sunCoords = { elevation: Math.PI * 0.05, azimuth: Math.PI * 1.8 };
-sunPosition.setFromSphericalCoords(
-  1,
-  Math.PI * 0.5 - sunCoords.elevation,
-  sunCoords.azimuth
-);
-
-sky.material.uniforms["turbidity"].value = 10;
-sky.material.uniforms["rayleigh"].value = 3;
-sky.material.uniforms["mieCoefficient"].value = 0.005;
-sky.material.uniforms["mieDirectionalG"].value = 0.7;
-// sky.material.uniforms["sunPosition"].value.set(-0.5, 0.24, 0.95);
-sky.material.uniforms["sunPosition"].value.copy(sunPosition);
-
-if (engine.config.debug) {
-  const { guiFolders } = engine;
-  for (let dimension of ["x", "y", "z"]) {
-    guiFolders.sky
-      .add(sky.material.uniforms["sunPosition"].value, dimension)
-      .min(-1)
-      .max(1)
-      .step(0.01)
-      .name("sunPosition " + dimension);
-  }
-  guiFolders.sky
-    .add(sky.material.uniforms["rayleigh"], "value")
-    .min(0)
-    .max(10)
-    .step(0.1)
-    .name("rayleigh");
-  guiFolders.sky
-    .add(sky.material.uniforms["mieCoefficient"], "value")
-    .min(0)
-    .max(1)
-    .step(0.01)
-    .name("mieCoefficient");
-  guiFolders.sky
-    .add(sky.material.uniforms["mieDirectionalG"], "value")
-    .min(0)
-    .max(1)
-    .step(0.01)
-    .name("mieDirectionalG");
 }
 
 const makeCraneSegment = (numOfSides, material) => {
@@ -437,36 +385,23 @@ fontLoader.load("/fonts/Jaro_Regular.json", function (font) {
   engine.scene.add(text);
 });
 
+// SKY
+engine.createSkybox(10, 320, { directionalLight: true, hemisphereLight: true });
+
 // LIGHTS
+// const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+// engine.scene.add(ambientLight);
 
-const sunlight = new THREE.DirectionalLight(0xffffff, 3);
-sunlight.position.x =
-  sky.material.uniforms["sunPosition"].value.x * sky.scale.x;
-sunlight.position.y =
-  sky.material.uniforms["sunPosition"].value.y * sky.scale.y;
-sunlight.position.z =
-  sky.material.uniforms["sunPosition"].value.z * sky.scale.z;
-engine.scene.add(sunlight);
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-engine.scene.add(ambientLight);
-
-if (engine.config.debug) {
-  const { guiFolders } = engine;
-  guiFolders.lights
-    .add(sunlight, "intensity")
-    .min(0)
-    .max(3)
-    .step(0.1)
-    .name("sunlight intensity");
-  guiFolders.lights.addColor(sunlight, "color");
-  guiFolders.lights
-    .add(ambientLight, "intensity")
-    .min(0)
-    .max(1)
-    .step(0.01)
-    .name("ambientLight intensity");
-  guiFolders.lights.addColor(ambientLight, "color");
-}
+// if (engine.config.debug) {
+//   const { guiFolders } = engine;
+//   guiFolders.lights
+//     .add(ambientLight, "intensity")
+//     .min(0)
+//     .max(1)
+//     .step(0.01)
+//     .name("ambientLight intensity");
+//   guiFolders.lights.addColor(ambientLight, "color");
+// }
 
 // // ENVIRONMENT MAP
 // const rgbeLoader = new RGBELoader();
@@ -544,8 +479,6 @@ const tick = () => {
   }
 
   // Render
-  // renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  // renderer.toneMappingExposure = 0.5;
   engine.render();
   window.requestAnimationFrame(tick);
 };
