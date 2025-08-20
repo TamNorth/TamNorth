@@ -299,7 +299,10 @@ export default class Engine {
     );
     orthoCamera.lookAt(x, y, z);
     orthoCamera.translateOnAxis(new THREE.Vector3(0, 0, -1), 20);
-    this.scene.add(orthoCamera, new THREE.CameraHelper(orthoCamera));
+
+    if (this.config.debug) {
+      this.scene.add(orthoCamera, new THREE.CameraHelper(orthoCamera));
+    }
 
     // Render target
     let skyTexture = new THREE.WebGLRenderTarget(
