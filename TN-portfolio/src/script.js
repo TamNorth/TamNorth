@@ -374,8 +374,6 @@ if (engine.config.debug) {
 }
 
 // ANIMATE
-const clock = new THREE.Clock();
-let previousTime = 0;
 const cursorPositionCoefficient = 2;
 const cursorPositionOffset = 0.2;
 const targetPositions = {
@@ -385,9 +383,7 @@ const targetPositions = {
 };
 
 const tick = () => {
-  const elapsedTime = clock.getElapsedTime();
-  const deltaTime = elapsedTime - previousTime;
-  previousTime = elapsedTime;
+  const deltaTime = engine.deltaTime;
 
   // Update controls
   if (controls?.update) {

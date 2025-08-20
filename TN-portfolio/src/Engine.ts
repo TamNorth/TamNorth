@@ -30,7 +30,8 @@ export default class Engine {
   };
 
   private canvas: HTMLElement | undefined;
-  private clock = new THREE.Clock();
+  private clock: THREE.Clock | undefined;
+  private previousTime = 0;
   private sky: Sky | null = null;
   private world?: World;
 
@@ -100,6 +101,8 @@ export default class Engine {
     window.addEventListener("wheel", (event) => {
       this.cursor.wheel = event.deltaY / 238;
     });
+
+    this.clock = new THREE.Clock();
 
     const rapier = (this.rapier = await getRapier());
     this.world = new rapier.World(this.physicsParams.gravity);
@@ -343,7 +346,17 @@ export default class Engine {
   }
 
   public get time(): number {
-    return this.clock.elapsedTime;
+    return this.clock?.getElapsedTime() || 0;
+  }
+
+  public get deltaTime(): number {
+    const timeDelta = this.time - this.previousTime;
+    this.setPreviousTime();
+    return timeDelta;
+  }
+
+  private setPreviousTime() {
+    this.previousTime = this.time;
   }
 
   public render() {
