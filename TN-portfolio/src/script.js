@@ -83,7 +83,7 @@ window.addEventListener("mousemove", (event) => {
   cursor.y = -(event.clientY / sizes.height - 0.5);
 });
 
-let touchPosition = { x: 0, y: 0 };
+const touchPosition = { x: 0, y: 0 };
 window.addEventListener("touchmove", (event) => {
   const deltaX =
     event.changedTouches[0].clientX / sizes.width - touchPosition.x;
