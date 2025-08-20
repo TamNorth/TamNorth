@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MdOutlineVisibility,
   MdOutlineVisibilityOff,
@@ -10,7 +10,23 @@ import HeaderSubmenu from "../elements/HeaderSubmenu";
 
 export default function Header() {
   const [visibility, setVisibility] = useState(false);
+  const [hasTouch, setHasTouch] = useState(false);
   // const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener(
+      "touchstart",
+      function detectTouch() {
+        setHasTouch(true);
+        window.removeEventListener("touchstart", detectTouch);
+      },
+      false
+    );
+  }, []);
+
+  useEffect(() => {
+    setVisibility(hasTouch);
+  }, [hasTouch]);
 
   const buttonSize = 25;
   const buttonPadding = "p-6";
