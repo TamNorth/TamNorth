@@ -74,6 +74,8 @@ if (config.debug) {
 const cursor = {
   x: 0,
   y: 0,
+  touchX: 0,
+  touchY: 0,
   wheel: 0,
 };
 
@@ -83,16 +85,14 @@ window.addEventListener("mousemove", (event) => {
   cursor.y = -(event.clientY / sizes.height - 0.5);
 });
 
-const touchPosition = { x: 0, y: 0 };
 window.addEventListener("touchmove", (event) => {
-  const deltaX =
-    event.changedTouches[0].clientX / sizes.width - touchPosition.x;
+  const deltaX = event.changedTouches[0].clientX / sizes.width - cursor.touchX;
   const deltaY = -(
     event.changedTouches[0].clientY / sizes.height -
-    touchPosition.y
+    cursor.touchY
   );
-  touchPosition.x = event.changedTouches[0].clientX / sizes.width;
-  touchPosition.y = event.changedTouches[0].clientY / sizes.height;
+  cursor.touchX = event.changedTouches[0].clientX / sizes.width;
+  cursor.touchY = event.changedTouches[0].clientY / sizes.height;
   cursor.x = Math.min(Math.max(cursor.x + deltaX, -0.5), 0.5);
   cursor.y = Math.min(Math.max(cursor.y + deltaY, -0.5), 0.5);
 });
@@ -306,7 +306,7 @@ const craneMaterial = new THREE.MeshBasicMaterial({
   color: 0x555555,
   wireframe: true,
 });
-const craneSizes = {
+const craneParams = {
   width: 1,
   wire: {
     width: 0.05,
@@ -326,9 +326,18 @@ const craneSizes = {
     length: 0.2,
     number: 7,
   },
+  hoist: {},
+  speeds: {
+    jibGroup: 2,
+    hoistGroup: 2,
+    cable: 2,
+  },
 };
 
-craneSizes.cable.length = craneSizes.mast.length * 0.9;
+craneParams.cable.length = craneParams.mast.length * 0.9;
+craneParams.hoist.start = (-3 * craneParams.jib.length) / 5;
+craneParams.hoist.min = craneParams.jib.length * -0.7;
+craneParams.hoist.max = -2;
 
 const makeCranePart = (numOfSegments, numOfSides, material) => {
   const segments = [];
@@ -346,8 +355,8 @@ const makeCranePart = (numOfSegments, numOfSides, material) => {
 
 // mast
 const mast = makeCranePart(
-  craneSizes.mast.length / 2,
-  craneSizes.mast.sides,
+  craneParams.mast.length / 2,
+  craneParams.mast.sides,
   paintMaterial
 );
 crane.add(mast);
@@ -355,41 +364,41 @@ crane.add(mast);
 // jib
 const jibGroup = new THREE.Group();
 crane.add(jibGroup);
-jibGroup.position.y = craneSizes.mast.length;
+jibGroup.position.y = craneParams.mast.length;
 
 const jib = makeCranePart(
-  craneSizes.jib.length / 2,
-  craneSizes.jib.sides,
+  craneParams.jib.length / 2,
+  craneParams.jib.sides,
   paintMaterial
 );
 jib.rotation.x = Math.PI / 2;
 jib.rotation.z = Math.PI / 2;
-jib.position.x = craneSizes.jib.length * 0.2;
+jib.position.x = craneParams.jib.length * 0.2;
 jibGroup.add(jib);
 
 const weights = new THREE.Group();
 scene.add(weights);
 
-for (let i = 0; i < craneSizes.weights.number; i++) {
+for (let i = 0; i < craneParams.weights.number; i++) {
   const weight = new THREE.Mesh(
     new THREE.BoxGeometry(
-      craneSizes.weights.length,
-      craneSizes.weights.depth,
-      craneSizes.weights.width
+      craneParams.weights.length,
+      craneParams.weights.depth,
+      craneParams.weights.width
     ),
     concreteMaterial
   );
-  weight.position.x = -i * (craneSizes.weights.length + 0.05);
+  weight.position.x = -i * (craneParams.weights.length + 0.05);
   weights.add(weight);
 }
-weights.position.y = craneSizes.weights.width / 2 - craneSizes.weights.depth;
+weights.position.y = craneParams.weights.width / 2 - craneParams.weights.depth;
 weights.position.x = jib.position.x + 0.7;
 jibGroup.add(weights);
 
 // slewingUnit
 const slewingUnitScale = 1.4;
 const slewingUnit = new THREE.Group();
-slewingUnit.position.y = craneSizes.mast.length - 1;
+slewingUnit.position.y = craneParams.mast.length - 1;
 crane.add(slewingUnit);
 
 const slewingUnitBase = new THREE.Mesh(
@@ -412,7 +421,7 @@ slewingUnit.add(slewingUnitBase, slewingUnitCone);
 
 // Hoist Group
 const hoistGroup = new THREE.Group();
-hoistGroup.position.x = (-3 * craneSizes.jib.length) / 5;
+hoistGroup.position.x = craneParams.hoist.start;
 jibGroup.add(hoistGroup);
 
 // Hook Mesh
@@ -451,9 +460,9 @@ hoistGroup.add(hook);
 const cableGeometry = new THREE.CylinderGeometry(
   0.05,
   0.05,
-  craneSizes.cable.length
+  craneParams.cable.length
 );
-cableGeometry.translate(0, -craneSizes.cable.length / 2, 0);
+cableGeometry.translate(0, -craneParams.cable.length / 2, 0);
 const cable = new THREE.Mesh(cableGeometry, craneMaterial);
 hoistGroup.add(cable);
 
@@ -542,14 +551,14 @@ const camera = new THREE.PerspectiveCamera(
 scene.add(camera);
 
 // Position
-camera.position.z = (craneSizes.mast.length * 2) / 3;
+camera.position.z = (craneParams.mast.length * 2) / 3;
 camera.rotation.x = Math.PI * 0.225;
 
 // Controls
 let controls = {};
 if (config.debug) {
   controls = new OrbitControls(camera, canvas);
-  controls.target.set(0, craneSizes.mast.length / 2 + 1, 0);
+  controls.target.set(0, craneParams.mast.length / 2 + 1, 0);
   controls.update();
   gui.add(controls, "enabled").name("Toggle orbit controls");
 }
@@ -564,11 +573,19 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio * 1.5, 2));
 
 // ANIMATE
 const clock = new THREE.Clock();
+let previousTime = 0;
 const cursorPositionCoefficient = 2;
 const cursorPositionOffset = 0.2;
+const targetPositions = {
+  hoistGroup: craneParams.hoist.start,
+  jibGroup: 0,
+  cableLength: craneParams.cable.length,
+};
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+  const deltaTime = elapsedTime - previousTime;
+  previousTime = elapsedTime;
 
   // Update controls
   if (controls?.update) {
@@ -576,41 +593,54 @@ const tick = () => {
   }
 
   // Update jib
-  jibGroup.rotation.y = cursor.x * Math.PI * 0.6;
+  targetPositions.jibGroup = cursor.x * Math.PI * 0.6;
+  const jibGroupOffset = targetPositions.jibGroup - jibGroup.rotation.y;
+  if (Math.abs(jibGroupOffset) > 0.01) {
+    jibGroup.rotation.y +=
+      jibGroupOffset * deltaTime * craneParams.speeds.jibGroup;
+  }
 
   // Update cable & hook
   cable.geometry.computeBoundingBox();
   const cableLengthCurrent =
     cable.geometry.boundingBox.max.y - cable.geometry.boundingBox.min.y;
+  let cableLengthNew = cableLengthCurrent;
 
   // console.log(
   //   -Math.min(cursor.y - cursorPositionOffset, -0.01) *
   //     cursorPositionCoefficient *
-  //     craneSizes.cable.length
+  //     craneParams.cable.length
   // );
-  const cableLengthNew = Math.min(
+  targetPositions.cableLength = Math.min(
     -Math.min(cursor.y - cursorPositionOffset, -0.01) *
       cursorPositionCoefficient *
-      craneSizes.cable.length,
+      craneParams.cable.length,
     13
   );
+
+  const cableLengthOffset = targetPositions.cableLength - cableLengthCurrent;
+  if (Math.abs(cableLengthOffset) > 0.01) {
+    cableLengthNew += cableLengthOffset * deltaTime * craneParams.speeds.cable;
+  }
 
   cableGeometry.scale(1, cableLengthNew / cableLengthCurrent, 1);
   hook.position.y = -cableLengthNew;
 
-  // Update hoist group position
-  if (
-    cursor.wheel < 0 &&
-    hoistGroup.position.x > craneSizes.jib.length * -0.7
-  ) {
-    hoistGroup.position.x = Math.max(
-      hoistGroup.position.x + cursor.wheel,
-      craneSizes.jib.length * -0.7
+  if (cursor.wheel !== 0) {
+    targetPositions.hoistGroup = Math.min(
+      Math.max(
+        targetPositions.hoistGroup + cursor.wheel,
+        craneParams.hoist.min
+      ),
+      craneParams.hoist.max
     );
     cursor.wheel = 0;
-  } else if (cursor.wheel > 0 && hoistGroup.position.x < -2) {
-    hoistGroup.position.x = Math.min(hoistGroup.position.x + cursor.wheel, -2);
-    cursor.wheel = 0;
+  }
+
+  const hoistGroupOffset = targetPositions.hoistGroup - hoistGroup.position.x;
+  if (Math.abs(hoistGroupOffset) > 0.1) {
+    hoistGroup.position.x +=
+      hoistGroupOffset * deltaTime * craneParams.speeds.hoistGroup;
   }
 
   // Render
