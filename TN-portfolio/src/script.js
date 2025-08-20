@@ -58,54 +58,6 @@ if (engine.config.debug) {
   }
 }
 
-// CURSOR
-const cursor = {
-  x: 0,
-  y: 0,
-  touchX: 0,
-  touchY: 0,
-  wheel: 0,
-};
-
-window.addEventListener("mousemove", (event) => {
-  // console.log("mouse");
-  cursor.x = event.clientX / sizes.width - 0.5;
-  cursor.y = -(event.clientY / sizes.height - 0.5);
-});
-
-window.addEventListener("touchmove", (event) => {
-  const deltaX = event.changedTouches[0].clientX / sizes.width - cursor.touchX;
-  const deltaY = -(
-    event.changedTouches[0].clientY / sizes.height -
-    cursor.touchY
-  );
-  cursor.touchX = event.changedTouches[0].clientX / sizes.width;
-  cursor.touchY = event.changedTouches[0].clientY / sizes.height;
-  cursor.x = Math.min(Math.max(cursor.x + deltaX, -0.5), 0.5);
-  cursor.y = Math.min(Math.max(cursor.y + deltaY, -0.5), 0.5);
-});
-
-window.addEventListener("wheel", (event) => {
-  cursor.wheel = event.deltaY / 238;
-});
-
-// SIZES
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-};
-
-window.addEventListener("resize", () => {
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
-
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(sizes.width, sizes.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-});
-
 // TEXTURES
 
 const textureLoader = new THREE.TextureLoader();
@@ -493,11 +445,6 @@ const tick = () => {
     cable.geometry.boundingBox.max.y - cable.geometry.boundingBox.min.y;
   let cableLengthNew = cableLengthCurrent;
 
-  // console.log(
-  //   -Math.min(cursor.y - cursorPositionOffset, -0.01) *
-  //     cursorPositionCoefficient *
-  //     craneParams.cable.length
-  // );
   targetPositions.cableLength = Math.min(
     -Math.min(engine.cursor.y - cursorPositionOffset, -0.01) *
       cursorPositionCoefficient *
@@ -513,18 +460,21 @@ const tick = () => {
   cableGeometry.scale(1, cableLengthNew / cableLengthCurrent, 1);
   hook.position.y = -cableLengthNew;
 
-  if (cursor.wheel !== 0) {
+  if (engine.cursor.wheel !== 0) {
     targetPositions.hoistGroup = Math.min(
       Math.max(
-        targetPositions.hoistGroup + cursor.wheel,
+        targetPositions.hoistGroup + engine.cursor.wheel,
         craneParams.hoist.min
       ),
       craneParams.hoist.max
     );
-    cursor.wheel = 0;
-  } else if (cursor.wheel > 0 && hoistGroup.position.x < -2) {
-    hoistGroup.position.x = Math.min(hoistGroup.position.x + cursor.wheel, -2);
-    cursor.wheel = 0;
+    engine.cursor.wheel = 0;
+  }
+
+  const hoistGroupOffset = targetPositions.hoistGroup - hoistGroup.position.x;
+  if (Math.abs(hoistGroupOffset) > 0.1) {
+    hoistGroup.position.x +=
+      hoistGroupOffset * deltaTime * craneParams.speeds.hoistGroup;
   }
 
   // Render

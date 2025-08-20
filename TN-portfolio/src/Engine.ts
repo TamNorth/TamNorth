@@ -12,6 +12,8 @@ export default class Engine {
   public readonly cursor = {
     x: 0,
     y: 0,
+    touchX: 0,
+    touchY: 0,
     wheel: 0,
   };
   public gui: GUI | undefined;
@@ -80,6 +82,19 @@ export default class Engine {
     window.addEventListener("mousemove", (event) => {
       this.cursor.x = event.clientX / this.sizes.width - 0.5;
       this.cursor.y = -(event.clientY / this.sizes.height - 0.5);
+    });
+
+    window.addEventListener("touchmove", (event) => {
+      const deltaX =
+        event.changedTouches[0].clientX / this.sizes.width - this.cursor.touchX;
+      const deltaY = -(
+        event.changedTouches[0].clientY / this.sizes.height -
+        this.cursor.touchY
+      );
+      this.cursor.touchX = event.changedTouches[0].clientX / this.sizes.width;
+      this.cursor.touchY = event.changedTouches[0].clientY / this.sizes.height;
+      this.cursor.x = Math.min(Math.max(this.cursor.x + deltaX, -0.5), 0.5);
+      this.cursor.y = Math.min(Math.max(this.cursor.y + deltaY, -0.5), 0.5);
     });
 
     window.addEventListener("wheel", (event) => {
