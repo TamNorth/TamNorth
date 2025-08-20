@@ -70,49 +70,41 @@ export default function Header() {
             <HomeButton />
           </li>
           <li>
-            <HeaderSubmenu
-              title="contact"
-              visibility={visibility}
-              buttonStyle={buttonStyle}
-              headerOpacityStyle={headerOpacityStyle}
+            <ul
+              aria-label="External links"
+              className={`*:inline *:ml-3 *:nth-1:ml-0`}
             >
-              <p>Section under construction</p>
-            </HeaderSubmenu>
+              <li>
+                <a href="https://github.com/TamNorth" target="_blank">
+                  <FaGithub
+                    className={`inline mr-1 ${buttonStyle} ${
+                      visibility || headerOpacityStyle
+                    }`}
+                    size={buttonSize}
+                  />
+                </a>
+              </li>
+              <li>
+                <a href="https://linkedin.com/in/t-n-ba5a003b/" target="_blank">
+                  <FaLinkedin
+                    className={`inline mr-1 ${buttonStyle} ${
+                      visibility || headerOpacityStyle
+                    }`}
+                    size={buttonSize}
+                  />
+                </a>
+              </li>
+            </ul>
           </li>
         </ul>
       </nav>
-      <ul
-        aria-label="External links"
-        className={`*:inline *:ml-3 *:nth-1:ml-0`}
-      >
-        <li>
-          <a href="https://github.com/TamNorth" target="_blank">
-            <FaGithub
-              className={`inline mr-1 ${buttonStyle} ${
-                visibility || headerOpacityStyle
-              }`}
-              size={buttonSize}
-            />
-          </a>
-        </li>
-        <li>
-          <a href="https://linkedin.com/in/t-n-ba5a003b/" target="_blank">
-            <FaLinkedin
-              className={`inline mr-1 ${buttonStyle} ${
-                visibility || headerOpacityStyle
-              }`}
-              size={buttonSize}
-            />
-          </a>
-        </li>
-      </ul>
       <button
         type="button"
         aria-label={`toggle header visibility aid ${visibility ? "off" : "on"}`}
         onClick={() => {
           setVisibility(!visibility);
         }}
-        className={`${buttonStyle} ${buttonPadding} bg-radial from-black/20 from-20% to-transparent to-40% bg-size-[${
+        className={`${buttonStyle} ${buttonPadding} col-start-5 bg-radial from-black/20 from-20% to-transparent to-40% bg-size-[${
           Number(buttonSize) * 3
         }px_${Number(buttonSize) * 2}px] bg-center bg-no-repeat`}
       >
