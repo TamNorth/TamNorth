@@ -78,8 +78,21 @@ const cursor = {
 };
 
 window.addEventListener("mousemove", (event) => {
+  console.log("mouse");
   cursor.x = event.clientX / sizes.width - 0.5;
   cursor.y = -(event.clientY / sizes.height - 0.5);
+});
+
+let touchPosition = { x: 0, y: 0 };
+window.addEventListener("touchmove", (event) => {
+  const deltaX =
+    event.changedTouches[0].clientX / sizes.width - touchPosition.x;
+  const deltaY =
+    event.changedTouches[0].clientY / sizes.height - touchPosition.y;
+  touchPosition.x = event.changedTouches[0].clientX / sizes.width;
+  touchPosition.y = event.changedTouches[0].clientY / sizes.height;
+  cursor.x = Math.min(Math.max(cursor.x + deltaX, 0), 1);
+  cursor.y = Math.min(Math.max(cursor.y + deltaY, 0), 1);
 });
 
 window.addEventListener("wheel", (event) => {
