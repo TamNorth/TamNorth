@@ -61,7 +61,6 @@
 		gap: 2rem;
 		padding-bottom: 1rem;
 		color: var(--text-colour-h1);
-		background: var(--background-colour-base);
 	}
 
 	.header-hidden {
