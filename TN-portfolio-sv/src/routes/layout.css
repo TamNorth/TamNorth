@@ -9,19 +9,25 @@
 
 	/* BASE COLOURS */
 	/* day theme */
-	--color-day-grey-1: #000000;
+	--color-day-grey-0: #000000;
+	--color-day-grey-9: #ffffff;
 	/* night theme */
-	--color-night-grey-1: #ff0000;
+	--color-night-grey-0: #ffffff;
+	--color-night-grey-9: #000000;
 }
 
 .day-mode {
 	/* DERIVED COLOURS */
 	/* text */
-	--text-colour-h1: var(--color-day-grey-1)
+	--text-colour-h1: var(--color-day-grey-0);
+	/* background */
+	--background-colour-base: var(--color-day-grey-9);
 }
 
 .night-mode {
 	/* DERIVED COLOURS */
 	/* text */
-	--text-colour-h1: var(--color-night-grey-1)
+	--text-colour-h1: var(--color-night-grey-0);
+	/* background */
+	--background-colour-base: var(--color-night-grey-9);
 }

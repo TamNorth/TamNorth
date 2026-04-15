@@ -5,21 +5,31 @@
 
 	const homeButtonText = '<span>tam </span><span style="font-size: xx-large">N</span><span>orth</span>';
 
+	// HEADER VISIBILITY FADE
 	let visibility = $state(false);
 	let headerClass = $derived(visibility ? '' : 'header-hidden');
-	let theme = $state("day");
+
+	// THEME SELECTION
+	let isNightMode = $state(true);
+	let themeClassNames = ["day-mode", "night-mode"]
+	$effect(() => {
+		document.body.classList.add(themeClassNames[Number(!isNightMode)]); 
+		document.body.classList.remove(themeClassNames[Number(isNightMode)]);
+	})
 </script>
 
-<header class="header {headerClass} {theme}-mode">
+<!-- <svelte:body class:{themeClassNames[Number(!isNightMode)]}/> -->
+
+<header class="header {headerClass}">
 	<nav class="navigation">
-		<a href={resolve('/about')} class="button">About</a>
-		<a href={resolve('/')} aria-label="Tam North homepage" class="button home-button">
+		<a href={resolve('/about')} class="header-button">About</a>
+		<a href={resolve('/')} aria-label="Tam North homepage" class="header-button home-button">
 			{@html homeButtonText}
 		</a>
 		<a href={resolve('/about')}>About</a>
 	</nav>
 	<button
-		class="button"
+		class="header-button"
 		onclick={() => (visibility = !visibility)}
 		aria-label="toggle header visibility aid {visibility ? 'off' : 'on'}"
 	>
@@ -30,21 +40,16 @@
 		{/if}
 	</button>
 	<button
-		class="button"
-		onclick={() => (theme = (theme === "day") ? "night" : "day")}
-		aria-label="toggle theme: {theme}"
+		class="header-button"
+		onclick={() => {isNightMode = !isNightMode}}
+		aria-label="toggle theme}"
 	>
-		{#if theme === "day"}
-			<Icon src={BsMoonFill} />
-		{:else}
-			<Icon src={BsSunFill} />
-		{/if}
+		<Icon src={isNightMode ? BsSunFill : BsMoonFill} />
 	</button>
 </header>
 
 <style>
 	.header {
-		/* background-color: var(--tam-bg-1); */
 		font-family: 'Cinzel Decorative';
 		position: fixed;
 		inset-inline: 0;
@@ -56,6 +61,7 @@
 		gap: 2rem;
 		padding-bottom: 1rem;
 		color: var(--text-colour-h1);
+		background: var(--background-colour-base);
 	}
 
 	.header-hidden {
@@ -76,7 +82,7 @@
 		text-align: center;
 	}
 
-	.button {
+	.header-button {
 		transition: scale 0.5s;
 		cursor: pointer;
 
