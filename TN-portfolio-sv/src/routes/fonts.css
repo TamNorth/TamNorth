@@ -1,0 +1,8 @@
+@font-face {
+	font-family: 'Cinzel Decorative', serif;
+	font-weight: 400;
+	font-style: normal;
+	src: local('Cinzel Decorative')
+		url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&display=swap')
+		format('truetype');
+}

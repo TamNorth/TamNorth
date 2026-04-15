@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+@import './fonts.css';
+@plugin '@tailwindcss/forms';
+:root {
+	/* FONTS */
+	--font-cinzel: 'Cinzel Decorative', serif;
+	--font-montserrat: 'Montserrat', sans-serif;
+	--font-bellefair: 'Bellefair', serif;
+
+	/* BASE COLOURS */
+	/* day theme */
+	--color-day-grey-1: #000000;
+	/* night theme */
+	--color-night-grey-1: #ff0000;
+}
+
+.day-mode {
+	/* DERIVED COLOURS */
+	/* text */
+	--text-colour-h1: var(--color-day-grey-1)
+}
+
+.night-mode {
+	/* DERIVED COLOURS */
+	/* text */
+	--text-colour-h1: var(--color-night-grey-1)
+}
