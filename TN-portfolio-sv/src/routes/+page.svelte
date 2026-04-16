@@ -1,5 +1,5 @@
 <script>
-	import Page from "$lib/Page.svelte";
+	import Page from "$lib/shared/Page.svelte";
 </script>
 
 <Page>
