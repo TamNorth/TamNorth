@@ -16,6 +16,7 @@
 		background-color: var(--background-colour-base);
         height: 100vh;
         width: 100vw;
+        z-index: -1;
     }
 
     .grid {
