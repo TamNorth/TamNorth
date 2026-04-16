@@ -25,7 +25,7 @@
 
 <!-- <svelte:body class:{themeClassNames[Number(!isNightMode)]}/> -->
 
-<header class="header {accessibilityMode ? 'header-hidden' : ''}">
+<header class="header {accessibilityMode ? '' : 'header-hidden'}">
 	<!-- NAVIGATION -->
 	<nav class="navigation">
 		<!-- <a href={resolve('/about')} class="header-button">About</a> -->
