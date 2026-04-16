@@ -1,7 +1,8 @@
 <script>
-	import Page from "$lib/shared/Page.svelte";
+	import Card from "$lib/shared/Card.svelte";
+    import Page from "$lib/shared/Page.svelte";
 </script>
 
 <Page>
-    <h1>Welcome to your library project</h1>
+    <Card>Welcome to my website</Card>
 </Page>

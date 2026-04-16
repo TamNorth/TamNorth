@@ -66,7 +66,6 @@
 		gap: var(--gap-spacing);
 		/* bottom-padding to increase header hover detection area */
 		padding: 0 var(--gap-spacing) var(--gap-spacing);
-		color: var(--text-colour-h1);
 		z-index: 1;
 	}
 

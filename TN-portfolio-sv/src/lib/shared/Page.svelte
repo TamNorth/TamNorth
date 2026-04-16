@@ -16,11 +16,6 @@
 		background-color: var(--background-colour-base);
         height: 100vh;
         width: 100vw;
-        color: var(--text-colour-base);
-
-        h1 {
-            color: var(--text-colour-h1);
-        }
     }
 
     .grid {

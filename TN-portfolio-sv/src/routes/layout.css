@@ -26,6 +26,15 @@
 
 	--header-height: calc(var(--base-spacing) * 3);
 	--page-width: calc(var(--base-text-size) * 50);
+
+	/* STYLES */
+	body {
+		color: var(--text-colour-base);
+
+		h1 {
+			color: var(--text-colour-h1);
+		}
+	}
 }
 
 .day-mode {
