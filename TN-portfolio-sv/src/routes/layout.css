@@ -9,25 +9,41 @@
 
 	/* BASE COLOURS */
 	/* day theme */
-	--color-day-grey-0: #000000;
-	--color-day-grey-9: #ffffff;
+	--colour-day-grey-0: #000000;
+	--colour-day-grey-8: #aaaaaa;
+	--colour-day-grey-9: #bbbbbb;
 	/* night theme */
-	--color-night-grey-0: #ffffff;
-	--color-night-grey-9: #000000;
+	--colour-night-grey-0: #bbbbbb;
+	--colour-night-grey-8: #111111;
+	--colour-night-grey-9: #000000;
+
+	/* NUMBERS */
+	--gr: 1.618;
+
+	/* SPACING */
+	--base-spacing: 1rem;
+	--base-text-size: calc(var(--base-spacing) * 1);
+
+	--header-height: calc(var(--base-spacing) * 3);
+	--page-width: calc(var(--base-text-size) * 50);
 }
 
 .day-mode {
-	/* DERIVED COLOURS */
+	/* COLOURS */
 	/* text */
-	--text-colour-h1: var(--color-day-grey-0);
+	--text-colour-h1: var(--colour-day-grey-0);
+	--text-colour-base: var(--colour-day-grey-0);
 	/* background */
-	--background-colour-base: var(--color-day-grey-9);
+	--background-colour-base: var(--colour-day-grey-9);
+	--background-colour-card: var(--colour-day-grey-8);
 }
 
 .night-mode {
-	/* DERIVED COLOURS */
+	/* COLOURS */
 	/* text */
-	--text-colour-h1: var(--color-night-grey-0);
+	--text-colour-h1: var(--colour-night-grey-0);
+	--text-colour-base: var(--colour-night-grey-0);
 	/* background */
-	--background-colour-base: var(--color-night-grey-9);
+	--background-colour-base: var(--colour-night-grey-9);
+	--background-colour-card: var(--colour-night-grey-8);
 }

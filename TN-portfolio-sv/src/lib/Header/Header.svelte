@@ -54,7 +54,7 @@
 
 <style>
 	.header {
-		--gap-spacing: 1rem;
+		--gap-spacing: var(--base-spacing);
 		font-family: 'Cinzel Decorative';
 		position: fixed;
 		inset-inline: 0;
@@ -64,8 +64,10 @@
 		align-items: center;
 		justify-items: center;
 		gap: var(--gap-spacing);
-		padding: 0 var(--gap-spacing) 0;
+		/* bottom-padding to increase header hover detection area */
+		padding: 0 var(--gap-spacing) var(--gap-spacing);
 		color: var(--text-colour-h1);
+		z-index: 1;
 	}
 
 	.header-hidden {
@@ -79,10 +81,7 @@
 
 	.navigation {
 		grid-column: 2;
-		/* display: grid;
-		grid-template-columns: 1fr auto 1fr; */
 		align-items: center;
-		/* gap: 2rem; */
 		text-align: center;
 	}
 
