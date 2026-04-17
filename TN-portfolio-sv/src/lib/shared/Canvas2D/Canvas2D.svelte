@@ -1,12 +1,12 @@
 <script lang="js">
 	import { onMount } from 'svelte';
 
-	let { canvasFn = () => {}, height = "", width = "", ...attrs } = $props();
+	let { canvasFn = () => {}, height = '', width = '', ...attrs } = $props();
 
-    const style = `
+	const style = `
         --height: ${height || '100vh'}; 
         --width: ${width || '100vw'};
-    `
+    `;
 	let canvas = $state();
 	let mousePosition = $state({ x: 0, y: 0 });
 	const handleMouseMove = (e) => {
@@ -19,8 +19,14 @@
 	});
 </script>
 
-<svelte-css-wrapper {style} >
-	<canvas bind:this={canvas} onmousemove={handleMouseMove} {...attrs}></canvas>
+<svelte-css-wrapper {style}>
+	<canvas
+		bind:this={canvas}
+		height={height || window.innerHeight}
+		width={width || window.innerWidth}
+		onmousemove={handleMouseMove}
+		{...attrs}
+	></canvas>
 </svelte-css-wrapper>
 
 <style>
