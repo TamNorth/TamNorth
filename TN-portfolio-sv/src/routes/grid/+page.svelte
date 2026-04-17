@@ -5,7 +5,7 @@
 	const rowHeightScaleFactor = Math.sin(Math.PI * (2 / 3));
 	const fillWithCount = (array: number[], start: number) => array.fill(0).map((_, i) => i + start);
 
-	function getHexTriangles(size: number) {
+	function getHexgridTriangles(size: number) {
 		const getStart = (rowNumber: number) => Math.abs(rowNumber) - (2 * size) + 0.5;
 		const numOfRows = size * 2;
 		const rowNums = fillWithCount(Array(numOfRows), -size)
@@ -51,6 +51,8 @@
 				triangleIndex = 0;
 			}
 
+			const id = [Math.sign(y) > 0 ? y + 0.5 : y - 0.5, x]
+
 			// check if triangle should point up or down
 			const isOdd = !!(triangleIndex % 2);
 			const isUp = Math.sign(y) < 0 ? isOdd : !isOdd;
@@ -58,11 +60,12 @@
 			const triangle = drawTriangle(isUp, { x, y });
 
 			triangleIndex++;
-			return [...acc, triangle];
+
+			return [...acc, {id, vertices: triangle}];
 		}, []);
 	}
 
-	console.log(getHexTriangles(2));
+	console.log(getHexgridTriangles(2).map(({id}) => id));
 
 	function paintShapes(canvas, shapes, colour = 'green') {
 		const origin = { x: canvas.width / 2, y: canvas.height / 2 };
@@ -70,7 +73,7 @@
 		const ctx = canvas.getContext('2d');
 		ctx.strokeStyle = colour;
 		const gridScale = shapes.reduce((acc, shape) => {
-			const y1 = shape[0].y;
+			const y1 = shape.vertices[0].y;
 			return y1 > acc ? y1 : acc;
 		}, 0);
 		const scaleFactor = canvas.height / 2 / (gridScale + 1);
@@ -79,7 +82,7 @@
 			ctx.beginPath();
 			let firstVertex = null;
 
-			shape.forEach((coord) => {
+			shape.vertices.forEach((coord) => {
 				const xCoord = (coord.x * scaleFactor) + origin.x;
 				const yCoord = (coord.y * scaleFactor) + origin.y;
 				if (!firstVertex) {
@@ -99,4 +102,4 @@
 </script>
 
 <Page></Page>
-<Canvas2D canvasFn={(canvas) => paintShapes(canvas, getHexTriangles(5), 'red')} />
+<Canvas2D canvasFn={(canvas) => paintShapes(canvas, getHexgridTriangles(2), 'red')} />
