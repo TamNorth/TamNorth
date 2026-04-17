@@ -3,25 +3,30 @@
 	import { Icon } from 'svelte-icons-pack';
 	import { BsEyeFill, BsEyeSlashFill, BsMoonFill, BsSunFill } from 'svelte-icons-pack/bs';
 
-	const homeButtonText = '<span>tam </span><span style="font-size: xx-large">N</span><span>orth</span>';
+	const homeButtonText =
+		'<span>tam </span><span style="font-size: xx-large">N</span><span>orth</span>';
 
 	// HEADER OPACITY FADE
 	let accessibilityMode = $state(false);
 
 	// THEME SELECTION
 	let isNightMode = $state(true);
-	let themeClassNames = ["day-mode", "night-mode"]
+	let themeClassNames = ['day-mode', 'night-mode'];
 	$effect(() => {
-		document.body.classList.add(themeClassNames[Number(isNightMode)]); 
+		document.body.classList.add(themeClassNames[Number(isNightMode)]);
 		document.body.classList.remove(themeClassNames[Number(!isNightMode)]);
-	})
+	});
 
 	// TOUCH HANDLING
-	let firstTouchDetection = $state(true)
+	let firstTouchDetection = $state(true);
 </script>
 
-<svelte:window ontouchstart={() => {
-	if (firstTouchDetection) accessibilityMode = true; firstTouchDetection = false}}/>
+<svelte:window
+	ontouchstart={() => {
+		if (firstTouchDetection) accessibilityMode = true;
+		firstTouchDetection = false;
+	}}
+/>
 
 <!-- <svelte:body class:{themeClassNames[Number(!isNightMode)]}/> -->
 
@@ -34,7 +39,7 @@
 		</a>
 	</nav>
 	<!-- CONTROLS -->
-	 <div class="header-controls">
+	<div class="header-controls">
 		<button
 			class="header-button"
 			onclick={() => (accessibilityMode = !accessibilityMode)}
@@ -44,7 +49,9 @@
 		</button>
 		<button
 			class="header-button"
-			onclick={() => {isNightMode = !isNightMode}}
+			onclick={() => {
+				isNightMode = !isNightMode;
+			}}
 			aria-label="toggle theme"
 		>
 			<Icon src={isNightMode ? BsSunFill : BsMoonFill} />

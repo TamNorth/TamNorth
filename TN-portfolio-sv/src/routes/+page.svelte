@@ -1,8 +1,8 @@
 <script>
-	import Card from "$lib/shared/Card.svelte";
-    import Page from "$lib/shared/Page.svelte";
+	import Card from '$lib/shared/Card.svelte';
+	import Page from '$lib/shared/Page.svelte';
 </script>
 
 <Page>
-    <Card>Welcome to my website</Card>
+	<Card>Welcome to my website</Card>
 </Page>
