@@ -1,4 +1,37 @@
-export function rainbowMist(canvas) {
+export function paintShapes(canvas, shapes, colour = 'green') {
+		const origin = { x: canvas.width / 2, y: canvas.height / 2 };
+
+		const ctx = canvas.getContext('2d');
+		ctx.strokeStyle = colour;
+		const gridScale = shapes.reduce((acc, shape) => {
+			const y1 = shape[0].y;
+			return y1 > acc ? y1 : acc;
+		}, 0);
+		const scaleFactor = canvas.height / 2 / (gridScale + 1);
+
+		function outlineShape(shape) {
+			ctx.beginPath();
+			let firstVertex = null;
+
+			shape.forEach((coord) => {
+				const xCoord = (coord.x * scaleFactor) + origin.x;
+				const yCoord = (coord.y * scaleFactor) + origin.y;
+				if (!firstVertex) {
+					ctx.moveTo(xCoord, yCoord);
+					firstVertex = { x: xCoord, y: yCoord };
+				} else {
+					ctx.lineTo(xCoord, yCoord);
+				}
+			});
+
+			ctx.lineTo(firstVertex.x, firstVertex.y);
+			ctx.stroke();
+		}
+
+		shapes.forEach(outlineShape);
+	}
+    
+    export function rainbowMist(canvas) {
 	const ctx = canvas.getContext('2d');
 	let frame;
 

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
+	import { paintShapes } from '$lib/shared/Canvas2D/utils.js';
+
+	const GRID_SIZE = 3
 
 	const rowHeightScaleFactor = Math.sin(Math.PI * (2 / 3));
 	const fillWithCount = (array: number[], start: number) => array.fill(0).map((_, i) => i + start);
@@ -65,41 +68,10 @@
 		}, []);
 	}
 
-	console.log(getHexgridTriangles(2).map(({id}) => id));
+	console.log(getHexgridTriangles(GRID_SIZE).map(({id}) => id));
 
-	function paintShapes(canvas, shapes, colour = 'green') {
-		const origin = { x: canvas.width / 2, y: canvas.height / 2 };
-
-		const ctx = canvas.getContext('2d');
-		ctx.strokeStyle = colour;
-		const gridScale = shapes.reduce((acc, shape) => {
-			const y1 = shape.vertices[0].y;
-			return y1 > acc ? y1 : acc;
-		}, 0);
-		const scaleFactor = canvas.height / 2 / (gridScale + 1);
-
-		function paintVertex(shape) {
-			ctx.beginPath();
-			let firstVertex = null;
-
-			shape.vertices.forEach((coord) => {
-				const xCoord = (coord.x * scaleFactor) + origin.x;
-				const yCoord = (coord.y * scaleFactor) + origin.y;
-				if (!firstVertex) {
-					ctx.moveTo(xCoord, yCoord);
-					firstVertex = { x: xCoord, y: yCoord };
-				} else {
-					ctx.lineTo(xCoord, yCoord);
-				}
-			});
-
-			ctx.lineTo(firstVertex.x, firstVertex.y);
-			ctx.stroke();
-		}
-
-		shapes.forEach(paintVertex);
-	}
+	const shapes = getHexgridTriangles(GRID_SIZE).map(({vertices}) => vertices)
 </script>
 
 <Page></Page>
-<Canvas2D canvasFn={(canvas) => paintShapes(canvas, getHexgridTriangles(2), 'red')} />
+<Canvas2D canvasFn={(canvas) => paintShapes(canvas, shapes, 'red')} />
