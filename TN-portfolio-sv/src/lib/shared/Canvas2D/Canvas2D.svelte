@@ -1,6 +1,4 @@
 <script lang="js">
-	import { onMount } from 'svelte';
-
 	let { canvasFn = () => {}, height = '', width = '', ...attrs } = $props();
 
 	const style = `
@@ -22,21 +20,21 @@
 		mouseClick.y = e.clientY;
 	};
 
-	// let canvasHeight = $state()
-	// let canvasWidth = $state()
+	let w = $state(0);
+	let h = $state(0);
 
-	onMount(() => {
-		canvasFn({ canvas, mousePosition, mouseClick });
-		// canvasHeight = window.innerHeight
-		// canvasWidth = window.innerWidth
+	$effect(() => {
+		canvasFn({ canvas, mousePosition, mouseClick, w, h });
 	});
 </script>
 
 <svelte-css-wrapper {style}>
 	<canvas
 		bind:this={canvas}
-		height={1000}
-		width={2000}
+		bind:clientWidth={w}
+		bind:clientHeight={h}
+		height={h}
+		width={w}
 		onmousemove={handleMouseMove}
 		onclick={handleMouseClick}
 	></canvas>
