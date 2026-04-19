@@ -4,5 +4,7 @@
 </script>
 
 <Page>
-	<Card>Welcome to my website</Card>
+	<Card>
+		<a href="/grid">Grid</a>
+	</Card>
 </Page>
