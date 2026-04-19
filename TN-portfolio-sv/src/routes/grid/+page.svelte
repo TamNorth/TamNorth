@@ -3,10 +3,12 @@
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
 	import { paintShapes } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
-	import Button from '$lib/shared/Button.svelte';
 
-	const INITIAL_SCALE = 50;
+	const INITIAL_SCALE = 300;
+	const DEFAULT_GRID_SIZE = 4;
 	const SPRING_LENGTH = 0.2;
+	const SPRING_STRENGTH = 0.2;
+	const RELAXATION_PASSES = 5;
 
 	const fillWithCount = (array: number[], start: number = 0) =>
 		array.fill(0).map((_, i) => i + start);
@@ -246,7 +248,7 @@
 	}
 
 	function relaxGrid({ vertices, edges }, size, stepNum = 1) {
-		const SPRING_STRENGTH = 0.2;
+		const springStrength = SPRING_STRENGTH;
 
 		const newVertices = structuredClone(vertices);
 
@@ -260,8 +262,8 @@
 				const isBoundaryVertex = yIndex === size || xIndex + yIndex === 2 * size;
 
 				if (!isBoundaryVertex) {
-					newVertices[vertex].x += vertexForces[vertex].x * SPRING_STRENGTH;
-					newVertices[vertex].y += vertexForces[vertex].y * SPRING_STRENGTH;
+					newVertices[vertex].x += vertexForces[vertex].x * springStrength;
+					newVertices[vertex].y += vertexForces[vertex].y * springStrength;
 				}
 			}
 		}
@@ -279,7 +281,11 @@
 		const { vertices, edges } = interpolate(mergedShapes);
 
 		const normalisedVertices = normaliseGrid(vertices);
-		const relaxedVertices = relaxGrid({ vertices: normalisedVertices, edges }, gridSize, 5);
+		const relaxedVertices = relaxGrid(
+			{ vertices: normalisedVertices, edges },
+			gridSize,
+			RELAXATION_PASSES
+		);
 
 		const formattedEdges = getEdgeCoords({ vertices: relaxedVertices, edges });
 
@@ -291,15 +297,17 @@
 		// console.log(vertices);
 	}
 
-	const { vertices, edges } = makeHex(6);
+	let gridSize = $state(DEFAULT_GRID_SIZE);
+
+	const { vertices, edges } = $derived(makeHex(gridSize));
 
 	const canvasFn = ({ canvas, mouseClick, w, h }) => {
-		const ctx = canvas.getContext('2d');
+		const context = canvas.getContext('2d');
 		const origin = $state({ x: w / 2, y: h / 2 });
 
 		$effect(() => {
-			ctx.clearRect(0, 0, w, h);
-			paintShapes({ context: ctx, origin, shapes: edges, scale });
+			context.clearRect(0, 0, w, h);
+			paintShapes({ context, origin, shapes: edges, scale: scale / gridSize });
 		});
 
 		$effect(() => {
@@ -318,8 +326,10 @@
 <Canvas2D {canvasFn} />
 <div class="toolbar">
 	<Tile>
-		<Button onClick={() => handleZoom('out')}>-</Button>
-		<Button onClick={() => handleZoom('in')}>+</Button>
+		<label>
+			<input type="range" bind:value={gridSize} min="1" max="10" />
+			Grid size: {gridSize}
+		</label>
 	</Tile>
 </div>
 

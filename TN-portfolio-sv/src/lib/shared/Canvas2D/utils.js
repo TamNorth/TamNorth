@@ -1,4 +1,4 @@
-export function paintShapes({context, origin, shapes, scale, colour}) {
+export function paintShapes({context, origin, shapes, scale = 1, colour}) {
 	const defaultColour = 'red';
 
 	shapes.forEach(({ vertices, colour: shapeColour }) => {
