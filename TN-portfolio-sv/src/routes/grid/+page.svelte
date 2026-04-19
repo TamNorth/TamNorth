@@ -5,7 +5,6 @@
 
 	const GRID_SIZE = 4
 
-	const rowHeightScaleFactor = Math.sin(Math.PI * (2 / 3));
 	const fillWithCount = (array: number[], start: number = 0) => array.fill(0).map((_, i) => i + start);
 
 	function getHexgridTriangles(size: number) {
@@ -68,7 +67,7 @@
 		}, []);
 	}
 
-	function selectMergingPartners(shapes, _remainingIndices: number[] = [], _mergedShapes = []) {
+	function mergeShapes(shapes, _remainingIndices: number[] = [], _mergedShapes = []) {
 		// const shapesCopy = structuredClone(shapes)
 		_remainingIndices = _remainingIndices.length ? _remainingIndices : fillWithCount(Array(shapes.length))
 		const selectorNum = Math.floor(Math.random() * _remainingIndices.length)
@@ -95,7 +94,7 @@
 
 		if (!t2) {
 			const newRemainingIndices = _remainingIndices.filter(index => index != t1Index)
-			return newRemainingIndices.length ? selectMergingPartners(shapes, newRemainingIndices, [..._mergedShapes, t1.vertices]) : [..._mergedShapes, t1.vertices]
+			return newRemainingIndices.length ? mergeShapes(shapes, newRemainingIndices, [..._mergedShapes, t1.vertices]) : [..._mergedShapes, t1.vertices]
 		}
 
 		const [t1v1, t1v2, t1v3] = t1.vertices
@@ -120,20 +119,132 @@
 
 		const newRemainingIndices = _remainingIndices.filter(index => ![t1Index, t2Index].includes(index))
 
-		return newRemainingIndices.length ? selectMergingPartners(shapes, newRemainingIndices, [..._mergedShapes, mergedVertices]) : [..._mergedShapes, mergedVertices]
+		return newRemainingIndices.length ? mergeShapes(shapes, newRemainingIndices, [..._mergedShapes, mergedVertices]) : [..._mergedShapes, mergedVertices]
 	}
 
-	function mergeShapes(shape1, shape2) {
+	function interpolate(shapes) {
+		const {vertices, edges} = shapes.reduce((acc, shape) => {
+			const {mX, mY} = shape.reduce((acc, {x, y}) => {
+				acc.mX += x / shape.length
+				acc.mY += y / shape.length
+				return acc
+			}, {mX: 0, mY: 0})
+			const middleVertexId = `${mX}/${mY}`
+			acc.vertices[middleVertexId] = {x: mX, y: mY}
+
+			for (let i0 = 0; i0 < shape.length; i0++) {
+				const i2 = (i0 + 1) % shape.length
+				const {x: x0, y: y0} = shape[i0]
+				const {x: x2, y: y2} = shape[i2]
+				const {x1, y1} = {
+					x1: (x0 + x2) / 2,
+					y1: (y0 + y2) / 2,
+				}
+				
+				const vertex0Id = `${x0}/${y0}`
+				const vertex1Id = `${x1}/${y1}`
+				const vertex2Id = `${x2}/${y2}`
+
+				if (!acc.vertices[vertex0Id]) acc.vertices[vertex0Id] = {x: x0, y: y0}
+				if (!acc.vertices[vertex1Id]) acc.vertices[vertex1Id] = {x: x1, y: y1}
+
+				const edge0Id = `${vertex0Id}//${vertex1Id}`
+				const edge0AltId = `${vertex1Id}//${vertex0Id}`
+				const edge1Id = `${vertex1Id}//${vertex2Id}`
+				const edge1AltId = `${vertex2Id}//${vertex1Id}`
+				const edge2Id = `${vertex1Id}//${middleVertexId}`
+
+				if (!acc.edges[edge0Id] && !acc.edges[edge0AltId]) acc.edges[edge0Id] = [vertex0Id, vertex1Id]
+				if (!acc.edges[edge1Id] && !acc.edges[edge1AltId]) acc.edges[edge1Id] = [vertex1Id, vertex2Id]
+				acc.edges[edge2Id] = [vertex1Id, middleVertexId]
+			}
+
+			return acc
+		}, {vertices: {}, edges: {}})
+
+		return {vertices, edges: Object.values(edges)}
+	}
+
+	function normaliseGrid(vertices) {
+		const xScalingFactor = 0.5
+		const yScalingFactor = Math.sin(Math.PI * (2 / 3));
+
+		let newVertices = {}
+
+		for (let vertex in vertices) {
+			newVertices[vertex] = {
+				x: vertices[vertex].x * xScalingFactor,
+				y: vertices[vertex].y * yScalingFactor,
+			}
+		}
+		
+		return newVertices
+	}
+
+	function getVertexForces({vertices, edges}) {
+		const SPRING_LENGTH = 0.2
+
+		const unresolvedForces = edges.reduce((acc, [v1, v2]) => {
+			const [end1, end2] = [vertices[v1], vertices[v2]]
+			const dY = end1.y - end2.y
+			const dX = end1.x - end2.x
+
+			const bearing = Math.atan(dY / dX)
+			const length = Math.sqrt(Math.pow(dY, 2) + Math.pow(dX, 2))
+			const tension = length - SPRING_LENGTH
+
+			const tensionY = tension * Math.sin(bearing)
+			const tensionX = tension * Math.cos(bearing)
+			
+			if (!acc[v1]) acc[v1] = []
+			if (!acc[v2]) acc[v2] = []
+
+			acc[v1] = [...acc[v1], {tensionY, tensionX}]
+			acc[v2] = [...acc[v2], {tensionY: -tensionY, tensionX: -tensionX}]
+			return acc
+		}, {})
+
+		function resolveForces(vertex) {
+			return vertex.reduce((acc, {tensionY, tensionX}) => ({
+				y: acc.y + tensionY,
+				x: acc.x + tensionX,
+			}), {x: 0, y: 0})
+		}
+		
+		return Object.entries(unresolvedForces).reduce((acc, [id, vertex]) => ({...acc, [id]: resolveForces(vertex)}), {})
+	}
+
+	function getEdgeCoords({vertices, edges}) {
+		return edges.map(([v1, v2]) => ({vertices: [vertices[v1], vertices[v2]]}))
 	}
 
 	const shapes = getHexgridTriangles(GRID_SIZE)
-	const shapesVertices = shapes.map(({vertices}) => vertices)
 
-	const mergedShapes = selectMergingPartners(shapes)
-	console.log(mergedShapes)
+	const mergedShapes = mergeShapes(shapes)
+	const {vertices, edges} = interpolate(mergedShapes)
+
+	const normalisedVertices = normaliseGrid(vertices)
+	const formattedEdges = getEdgeCoords({vertices: normalisedVertices, edges})
+
+	const verticesAndEdges = {
+		vertices: normalisedVertices, 
+		edges: formattedEdges,
+	}
+	// getVertexForces(verticesAndEdges)
+
+
+	console.log(getVertexForces({vertices: normalisedVertices, edges}))
+	// console.log(edgeCoords)
+	// const testShapes = [[
+	// 	{x: 0, y: 0},
+	// 	{x: 1, y: 0},
+	// 	{x: 1, y: 1},
+	// 	{x: 0, y: 1},
+	// ]]
+	// console.log(getEdgeCoords(interpolate(testShapes)))
 
 	const canvasFn = (canvas) => {
-		paintShapes(canvas, mergedShapes, undefined);
+		paintShapes(canvas, verticesAndEdges.edges, undefined);
 	}
 </script>
 
