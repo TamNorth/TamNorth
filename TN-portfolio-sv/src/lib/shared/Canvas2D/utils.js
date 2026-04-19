@@ -1,27 +1,36 @@
-export function paintShapes(canvas, shapes, colour = 'green') {
+export function paintShapes(canvas, shapes, colour) {
 		const origin = { x: canvas.width / 2, y: canvas.height / 2 };
 
 		const ctx = canvas.getContext('2d');
-		ctx.strokeStyle = colour;
+		const defaultColour = "red"
+		// const colours = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "white", "brown", "grey"]
+		// let colourIndex = 0
+
 		const gridScale = shapes.reduce((acc, shape) => {
-			const y1 = shape[0].y;
+			const y1 = shape.vertices[0].y;
 			return y1 > acc ? y1 : acc;
 		}, 0);
 		const scaleFactor = canvas.height / 2 / (gridScale + 1);
 
-		function outlineShape(shape) {
+		function outlineShape({vertices, colour: shapeColour}) {
+			ctx.strokeStyle = colour ?? shapeColour ?? defaultColour;
+
 			ctx.beginPath();
 			let firstVertex = null;
 
-			shape.forEach((coord) => {
-				const xCoord = (coord.x * scaleFactor) + origin.x;
-				const yCoord = (coord.y * scaleFactor) + origin.y;
+			vertices.forEach((coord) => {
+				const xCoord = (coord?.x * scaleFactor) + origin.x;
+				const yCoord = (coord?.y * scaleFactor) + origin.y;
+				if (!xCoord || !yCoord) return
+
 				if (!firstVertex) {
 					ctx.moveTo(xCoord, yCoord);
 					firstVertex = { x: xCoord, y: yCoord };
 				} else {
 					ctx.lineTo(xCoord, yCoord);
 				}
+				// colourIndex = colourIndex + 1 % colours.length;
+				// ctx.strokeStyle = colour ?? colours[colourIndex]
 			});
 
 			ctx.lineTo(firstVertex.x, firstVertex.y);
