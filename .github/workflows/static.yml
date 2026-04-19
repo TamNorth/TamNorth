@@ -35,7 +35,7 @@ jobs:
         run: npm install
         working-directory: "./TN-portfolio"
       - name: build app
-        run: npm run build
+        run: npm run vite build && npm run prepack
         working-directory: "./TN-portfolio"
       - name: Setup Pages
         uses: actions/configure-pages@v5
