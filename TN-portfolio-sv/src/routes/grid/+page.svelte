@@ -2,8 +2,11 @@
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
 	import { paintShapes } from '$lib/shared/Canvas2D/utils.js';
+	import Tile from '$lib/shared/Tile.svelte';
+	import Button from '$lib/shared/Button.svelte';
 
-	const GRID_SIZE = 10;
+	const INITIAL_SCALE = 50;
+	const SPRING_LENGTH = 0.2;
 
 	const fillWithCount = (array: number[], start: number = 0) =>
 		array.fill(0).map((_, i) => i + start);
@@ -201,19 +204,19 @@
 	}
 
 	function getVertexForces({ vertices, edges }) {
-		const SPRING_LENGTH = 0.2;
+		const springLength = SPRING_LENGTH;
 
 		const unresolvedForces = edges.reduce((acc, [v1, v2]) => {
 			const [end1, end2] = [vertices[v1], vertices[v2]];
 			const dY = end1.y - end2.y; // positive if end1 is lower
 			const dX = end1.x - end2.x; // positive if end1 is to the right
-			const rotation1 = Math.sign(dY)
-			const rotation2 = Number(Math.sign(dY) === Math.sign(dX))
-			const totalRotation = rotation1 * rotation2
+			const rotation1 = Math.sign(dY);
+			const rotation2 = Number(Math.sign(dY) === Math.sign(dX));
+			const totalRotation = rotation1 * rotation2;
 
 			const bearing = Math.atan(dY / dX);
 			const length = Math.sqrt(Math.pow(dY, 2) + Math.pow(dX, 2));
-			const tension = length - SPRING_LENGTH;
+			const tension = length - springLength;
 
 			const tensionY = totalRotation * tension * Math.sin(bearing);
 			const tensionX = totalRotation * tension * Math.cos(bearing);
@@ -242,20 +245,6 @@
 		);
 	}
 
-	// console.log(getVertexForces({
-	// 	vertices: {
-	// 		a: {
-	// 			y: 100,
-	// 			x: 100,
-	// 		},
-	// 		b: {
-	// 			y: -100,
-	// 			x: -100,
-	// 		}
-	// 	},
-	// 	edges: [["a", "b"]]
-	// }))
-
 	function relaxGrid({ vertices, edges }, size, stepNum = 1) {
 		const SPRING_STRENGTH = 0.2;
 
@@ -265,12 +254,14 @@
 			const vertexForces = getVertexForces({ vertices: newVertices, edges });
 
 			for (let vertex in newVertices) {
-				const [xIndex, yIndex] = vertex.split('/').map(id => Number(Math.abs(Number(id)).toFixed(1)))
+				const [xIndex, yIndex] = vertex
+					.split('/')
+					.map((id) => Number(Math.abs(Number(id)).toFixed(1)));
 				const isBoundaryVertex = yIndex === size || xIndex + yIndex === 2 * size;
 
 				if (!isBoundaryVertex) {
 					newVertices[vertex].x += vertexForces[vertex].x * SPRING_STRENGTH;
-					newVertices[vertex].y += vertexForces[vertex].y * SPRING_STRENGTH; 
+					newVertices[vertex].y += vertexForces[vertex].y * SPRING_STRENGTH;
 				}
 			}
 		}
@@ -281,20 +272,63 @@
 		return edges.map(([v1, v2]) => ({ vertices: [vertices[v1], vertices[v2]] }));
 	}
 
-	const shapes = getHexgridTriangles(GRID_SIZE);
+	function makeHex(gridSize) {
+		const shapes = getHexgridTriangles(gridSize);
 
-	const mergedShapes = mergeShapes(shapes);
-	const { vertices, edges } = interpolate(mergedShapes);
+		const mergedShapes = mergeShapes(shapes);
+		const { vertices, edges } = interpolate(mergedShapes);
 
-	const normalisedVertices = normaliseGrid(vertices);
-	const relaxedVertices = relaxGrid({ vertices: normalisedVertices, edges }, GRID_SIZE, 5);
+		const normalisedVertices = normaliseGrid(vertices);
+		const relaxedVertices = relaxGrid({ vertices: normalisedVertices, edges }, gridSize, 5);
 
-	const formattedEdges = getEdgeCoords({ vertices: relaxedVertices, edges });
+		const formattedEdges = getEdgeCoords({ vertices: relaxedVertices, edges });
 
-	const canvasFn = (canvas) => {
-		paintShapes(canvas, formattedEdges, undefined);
+		return { vertices: relaxedVertices, edges: formattedEdges };
+	}
+
+	function dropHex(mouseClick, vertices) {
+		// console.log(mouseClick.x);
+		// console.log(vertices);
+	}
+
+	const { vertices, edges } = makeHex(6);
+
+	const canvasFn = ({ canvas, mouseClick, w, h }) => {
+		const ctx = canvas.getContext('2d');
+		const origin = $state({ x: w / 2, y: h / 2 });
+
+		$effect(() => {
+			ctx.clearRect(0, 0, w, h);
+			paintShapes({ context: ctx, origin, shapes: edges, scale });
+		});
+
+		$effect(() => {
+			dropHex(mouseClick, vertices);
+		});
 	};
+
+	let scale = $state(INITIAL_SCALE);
+
+	function handleZoom(direction) {
+		scale *= direction === 'in' ? 1.1 : 0.9;
+	}
 </script>
 
 <Page></Page>
 <Canvas2D {canvasFn} />
+<div class="toolbar">
+	<Tile>
+		<Button onClick={() => handleZoom('out')}>-</Button>
+		<Button onClick={() => handleZoom('in')}>+</Button>
+	</Tile>
+</div>
+
+<style>
+	.toolbar {
+		position: fixed;
+		right: 0;
+		margin: var(--header-height) var(--base-spacing) 0;
+		display: flex;
+		flex-direction: column;
+	}
+</style>
