@@ -1,16 +1,36 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
+import { sveltekit } from '@sveltejs/kit/vite';
 
-// https://vite.dev/config/
 export default defineConfig({
-  base: "./",
-  root: "src/", // Sources files (typically where index.html is)
-  publicDir: "../public/", // Path from "root" to static assets (files that are served as they are)
-  build: {
-    outDir: "../dist", // Output in the dist/ folder
-    emptyOutDir: true, // Empty the folder first
-    sourcemap: true, // Add sourcemap
-  },
-  plugins: [react(), tailwindcss()],
+	plugins: [tailwindcss(), sveltekit()],
+	test: {
+		expect: { requireAssertions: true },
+		projects: [
+			{
+				extends: './vite.config.ts',
+				test: {
+					name: 'client',
+					browser: {
+						enabled: true,
+						provider: playwright(),
+						instances: [{ browser: 'chromium', headless: true }]
+					},
+					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+					exclude: ['src/lib/server/**']
+				}
+			},
+
+			{
+				extends: './vite.config.ts',
+				test: {
+					name: 'server',
+					environment: 'node',
+					include: ['src/**/*.{test,spec}.{js,ts}'],
+					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+				}
+			}
+		]
+	}
 });
