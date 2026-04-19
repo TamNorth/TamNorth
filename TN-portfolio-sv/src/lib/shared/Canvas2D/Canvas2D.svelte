@@ -26,12 +26,7 @@
 </script>
 
 <svelte-css-wrapper {style}>
-	<canvas
-		bind:this={canvas}
-		// height={canvasHeight}
-		// width={canvasWidth}
-		onmousemove={handleMouseMove}
-		{...attrs}
+	<canvas bind:this={canvas} height={1000} width={2000} onmousemove={handleMouseMove} {...attrs}
 	></canvas>
 </svelte-css-wrapper>
 

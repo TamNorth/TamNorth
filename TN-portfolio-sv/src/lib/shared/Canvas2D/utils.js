@@ -1,46 +1,46 @@
 export function paintShapes(canvas, shapes, colour) {
-		const origin = { x: canvas.width / 2, y: canvas.height / 2 };
+	const origin = { x: canvas.width / 2, y: canvas.height / 2 };
 
-		const ctx = canvas.getContext('2d');
-		const defaultColour = "red"
-		// const colours = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "white", "brown", "grey"]
-		// let colourIndex = 0
+	const ctx = canvas.getContext('2d');
+	const defaultColour = 'red';
+	// const colours = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "white", "brown", "grey"]
+	// let colourIndex = 0
 
-		const gridScale = shapes.reduce((acc, shape) => {
-			const y1 = shape.vertices[0].y;
-			return y1 > acc ? y1 : acc;
-		}, 0);
-		const scaleFactor = canvas.height / 2 / (gridScale + 1);
+	const gridScale = shapes.reduce((acc, shape) => {
+		const y1 = shape.vertices[0].y;
+		return y1 > acc ? y1 : acc;
+	}, 0);
+	const scaleFactor = canvas.height / 2 / (gridScale + 1);
 
-		function outlineShape({vertices, colour: shapeColour}) {
-			ctx.strokeStyle = colour ?? shapeColour ?? defaultColour;
+	function outlineShape({ vertices, colour: shapeColour }) {
+		ctx.strokeStyle = colour ?? shapeColour ?? defaultColour;
 
-			ctx.beginPath();
-			let firstVertex = null;
+		ctx.beginPath();
+		let firstVertex = null;
 
-			vertices.forEach((coord) => {
-				const xCoord = (coord?.x * scaleFactor) + origin.x;
-				const yCoord = (coord?.y * scaleFactor) + origin.y;
-				if (!xCoord || !yCoord) return
+		vertices.forEach((coord) => {
+			const xCoord = coord?.x * scaleFactor + origin.x;
+			const yCoord = coord?.y * scaleFactor + origin.y;
+			if (!xCoord || !yCoord) return;
 
-				if (!firstVertex) {
-					ctx.moveTo(xCoord, yCoord);
-					firstVertex = { x: xCoord, y: yCoord };
-				} else {
-					ctx.lineTo(xCoord, yCoord);
-				}
-				// colourIndex = colourIndex + 1 % colours.length;
-				// ctx.strokeStyle = colour ?? colours[colourIndex]
-			});
+			if (!firstVertex) {
+				ctx.moveTo(xCoord, yCoord);
+				firstVertex = { x: xCoord, y: yCoord };
+			} else {
+				ctx.lineTo(xCoord, yCoord);
+			}
+			// colourIndex = colourIndex + 1 % colours.length;
+			// ctx.strokeStyle = colour ?? colours[colourIndex]
+		});
 
-			ctx.lineTo(firstVertex.x, firstVertex.y);
-			ctx.stroke();
-		}
-
-		shapes.forEach(outlineShape);
+		ctx.lineTo(firstVertex.x, firstVertex.y);
+		ctx.stroke();
 	}
-    
-    export function rainbowMist(canvas) {
+
+	shapes.forEach(outlineShape);
+}
+
+export function rainbowMist(canvas) {
 	const ctx = canvas.getContext('2d');
 	let frame;
 
@@ -95,14 +95,14 @@ export function paintCoords(canvas, coords, colour = 'green') {
 
 export function getHexGrid(size) {
 	const fillWithCount = (array, start) => array.fill(0).map((_, i) => i + start);
-    const getStart = (rowNumber) => Math.abs(rowNumber) / 2 - size;
-    const numOfRows = size * 2 + 1;
-    const rowNums = fillWithCount(Array(numOfRows), -size);
+	const getStart = (rowNumber) => Math.abs(rowNumber) / 2 - size;
+	const numOfRows = size * 2 + 1;
+	const rowNums = fillWithCount(Array(numOfRows), -size);
 
-    return rowNums.reduce((acc, rowNum) => {
-        const rowLength = size * 2 + 1 - Math.abs(rowNum);
-        const rowStart = getStart(rowNum);
-        const xValues = fillWithCount(Array(rowLength), rowStart);
-        return [...acc, ...xValues.reduce((acc, val) => [...acc, { x: val, y: rowNum }], [])];
-    }, []);
+	return rowNums.reduce((acc, rowNum) => {
+		const rowLength = size * 2 + 1 - Math.abs(rowNum);
+		const rowStart = getStart(rowNum);
+		const xValues = fillWithCount(Array(rowLength), rowStart);
+		return [...acc, ...xValues.reduce((acc, val) => [...acc, { x: val, y: rowNum }], [])];
+	}, []);
 }
