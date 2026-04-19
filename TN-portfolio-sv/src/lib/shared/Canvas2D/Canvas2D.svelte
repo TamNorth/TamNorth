@@ -15,16 +15,21 @@
 		mousePosition.y = e.clientY;
 	};
 
+	// let canvasHeight = $state()
+	// let canvasWidth = $state()
+
 	onMount(() => {
 		canvasFn(canvas, mousePosition);
+		// canvasHeight = window.innerHeight
+		// canvasWidth = window.innerWidth
 	});
 </script>
 
 <svelte-css-wrapper {style}>
 	<canvas
 		bind:this={canvas}
-		height={window.innerHeight}
-		width={window.innerWidth}
+		// height={canvasHeight}
+		// width={canvasWidth}
 		onmousemove={handleMouseMove}
 		{...attrs}
 	></canvas>
