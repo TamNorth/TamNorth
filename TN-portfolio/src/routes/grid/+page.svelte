@@ -12,6 +12,9 @@
 	const SPRING_STRENGTH = 0.2;
 	const RELAXATION_PASSES = 5;
 
+	let gridSize = $state(DEFAULT_GRID_SIZE);
+	let scale = $state(INITIAL_SCALE);
+
 	const fillWithCount = (array: number[], start: number = 0) =>
 		array.fill(0).map((_, i) => i + start);
 
@@ -299,8 +302,6 @@
 		// console.log(vertices);
 	}
 
-	let gridSize = $state(DEFAULT_GRID_SIZE);
-
 	const { vertices, edges } = $derived(makeHex(gridSize));
 
 	const canvasFn = ({ canvas, mouseClick, w, h }) => {
@@ -316,16 +317,10 @@
 			dropHex(mouseClick, vertices);
 		});
 	};
-
-	let scale = $state(INITIAL_SCALE);
-
-	function handleZoom(direction) {
-		scale *= direction === 'in' ? 1.1 : 0.9;
-	}
 </script>
 
-<Page></Page>
-<Canvas2D {canvasFn} />
+<Page><Canvas2D {canvasFn} height="100vh" width="40rem" customStyle="grid-column: 2;" /></Page>
+
 <div class="toolbar">
 	<Tile>
 		<label>
