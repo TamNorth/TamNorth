@@ -188,14 +188,10 @@
 					const gridQuad = [];
 
 					function registerEdge(end1Id, end2Id) {
+						gridQuad.push(end1Id);
 						const edgeId = `${end1Id}//${end2Id}`;
 						const edgeAltId = `${end2Id}//${end1Id}`;
-						if (acc.edges[edgeId]) {
-							gridQuad.push(edgeId);
-						} else if (acc.edges[edgeAltId]) {
-							gridQuad.push(edgeAltId);
-						} else {
-							gridQuad.push(edgeId);
+						if (!acc.edges[edgeId] && !acc.edges[edgeAltId]) {
 							acc.edges[edgeId] = [end1Id, end2Id];
 						}
 					}
@@ -312,7 +308,6 @@
 
 		const mergedShapes = mergeShapes(shapes);
 		const { vertices, edges, quads } = interpolate(mergedShapes);
-		console.log(quads);
 
 		const normalisedVertices = normaliseGrid(vertices);
 		const relaxedVertices = relaxGrid(
@@ -323,7 +318,7 @@
 
 		const formattedEdges = getEdgeCoords({ vertices: relaxedVertices, edges });
 
-		return { vertices: relaxedVertices, edges: formattedEdges };
+		return { vertices: relaxedVertices, edges: formattedEdges, quads };
 	}
 
 	function getNearestVertex(mouseClick, vertices, scale, origin) {
@@ -370,7 +365,11 @@
 		return loop(startingVertexId, startingDistance);
 	}
 
-	const { vertices, edges } = $derived(makeHex(gridSize));
+	function getQuadsFromVertex(vertexId, quads) {
+		return quads.filter((quad) => quad.some((vid) => vid === vertexId));
+	}
+
+	const { vertices, edges, quads } = $derived(makeHex(gridSize));
 
 	const canvasFn = ({ canvas, mouseClick, w, h }) => {
 		const { x: xOffset, y: yOffset } = canvas.getBoundingClientRect();
@@ -386,10 +385,15 @@
 
 		$effect(() => {
 			const nearestVertexId = getNearestVertex(mousePos, vertices, scale, origin);
+			const selectedQuads = getQuadsFromVertex(nearestVertexId, quads);
+			const shapes = selectedQuads.map((quad) => {
+				return { vertices: quad.map((vertexId) => vertices[vertexId]) };
+			});
+
 			paintShapes({
 				context,
 				origin,
-				shapes: [{ vertices: [{ x: 0, y: 0 }, vertices[nearestVertexId]] }],
+				shapes,
 				scale,
 				colour: 'green'
 			});
