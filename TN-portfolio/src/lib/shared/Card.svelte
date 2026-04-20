@@ -14,6 +14,9 @@
 	.card {
 		grid-column: 2;
 		grid-row: 2;
+		display: flex;
+		flex-direction: column;
+		gap: var(--base-spacing);
 		padding: var(--base-spacing);
 		max-width: var(--page-width);
 		background-color: var(--background-colour);
