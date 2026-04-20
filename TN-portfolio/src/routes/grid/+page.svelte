@@ -6,6 +6,8 @@
 
 	const INITIAL_SCALE = 300;
 	const DEFAULT_GRID_SIZE = 4;
+
+	/* RELAXATION PARAMS */
 	const SPRING_LENGTH = 0.2;
 	const SPRING_STRENGTH = 0.2;
 	const RELAXATION_PASSES = 5;
@@ -25,10 +27,7 @@
 			return [...acc, ...xValues.reduce((acc, val) => [...acc, { x: val, y: rowNum }], [])];
 		}, []);
 
-		let triangleIndex = 0;
-		let rowIndex = 0;
-
-		function drawTriangle(isUp, centreCoord) {
+		function drawTriangle(pointsUp, centreCoord) {
 			const { x, y } = centreCoord;
 
 			// To-do: deal with magic numbers
@@ -37,19 +36,22 @@
 
 			const v1 = {
 				x: x,
-				y: isUp ? y - yScale : y + yScale
+				y: pointsUp ? y - yScale : y + yScale
 			};
 			const v2 = {
 				x: x + xScale,
-				y: isUp ? y + yScale : y - yScale
+				y: pointsUp ? y + yScale : y - yScale
 			};
 			const v3 = {
 				x: x - xScale,
-				y: isUp ? y + yScale : y - yScale
+				y: pointsUp ? y + yScale : y - yScale
 			};
 
 			return [v1, v2, v3];
 		}
+
+		let triangleIndex = 0;
+		let rowIndex = 0;
 
 		return triangleCentres.reduce((acc, { x, y }) => {
 			// if first triangle in row, reset index to 0
@@ -62,13 +64,13 @@
 
 			// check if triangle should point up or down
 			const isOdd = !!(triangleIndex % 2);
-			const isUp = Math.sign(y) < 0 ? !isOdd : isOdd;
+			const pointsUp = Math.sign(y) < 0 ? !isOdd : isOdd;
 
-			const triangle = drawTriangle(isUp, { x, y });
+			const triangle = drawTriangle(pointsUp, { x, y });
 
 			triangleIndex++;
 
-			return [...acc, { id, vertices: triangle, isUp }];
+			return [...acc, { id, vertices: triangle, pointsUp }];
 		}, []);
 	}
 
@@ -82,13 +84,13 @@
 
 		const t1 = shapes[t1Index];
 		const {
-			isUp,
+			pointsUp,
 			id: { x: x1, y: y1 }
 		} = t1;
 
 		function selectPartner(previousTries = []) {
 			if (previousTries.length >= 3) return {};
-			const directionMap = ['right', 'left', t1.isUp ? 'down' : 'up'].filter(
+			const directionMap = ['right', 'left', t1.pointsUp ? 'down' : 'up'].filter(
 				(direction) => !previousTries.includes(direction)
 			);
 			const directionNum = Math.floor(Math.random() * directionMap.length);
@@ -119,9 +121,9 @@
 		const mergedVertices = (() => {
 			switch (direction) {
 				case 'left':
-					return isUp ? [t2v3, t1v1, t1v2, t1v3] : [t1v3, t1v2, t1v1, t2v3];
+					return pointsUp ? [t2v3, t1v1, t1v2, t1v3] : [t1v3, t1v2, t1v1, t2v3];
 				case 'right':
-					return isUp ? [t1v1, t2v2, t1v2, t1v3] : [t1v3, t1v2, t2v2, t1v1];
+					return pointsUp ? [t1v1, t2v2, t1v2, t1v3] : [t1v3, t1v2, t2v2, t1v1];
 				case 'up':
 					return [t2v1, t1v2, t1v1, t1v3];
 				case 'down':
