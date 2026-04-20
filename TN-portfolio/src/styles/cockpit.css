@@ -1,0 +1,26 @@
+:root .cockpit {
+	/* FONTS */
+
+	/* BASE COLOURS */
+	/* day theme */
+	--colour-day-grey-0: #000000;
+	--colour-day-grey-6: #888888;
+	--colour-day-grey-7: #999999;
+	--colour-day-grey-8: #aaaaaa;
+	--colour-day-grey-9: #bbbbbb;
+	/* night theme */
+	--colour-night-grey-0: #bbbbbb;
+	--colour-night-grey-6: #333333;
+	--colour-night-grey-7: #222222;
+	--colour-night-grey-8: #111111;
+	--colour-night-grey-9: #000000;
+
+	/* STYLES */
+	body {
+		color: var(--text-colour-base);
+
+		h1 {
+			color: var(--text-colour-h1);
+		}
+	}
+}
