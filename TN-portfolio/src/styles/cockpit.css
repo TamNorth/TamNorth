@@ -15,7 +15,31 @@
 	--colour-night-grey-8: #111111;
 	--colour-night-grey-9: #000000;
 
-	/* STYLES */
+    /* BOX-SHADOW */
+    /* internal variables */
+    --shadow-length: 2px;
+    --shadow-direction-x: -1;
+    --shadow-direction-y: 1;
+    --shadow-visibility: 50%;
+    --shadow-colour: black;
+    
+    --inset-highlight-colour: rgb(255, 200, 150);
+    --bevel-size: 2px;
+    --bevel-blur: var(--bevel-size);
+    --bevel-visibility: 20%;
+
+    /* external variables */
+    --external-shadow:
+        color-mix(in hsl, var(--shadow-colour) var(--shadow-visibility), transparent) calc(var(--shadow-length) * var(--shadow-direction-x))
+            calc(var(--shadow-length) * var(--shadow-direction-y)) 3px 0,
+        rgb(0, 0, 0, var(--shadow-visibility)) 0 0 1px 1px;
+    --bevel-and-shadow: var(--external-shadow),
+			inset color-mix(in hsl, var(--inset-highlight-colour) var(--bevel-visibility), transparent) calc(var(--bevel-size) * -1) var(--bevel-size)
+				var(--bevel-blur) 0,
+			inset color-mix(in hsl, var(--shadow-colour) var(--shadow-visibility), transparent) var(--bevel-size) calc(var(--bevel-size) * -1) var(--bevel-blur) 0;
+    --border-radius-tile: calc(var(--bevel-size) * 0.5);
+
+	/* TEXT STYLES */
 	body {
 		color: var(--text-colour-base);
 
