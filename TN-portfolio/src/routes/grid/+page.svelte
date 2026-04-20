@@ -407,6 +407,41 @@
 		return candidateQuads.find((quad) => checkIfInsideQuad(quad, mouseClick));
 	}
 
+	function paintQuad({ context, mousePos, vertices, quads, scale, origin }) {
+		const singleQuad = getNearestQuad(mousePos, quads, vertices, scale, origin);
+		const shape = { vertices: singleQuad?.map((vertexId) => vertices[vertexId]) };
+
+		return (
+			shape.vertices &&
+			fillShapes({
+				context,
+				origin,
+				shapes: [shape],
+				scale,
+				colour: 'blue'
+			})
+		);
+	}
+
+	function paintQuadGroup({ context, mousePos, vertices, quads, scale, origin }) {
+		const nearestVertexId = getNearestVertex(mousePos, vertices, scale, origin);
+		const selectedQuads = getQuadsFromVertex(nearestVertexId, quads);
+		const shapes = selectedQuads?.map((quad) => {
+			return { vertices: quad.map((vertexId) => vertices[vertexId]) };
+		});
+
+		return (
+			shapes &&
+			fillShapes({
+				context,
+				origin,
+				shapes,
+				scale,
+				colour: 'green'
+			})
+		);
+	}
+
 	const { vertices, edges, quads } = $derived(makeHex(gridSize));
 
 	const canvasFn = ({ canvas, mouseClick, w, h }) => {
@@ -422,30 +457,9 @@
 		});
 
 		$effect(() => {
-			const nearestVertexId = getNearestVertex(mousePos, vertices, scale, origin);
-			const selectedQuads = getQuadsFromVertex(nearestVertexId, quads);
-			const shapes = selectedQuads.map((quad) => {
-				return { vertices: quad.map((vertexId) => vertices[vertexId]) };
-			});
+			paintQuadGroup({ context, mousePos, vertices, quads, scale, origin });
 
-			fillShapes({
-				context,
-				origin,
-				shapes,
-				scale,
-				colour: 'green'
-			});
-
-			const singleQuad = getNearestQuad(mousePos, quads, vertices, scale, origin);
-			const singleShape = { vertices: singleQuad.map((vertexId) => vertices[vertexId]) };
-
-			fillShapes({
-				context,
-				origin,
-				shapes: [singleShape],
-				scale,
-				colour: 'blue'
-			});
+			paintQuad({ context, mousePos, vertices, quads, scale, origin });
 		});
 	};
 </script>
