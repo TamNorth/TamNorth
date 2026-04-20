@@ -4,10 +4,16 @@
 	import Light from '$lib/shared/Light.svelte';
 	import Link from '$lib/shared/Link.svelte';
 	import Page from '$lib/shared/Page.svelte';
+	import ThemeTester from './ThemeTester.svelte';
 </script>
 
 <Page>
 	<Card visible={false}>
-		<Tile><Light colour="red" size={1}></Light></Tile>
+		<div class="night-mode">
+			<ThemeTester />
+		</div>
+		<div class="day-mode">
+			<ThemeTester />
+		</div>
 	</Card>
 </Page>
