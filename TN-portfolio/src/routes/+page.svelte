@@ -1,11 +1,11 @@
 <script>
-	import Card from '$lib/shared/Card.svelte';
+	import PanelMain from '$lib/shared/PanelMain.svelte';
 	import Link from '$lib/shared/Link.svelte';
 	import Page from '$lib/shared/Page.svelte';
 </script>
 
 <Page>
-	<Card visible={false}>
+	<PanelMain visible={false}>
 		<Link href="/grid">Grid</Link>
-	</Card>
+	</PanelMain>
 </Page>
