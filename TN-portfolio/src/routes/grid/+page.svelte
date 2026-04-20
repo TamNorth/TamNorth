@@ -144,7 +144,7 @@
 	}
 
 	function interpolate(shapes) {
-		const { vertices, edges } = shapes.reduce(
+		const { vertices, edges, quads } = shapes.reduce(
 			(acc, shape) => {
 				let { mX, mY } = shape.reduce(
 					(acc, { x, y }) => {
@@ -161,39 +161,61 @@
 
 				for (let i0 = 0; i0 < shape.length; i0++) {
 					const i2 = (i0 + 1) % shape.length;
+					const i4 = (i0 + shape.length - 1) % shape.length;
 					const { x: x0, y: y0 } = shape[i0];
 					const { x: x2, y: y2 } = shape[i2];
+					const { x: x4, y: y4 } = shape[i4];
 					const { x1, y1 } = {
 						x1: (x0 + x2) / 2,
 						y1: (y0 + y2) / 2
 					};
+					const { x3, y3 } = {
+						x3: (x0 + x4) / 2,
+						y3: (y0 + y4) / 2
+					};
 
-					const vertex0Id = `${x0}/${y0}`;
-					const vertex1Id = `${x1}/${y1}`;
-					const vertex2Id = `${x2}/${y2}`;
+					const verticesToAdd = {
+						[`${x0}/${y0}`]: { x: x0, y: y0 },
+						[`${x1}/${y1}`]: { x: x1, y: y1 },
+						[middleVertexId]: { x: mX, y: mY },
+						[`${x3}/${y3}`]: { x: x3, y: y3 }
+					};
 
-					if (!acc.vertices[vertex0Id]) acc.vertices[vertex0Id] = { x: x0, y: y0 };
-					if (!acc.vertices[vertex1Id]) acc.vertices[vertex1Id] = { x: x1, y: y1 };
+					Object.entries(verticesToAdd).forEach(([id, value]) => {
+						if (!acc.vertices[id]) acc.vertices[id] = value;
+					});
 
-					const edge0Id = `${vertex0Id}//${vertex1Id}`;
-					const edge0AltId = `${vertex1Id}//${vertex0Id}`;
-					const edge1Id = `${vertex1Id}//${vertex2Id}`;
-					const edge1AltId = `${vertex2Id}//${vertex1Id}`;
-					const edge2Id = `${vertex1Id}//${middleVertexId}`;
+					const gridQuad = [];
 
-					if (!acc.edges[edge0Id] && !acc.edges[edge0AltId])
-						acc.edges[edge0Id] = [vertex0Id, vertex1Id];
-					if (!acc.edges[edge1Id] && !acc.edges[edge1AltId])
-						acc.edges[edge1Id] = [vertex1Id, vertex2Id];
-					acc.edges[edge2Id] = [vertex1Id, middleVertexId];
+					function registerEdge(end1Id, end2Id) {
+						const edgeId = `${end1Id}//${end2Id}`;
+						const edgeAltId = `${end2Id}//${end1Id}`;
+						if (acc.edges[edgeId]) {
+							gridQuad.push(edgeId);
+						} else if (acc.edges[edgeAltId]) {
+							gridQuad.push(edgeAltId);
+						} else {
+							gridQuad.push(edgeId);
+							acc.edges[edgeId] = [end1Id, end2Id];
+						}
+					}
+
+					const vertexIds = Object.keys(verticesToAdd);
+
+					for (let j = 0; j < vertexIds.length; j++) {
+						const k = (j + 1) % vertexIds.length;
+						registerEdge(vertexIds[j], vertexIds[k]);
+					}
+
+					acc.quads = [...acc.quads, gridQuad];
 				}
 
 				return acc;
 			},
-			{ vertices: {}, edges: {} }
+			{ vertices: {}, edges: {}, quads: [] }
 		);
 
-		return { vertices, edges: Object.values(edges) };
+		return { vertices, edges: Object.values(edges), quads };
 	}
 
 	function normaliseGrid(vertices) {
@@ -289,7 +311,8 @@
 		const shapes = getHexgridTriangles(gridSize);
 
 		const mergedShapes = mergeShapes(shapes);
-		const { vertices, edges } = interpolate(mergedShapes);
+		const { vertices, edges, quads } = interpolate(mergedShapes);
+		console.log(quads);
 
 		const normalisedVertices = normaliseGrid(vertices);
 		const relaxedVertices = relaxGrid(
