@@ -1,5 +1,5 @@
 <script>
-	let { children = () => {}, href = '/' } = $props();
+	let { children = () => {} } = $props();
 </script>
 
 <div class="bevel">
@@ -8,9 +8,13 @@
 
 <style>
 	.bevel {
-		--light-direction-x: -3px;
-		--light-direction-y: 3px;
-		--external-shadow: rgb(0, 0, 0, 50%) var(--light-direction-x) var(--light-direction-y) 5px 1px;
+		--shadow-length: 2px;
+		--shadow-direction-x: -1;
+		--shadow-direction-y: 1;
+		--external-shadow:
+			rgb(0, 0, 0, 50%) calc(var(--shadow-length) * var(--shadow-direction-x))
+				calc(var(--shadow-length) * var(--shadow-direction-y)) 3px 0,
+			rgb(0, 0, 0, 50%) 0 0 1px 1px;
 
 		--inset-highlight-colour: 255, 200, 150;
 		--bevel-size: 2px;
