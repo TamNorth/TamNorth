@@ -6,11 +6,21 @@
 
 <Page>
 	<PanelMain visible={false}>
-		<div class="night-mode">
-			<ThemeTester />
+		<div class="theme-cockpit">
+			<div class="night-mode">
+				<ThemeTester />
+			</div>
+			<div class="day-mode">
+				<ThemeTester />
+			</div>
 		</div>
-		<div class="day-mode">
-			<ThemeTester />
+		<div class="theme-pixel">
+			<div class="night-mode">
+				<ThemeTester />
+			</div>
+			<div class="day-mode">
+				<ThemeTester />
+			</div>
 		</div>
 	</PanelMain>
 </Page>

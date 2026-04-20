@@ -15,7 +15,7 @@
 	$effect(() => {
 		document.body.classList.add(themeClassNames[Number(isNightMode)]);
 		document.body.classList.remove(themeClassNames[Number(!isNightMode)]);
-		document.body.classList.add('cockpit');
+		document.body.classList.add('theme-cockpit');
 	});
 
 	// TOUCH HANDLING
