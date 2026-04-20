@@ -320,7 +320,11 @@
 						[idY + delta, idX],
 						[idY - delta, idX],
 						[idY, idX + delta],
-						[idY, idX - delta]
+						[idY, idX - delta],
+						[idY + delta, idX + delta],
+						[idY + delta, idX - delta],
+						[idY - delta, idX - delta],
+						[idY - delta, idX + delta]
 					],
 					[]
 				)
@@ -346,6 +350,9 @@
 	const { vertices, edges } = $derived(makeHex(gridSize));
 
 	const canvasFn = ({ canvas, mouseClick, w, h }) => {
+		const { x: xOffset, y: yOffset } = canvas.getBoundingClientRect();
+		const mousePos = { x: mouseClick.x - xOffset, y: mouseClick.y - yOffset };
+
 		const context = canvas.getContext('2d');
 		const origin = $state({ x: w / 2, y: h / 2 });
 
@@ -355,7 +362,7 @@
 		});
 
 		$effect(() => {
-			const nearestVertexId = getNearestVertex(mouseClick, vertices, scale, origin);
+			const nearestVertexId = getNearestVertex(mousePos, vertices, scale, origin);
 			paintShapes({
 				context,
 				origin,
