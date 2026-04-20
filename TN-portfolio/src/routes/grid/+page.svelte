@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
-	import { paintShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
+	import { fillShapes, paintShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
 
 	const INITIAL_SCALE = 300;
@@ -390,7 +390,7 @@
 				return { vertices: quad.map((vertexId) => vertices[vertexId]) };
 			});
 
-			paintShapes({
+			fillShapes({
 				context,
 				origin,
 				shapes,

@@ -1,9 +1,4 @@
-export function paintShapes({context, origin, shapes, scale = 1, colour}) {
-	const defaultColour = 'red';
-
-	shapes.forEach(({ vertices, colour: shapeColour }) => {
-		context.strokeStyle = colour ?? shapeColour ?? defaultColour;
-
+function makePath(context, vertices, scale, origin) {
 		context.beginPath();
 		let firstVertex = null;
 
@@ -20,7 +15,29 @@ export function paintShapes({context, origin, shapes, scale = 1, colour}) {
 		});
 
 		context.lineTo(firstVertex.x, firstVertex.y);
+}
+
+export function paintShapes({context, origin, shapes, scale = 1, colour}) {
+	const defaultColour = 'red';
+
+	shapes.forEach(({ vertices, colour: shapeColour }) => {
+		context.strokeStyle = colour ?? shapeColour ?? defaultColour;
+
+		makePath(context, vertices, scale, origin)
+		
 		context.stroke();
+	})
+}
+
+export function fillShapes({context, origin, shapes, scale = 1, colour}) {
+	const defaultColour = 'red';
+
+	shapes.forEach(({ vertices, colour: shapeColour }) => {
+		context.fillStyle = colour ?? shapeColour ?? defaultColour;
+
+		makePath(context, vertices, scale, origin)
+
+		context.fill();
 	})
 }
 
