@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           # Upload vite build
-          path: "./TN-portfolio/build/"
+          path: "./TN-portfolio/dist/"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
