@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
-	import { fillShapes, paintShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
+	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
 
 	const INITIAL_SCALE = 300;
@@ -453,7 +453,7 @@
 
 		$effect(() => {
 			context.clearRect(0, 0, w, h);
-			paintShapes({ context, origin, shapes: edges, scale });
+			outlineShapes({ context, origin, shapes: edges, scale });
 		});
 
 		$effect(() => {

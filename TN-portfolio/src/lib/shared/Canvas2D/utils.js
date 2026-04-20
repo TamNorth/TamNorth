@@ -17,7 +17,7 @@ function makePath(context, vertices, scale, origin) {
 		context.lineTo(firstVertex.x, firstVertex.y);
 }
 
-export function paintShapes({context, origin, shapes, scale = 1, colour}) {
+export function outlineShapes({context, origin, shapes, scale = 1, colour}) {
 	const defaultColour = 'red';
 
 	shapes.forEach(({ vertices, colour: shapeColour }) => {
