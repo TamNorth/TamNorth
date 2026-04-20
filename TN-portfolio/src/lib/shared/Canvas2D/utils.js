@@ -8,21 +8,27 @@ export function paintShapes({context, origin, shapes, scale = 1, colour}) {
 		let firstVertex = null;
 
 		vertices.forEach((coord) => {
-			const xCoord = coord?.x * scale + origin.x;
-			const yCoord = coord?.y * scale + origin.y;
-			if (!xCoord || !yCoord) return;
+			const {x, y} = scaleVertex(coord, scale, origin)
+			if (!x || !y) return;
 
 			if (!firstVertex) {
-				context.moveTo(xCoord, yCoord);
-				firstVertex = { x: xCoord, y: yCoord };
+				context.moveTo(x, y);
+				firstVertex = { x, y };
 			} else {
-				context.lineTo(xCoord, yCoord);
+				context.lineTo(x, y);
 			}
 		});
 
 		context.lineTo(firstVertex.x, firstVertex.y);
 		context.stroke();
 	})
+}
+
+export function scaleVertex(vertex, scale, origin) {
+	return {
+		x: vertex?.x * scale + origin.x,
+		y: vertex?.y * scale + origin.y,
+	}
 }
 
 export function rainbowMist(canvas) {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
-	import { paintShapes } from '$lib/shared/Canvas2D/utils.js';
+	import { paintShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
 
 	const INITIAL_SCALE = 300;
@@ -13,7 +13,7 @@
 	const RELAXATION_PASSES = 5;
 
 	let gridSize = $state(DEFAULT_GRID_SIZE);
-	let scale = $state(INITIAL_SCALE);
+	let scale = $derived(INITIAL_SCALE / gridSize);
 
 	const fillWithCount = (array: number[], start: number = 0) =>
 		array.fill(0).map((_, i) => i + start);
@@ -146,7 +146,7 @@
 	function interpolate(shapes) {
 		const { vertices, edges } = shapes.reduce(
 			(acc, shape) => {
-				const { mX, mY } = shape.reduce(
+				let { mX, mY } = shape.reduce(
 					(acc, { x, y }) => {
 						acc.mX += x / shape.length;
 						acc.mY += y / shape.length;
@@ -154,6 +154,8 @@
 					},
 					{ mX: 0, mY: 0 }
 				);
+				mX = mX.toFixed(1);
+				mY = mY.toFixed(1);
 				const middleVertexId = `${mX}/${mY}`;
 				acc.vertices[middleVertexId] = { x: mX, y: mY };
 
@@ -210,6 +212,10 @@
 		return newVertices;
 	}
 
+	function getHypotenuse(dX, dY) {
+		return Math.sqrt(Math.pow(dY, 2) + Math.pow(dX, 2));
+	}
+
 	function getVertexForces({ vertices, edges }) {
 		const springLength = SPRING_LENGTH;
 
@@ -222,7 +228,7 @@
 			const totalRotation = rotation1 * rotation2;
 
 			const bearing = Math.atan(dY / dX);
-			const length = Math.sqrt(Math.pow(dY, 2) + Math.pow(dX, 2));
+			const length = getHypotenuse(dX, dY);
 			const tension = length - springLength;
 
 			const tensionY = totalRotation * tension * Math.sin(bearing);
@@ -297,9 +303,44 @@
 		return { vertices: relaxedVertices, edges: formattedEdges };
 	}
 
-	function dropHex(mouseClick, vertices) {
-		// console.log(mouseClick.x);
-		// console.log(vertices);
+	function getNearestVertex(mouseClick, vertices, scale, origin) {
+		const startingVertexId = '0/0';
+		const startingPos = scaleVertex(vertices[startingVertexId], scale, origin);
+		const startingDistance = getHypotenuse(
+			startingPos.x - mouseClick.x,
+			startingPos.y - mouseClick.y
+		);
+
+		function loop(vertexId, currentDistance) {
+			const [idY, idX] = vertexId.split('/').map((id) => Number(id));
+			const neighbourIds = [1, 0.5, 0.3, 0.7]
+				.reduce(
+					(acc, delta) => [
+						...acc,
+						[idY + delta, idX],
+						[idY - delta, idX],
+						[idY, idX + delta],
+						[idY, idX - delta]
+					],
+					[]
+				)
+				.map((id) => id.join('/'));
+
+			const { id: closestNeighbour, distance: newDistance } = neighbourIds.reduce(
+				(acc, id) => {
+					if (!vertices[id]) return acc;
+					const position = scaleVertex(vertices[id], scale, origin);
+					const distance = getHypotenuse(position.x - mouseClick.x, position.y - mouseClick.y);
+					if (distance < acc?.distance) return { id, distance };
+					return acc;
+				},
+				{ id: vertexId, distance: currentDistance }
+			);
+
+			return closestNeighbour === vertexId ? vertexId : loop(closestNeighbour, newDistance);
+		}
+
+		return loop(startingVertexId, startingDistance);
 	}
 
 	const { vertices, edges } = $derived(makeHex(gridSize));
@@ -310,11 +351,18 @@
 
 		$effect(() => {
 			context.clearRect(0, 0, w, h);
-			paintShapes({ context, origin, shapes: edges, scale: scale / gridSize });
+			paintShapes({ context, origin, shapes: edges, scale });
 		});
 
 		$effect(() => {
-			dropHex(mouseClick, vertices);
+			const nearestVertexId = getNearestVertex(mouseClick, vertices, scale, origin);
+			paintShapes({
+				context,
+				origin,
+				shapes: [{ vertices: [{ x: 0, y: 0 }, vertices[nearestVertexId]] }],
+				scale,
+				colour: 'green'
+			});
 		});
 	};
 </script>
