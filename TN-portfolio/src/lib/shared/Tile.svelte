@@ -9,7 +9,7 @@
 <style>
 	.bevel {
 		border-radius: var(--border-radius-tile);
-		box-shadow: var(--bevel-and-shadow);
+		box-shadow: var(--external-shadow), var(--bevel-1);
 
 		padding: var(--base-spacing);
 		background-color: var(--background-colour-tile);

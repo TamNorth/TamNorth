@@ -26,7 +26,7 @@
 
 <button
 	type="button"
-	class="light {active ? 'active' : ''}"
+	class="clickable {active ? 'active' : ''}"
 	onclick={onClick}
 	style="--light-base-colour: {lightColour}; --size-factor: {size};"
 >
@@ -34,29 +34,22 @@
 </button>
 
 <style>
-	.light {
+	button {
 		--light-base-colour: rgb(255, 0, 0);
-		--light-bevel-size: calc(0.5px * var(--size-factor));
-		--bevel-blur: var(--light-bevel-size);
-		--light-colour: color-mix(in hsl, var(--light-base-colour) 75%, black);
-		background-color: var(--light-colour);
+		background-color: color-mix(in hsl, var(--light-base-colour) 75%, black);
 
 		border-radius: 50%;
 		box-shadow:
 			var(--external-shadow),
-			inset rgb(var(--inset-highlight-colour), 20%) calc(var(--light-bevel-size) * -1)
-				var(--light-bevel-size) var(--bevel-blur) var(--light-bevel-size),
-			inset rgb(0, 0, 0, 50%) var(--light-bevel-size) calc(var(--light-bevel-size) * -1)
-				var(--bevel-blur) 0,
+			var(--bevel-2),
 			inset rgb(0, 0, 0, 0.6) 0 0 20px 10px;
 
 		height: calc(var(--base-spacing) * var(--size-factor));
 		aspect-ratio: 1;
-		cursor: pointer;
 
 		&:active,
 		&.active {
-			--light-colour: var(--light-base-colour);
+			background-color: var(--light-base-colour);
 			--external-shadow: color-mix(in hsl, var(--light-base-colour) 50%, transparent) 0 0 15px 5px;
 		}
 	}

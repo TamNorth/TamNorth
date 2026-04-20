@@ -33,11 +33,16 @@
         color-mix(in hsl, var(--shadow-colour) var(--shadow-visibility), transparent) calc(var(--shadow-length) * var(--shadow-direction-x))
             calc(var(--shadow-length) * var(--shadow-direction-y)) 3px 0,
         rgb(0, 0, 0, var(--shadow-visibility)) 0 0 1px 1px;
-    --bevel-and-shadow: var(--external-shadow),
-			inset color-mix(in hsl, var(--inset-highlight-colour) var(--bevel-visibility), transparent) calc(var(--bevel-size) * -1) var(--bevel-size)
-				var(--bevel-blur) 0,
+    --bevel-1: inset color-mix(in hsl, var(--inset-highlight-colour) var(--bevel-visibility), transparent) calc(var(--bevel-size) * -1) var(--bevel-size) var(--bevel-blur) 0,
 			inset color-mix(in hsl, var(--shadow-colour) var(--shadow-visibility), transparent) var(--bevel-size) calc(var(--bevel-size) * -1) var(--bevel-blur) 0;
+    --bevel-2: inset color-mix(in hsl, var(--inset-highlight-colour) var(--bevel-visibility), transparent) calc(var(--bevel-size) * -0.5) calc(var(--bevel-size) * 0.5) var(--bevel-blur) calc(var(--bevel-size) * 0.5),
+			inset color-mix(in hsl, var(--shadow-colour) var(--shadow-visibility), transparent) calc(var(--bevel-size) * 0.5) calc(var(--bevel-size) * -0.5) var(--bevel-blur) 0;
     --border-radius-tile: calc(var(--bevel-size) * 0.5);
+
+    /* CURSOR */
+    .clickable {
+        cursor: pointer;
+    }
 
 	/* TEXT STYLES */
 	body {
