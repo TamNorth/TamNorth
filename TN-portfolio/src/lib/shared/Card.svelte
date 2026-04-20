@@ -1,8 +1,12 @@
 <script>
-	let { children = () => {} } = $props();
+	let { children = () => {}, visible = true } = $props();
+
+	const style = `
+		--background-colour: ${visible ? '--background-colour-card' : 'none'}
+	`;
 </script>
 
-<div class="card">
+<div class="card" {style}>
 	{@render children()}
 </div>
 
@@ -12,6 +16,6 @@
 		grid-row: 2;
 		padding: var(--base-spacing);
 		max-width: var(--page-width);
-		background-color: var(--background-colour-card);
+		background-color: var(--background-colour);
 	}
 </style>
