@@ -439,6 +439,71 @@
 		);
 	}
 
+	function fitPolygon({ polygonSides = 4, quadGroup, vertices }) {
+		const vertexCounts = quadGroup.reduce((acc, quad) => {
+			quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
+			return acc;
+		}, {});
+
+		const { cornerVertexIds, edgeVertexIds, middleVertexId } = Object.entries(vertexCounts).reduce(
+			(acc, [id, count]) => {
+				if (count === 1) acc.cornerVertexIds.push(id);
+				else if (count === 2) acc.edgeVertexIds.push(id);
+				else acc.middleVertexId = id;
+				return acc;
+			},
+			{ cornerVertexIds: [], edgeVertexIds: [], middleVertexId: '' }
+		);
+
+		const vertexAngles = [...cornerVertexIds, ...edgeVertexIds]
+			.reduce((acc, vertexId) => {
+				function getBearing(vertex1Id, vertex2Id) {
+					const dX = vertices[vertex1Id].x - vertices[vertex2Id].x;
+					const dY = vertices[vertex1Id].y - vertices[vertex2Id].y;
+					const rotation = dY < 0 ? -2 : 1;
+					return (Math.atan(dY / dX) * rotation + 2 * Math.PI) % (2 * Math.PI);
+				}
+				return [...acc, [vertexId, getBearing(vertexId, middleVertexId)]];
+			}, [])
+			.sort((a, b) => a[0] - b[0]);
+
+		if (vertexAngles.length < polygonSides) return null;
+
+		const targetAngles = fillWithCount(Array(polygonSides), 0).map(
+			(angle) => (vertexAngles[0][1] + (angle * 2 * Math.PI) / polygonSides) % (2 * Math.PI)
+		);
+
+		function getClosestVertexToAngle(vertexAngles, targetAngles) {
+			let vertexIndex = 1;
+			let targetIndex = 1;
+			const results = [vertexAngles[0]];
+
+			while (vertexIndex < vertexAngles.length && targetIndex < targetAngles.length) {
+				const [id, angle] = vertexAngles[vertexIndex];
+				const targetAngle = targetAngles[targetIndex];
+				const currentClosestAngle = results[targetIndex]?.[1] ?? 2 * Math.PI;
+				const currentAngleDiff = Math.abs(currentClosestAngle - targetAngle);
+				const newAngleDiff = Math.abs(angle - targetAngle);
+
+				if (newAngleDiff < currentAngleDiff) {
+					if (results[targetIndex]) {
+						results[targetIndex] = [id, angle];
+					} else {
+						results.push([id, angle]);
+					}
+					vertexIndex++;
+				} else {
+					targetIndex++;
+				}
+			}
+
+			return results;
+		}
+
+		const selectedVertices = getClosestVertexToAngle(vertexAngles, targetAngles);
+		console.log(targetAngles.map((angle, i) => [angle, selectedVertices[i][1]]));
+	}
+
 	/* EXECUTION */
 
 	let gridSize = $state(DEFAULT_GRID_SIZE);
@@ -446,9 +511,10 @@
 
 	const { vertices, edges, quads } = $derived(makeHex(gridSize));
 
-	const canvasFn = ({ canvas, mouseClick, w, h }) => {
+	const canvasFn = ({ canvas, mousePosition, mouseClick, w, h }) => {
 		const { x: xOffset, y: yOffset } = canvas.getBoundingClientRect();
-		const mousePos = { x: mouseClick.x - xOffset, y: mouseClick.y - yOffset };
+		const mousePos = { x: mousePosition.x - xOffset, y: mousePosition.y - yOffset };
+		const mouseClickPos = { x: mouseClick.x - xOffset, y: mouseClick.y - yOffset };
 
 		const context = canvas.getContext('2d');
 		const origin = $state({ x: w / 2, y: h / 2 });
@@ -460,8 +526,13 @@
 
 		$effect(() => {
 			paintQuadGroup({ context, mousePos, vertices, quads, scale, origin });
-
 			paintQuad({ context, mousePos, vertices, quads, scale, origin });
+		});
+
+		$effect(() => {
+			const selectedVertexId = getNearestVertex(mouseClickPos, vertices, scale, origin);
+			const selectedQuads = getQuadsFromVertex(selectedVertexId, quads);
+			fitPolygon({ polygonSides: 4, quadGroup: selectedQuads, vertices });
 		});
 	};
 </script>
