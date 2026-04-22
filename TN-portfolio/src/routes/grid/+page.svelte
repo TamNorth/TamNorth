@@ -12,8 +12,7 @@
 	const SPRING_STRENGTH = 0.2;
 	const RELAXATION_PASSES = 5;
 
-	let gridSize = $state(DEFAULT_GRID_SIZE);
-	let scale = $derived(INITIAL_SCALE / gridSize);
+	/* DEFINITIONS */
 
 	const fillWithCount = (array: number[], start: number = 0) =>
 		array.fill(0).map((_, i) => i + start);
@@ -143,7 +142,7 @@
 			: [..._mergedShapes, mergedVertices];
 	}
 
-	function interpolate(shapes) {
+	function interpolate(shapes, size) {
 		const { vertices, edges, quads } = shapes.reduce(
 			(acc, shape) => {
 				let { mX, mY } = shape.reduce(
@@ -182,17 +181,21 @@
 					};
 
 					Object.entries(verticesToAdd).forEach(([id, value]) => {
-						if (!acc.vertices[id]) acc.vertices[id] = value;
+						const xDistance = Math.abs(value.x);
+						const yDistance = Math.abs(value.y);
+						const isBoundaryVertex = yDistance === size || xDistance + yDistance === 2 * size;
+						if (!acc.vertices[id])
+							acc.vertices[id] = isBoundaryVertex ? { ...value, locked: true } : value;
 					});
 
 					const gridQuad = [];
 
 					function registerEdge(end1Id, end2Id) {
 						gridQuad.push(end1Id);
-						const edgeId = `${end1Id}//${end2Id}`;
-						const edgeAltId = `${end2Id}//${end1Id}`;
-						if (!acc.edges[edgeId] && !acc.edges[edgeAltId]) {
-							acc.edges[edgeId] = [end1Id, end2Id];
+						const orderedIds = [end1Id, end2Id].sort();
+						const edgeId = `${orderedIds[0]}//${orderedIds[1]}`;
+						if (!acc.edges[edgeId]) {
+							acc.edges[edgeId] = orderedIds;
 						}
 					}
 
@@ -222,6 +225,7 @@
 
 		for (let vertex in vertices) {
 			newVertices[vertex] = {
+				...vertices[vertex],
 				x: vertices[vertex].x * xScalingFactor,
 				y: vertices[vertex].y * yScalingFactor
 			};
@@ -276,7 +280,7 @@
 		);
 	}
 
-	function relaxGrid({ vertices, edges }, size, stepNum = 1) {
+	function relaxGrid({ vertices, edges }, stepNum = 1) {
 		const springStrength = SPRING_STRENGTH;
 
 		const newVertices = structuredClone(vertices);
@@ -284,18 +288,15 @@
 		for (let i = 0; i < stepNum; i++) {
 			const vertexForces = getVertexForces({ vertices: newVertices, edges });
 
-			for (let vertex in newVertices) {
-				const [xIndex, yIndex] = vertex
-					.split('/')
-					.map((id) => Number(Math.abs(Number(id)).toFixed(1)));
-				const isBoundaryVertex = yIndex === size || xIndex + yIndex === 2 * size;
-
-				if (!isBoundaryVertex) {
-					newVertices[vertex].x += vertexForces[vertex].x * springStrength;
-					newVertices[vertex].y += vertexForces[vertex].y * springStrength;
+			for (let vertexId in newVertices) {
+				let vertex = newVertices[vertexId];
+				if (!vertex.locked) {
+					vertex.x += vertexForces[vertexId].x * springStrength;
+					vertex.y += vertexForces[vertexId].y * springStrength;
 				}
 			}
 		}
+
 		return newVertices;
 	}
 
@@ -307,14 +308,10 @@
 		const shapes = getHexgridTriangles(gridSize);
 
 		const mergedShapes = mergeShapes(shapes);
-		const { vertices, edges, quads } = interpolate(mergedShapes);
+		const { vertices, edges, quads } = interpolate(mergedShapes, gridSize);
 
 		const normalisedVertices = normaliseGrid(vertices);
-		const relaxedVertices = relaxGrid(
-			{ vertices: normalisedVertices, edges },
-			gridSize,
-			RELAXATION_PASSES
-		);
+		const relaxedVertices = relaxGrid({ vertices: normalisedVertices, edges }, RELAXATION_PASSES);
 
 		const formattedEdges = getEdgeCoords({ vertices: relaxedVertices, edges });
 
@@ -441,6 +438,11 @@
 			})
 		);
 	}
+
+	/* EXECUTION */
+
+	let gridSize = $state(DEFAULT_GRID_SIZE);
+	let scale = $derived(INITIAL_SCALE / gridSize);
 
 	const { vertices, edges, quads } = $derived(makeHex(gridSize));
 
