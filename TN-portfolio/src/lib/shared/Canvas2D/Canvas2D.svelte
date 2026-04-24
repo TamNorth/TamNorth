@@ -9,8 +9,10 @@
     `;
 
 	let canvas = $state();
-	let mousePosition = $state({ x: 0, y: 0 });
-	let mouseClick = $state({ x: 0, y: 0 });
+	let overlayCanvas = $state();
+	let mousePosition = $state({ x: null, y: null });
+	let mouseClick = $state({ x: null, y: null });
+	const { x: xOffset, y: yOffset } = $derived(canvas?.getBoundingClientRect() || {});
 
 	const handleMouseMove = (e) => {
 		mousePosition.x = e.clientX;
@@ -26,7 +28,7 @@
 	let h = $state(0);
 
 	$effect(() => {
-		canvasFn({ canvas, mousePosition, mouseClick, w, h });
+		canvasFn({ canvas, overlayCanvas, mousePosition, mouseClick, w, h });
 	});
 </script>
 
@@ -38,15 +40,30 @@
 	width={w}
 	onmousemove={handleMouseMove}
 	onclick={handleMouseClick}
+	class="canvas"
 	{style}
+></canvas>
+<canvas
+	bind:this={overlayCanvas}
+	height={h}
+	width={w}
+	class="overlay"
+	style="--x-offset: {xOffset}px; --y-offset: {yOffset}px;"
 ></canvas>
 
 <style>
-	canvas {
-		/* border: solid var(--text-colour-base); */
+	.canvas {
 		position: var(--position);
 		background-color: var(--background-colour-card);
 		height: var(--height);
 		width: var(--width);
+	}
+	.overlay {
+		position: absolute;
+		left: var(--x-offset);
+		top: var(--y-offset);
+		height: var(--height);
+		width: var(--width);
+		pointer-events: none;
 	}
 </style>
