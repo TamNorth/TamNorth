@@ -419,7 +419,8 @@
 		);
 	}
 
-	function fitPolygon({ polygonSides = 4, quadGroup, vertices }) {
+	function fitPolygon({ polygonSides = 4, quadGroup, vertices, radius }) {
+		const TWO_PI = 2 * Math.PI;
 		const vertexCounts = quadGroup.reduce((acc, quad) => {
 			quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
 			return acc;
@@ -435,41 +436,48 @@
 			{ cornerVertexIds: [], edgeVertexIds: [], middleVertexId: '' }
 		);
 
+		if (!middleVertexId || [...cornerVertexIds, ...edgeVertexIds].length < polygonSides) {
+			return null;
+		}
+
 		const vertexAngles = [...cornerVertexIds, ...edgeVertexIds]
 			.reduce((acc, vertexId) => {
 				function getBearing(vertex1Id, vertex2Id) {
 					const dX = vertices[vertex1Id].x - vertices[vertex2Id].x;
 					const dY = vertices[vertex1Id].y - vertices[vertex2Id].y;
-					const rotation = dY < 0 ? -2 : 1;
-					return (Math.atan(dY / dX) * rotation + 2 * Math.PI) % (2 * Math.PI);
+					return (Math.atan2(dY, dX) + TWO_PI) % TWO_PI;
 				}
 				return [...acc, [vertexId, getBearing(vertexId, middleVertexId)]];
 			}, [])
-			.sort((a, b) => a[0] - b[0]);
+			.sort((a, b) => a[1] - b[1]);
 
-		if (vertexAngles.length < polygonSides) return null;
-
-		const targetAngles = fillWithCount(Array(polygonSides), 0).map(
-			(angle) => (vertexAngles[0][1] + (angle * 2 * Math.PI) / polygonSides) % (2 * Math.PI)
-		);
+		const targetAngles = fillWithCount(Array(polygonSides), 0).map((index) => {
+			const angleInterval = TWO_PI / polygonSides;
+			const firstAngle = vertexAngles[0][1];
+			return (firstAngle + index * angleInterval) % TWO_PI;
+		});
 
 		function getClosestVertexToAngle(vertexAngles, targetAngles) {
 			let vertexIndex = 1;
 			let targetIndex = 1;
-			const results = [vertexAngles[0]];
+			const results = [[vertexAngles[0][0], 0]];
 
 			while (vertexIndex < vertexAngles.length && targetIndex < targetAngles.length) {
 				const [id, angle] = vertexAngles[vertexIndex];
 				const targetAngle = targetAngles[targetIndex];
-				const currentClosestAngle = results[targetIndex]?.[1] ?? 2 * Math.PI;
+				const currentClosestAngleIndex = results[targetIndex]?.[1];
+				const currentClosestAngle = vertexAngles[currentClosestAngleIndex]?.[1] ?? TWO_PI;
 				const currentAngleDiff = Math.abs(currentClosestAngle - targetAngle);
 				const newAngleDiff = Math.abs(angle - targetAngle);
 
-				if (newAngleDiff < currentAngleDiff) {
+				if (
+					newAngleDiff < currentAngleDiff ||
+					vertexAngles.length - vertexIndex <= targetAngles.length - targetIndex
+				) {
 					if (results[targetIndex]) {
-						results[targetIndex] = [id, angle];
+						results[targetIndex] = [id, vertexIndex];
 					} else {
-						results.push([id, angle]);
+						results.push([id, vertexIndex]);
 					}
 					vertexIndex++;
 				} else {
@@ -480,8 +488,80 @@
 			return results;
 		}
 
-		const selectedVertices = getClosestVertexToAngle(vertexAngles, targetAngles);
-		console.log(targetAngles.map((angle, i) => [angle, selectedVertices[i][1]]));
+		function resolveToPolygon(targetAngles, cornerVertices, vertexAngles, origin, radius) {
+			const { x: x0, y: y0 } = origin;
+
+			// Trackers:
+			// corner position trackers, used to place polygon-corner vertices and get polygon-edge linear equations:
+			let lastCorner = {
+				x: x0 + radius * Math.cos(targetAngles[targetAngles.length - 1]),
+				y: y0 + radius * Math.sin(targetAngles[targetAngles.length - 1])
+			};
+			let nextCorner = {
+				x: x0 + radius * Math.cos(targetAngles[0]),
+				y: y0 + radius * Math.sin(targetAngles[0])
+			};
+
+			// polygon corner angle trackers, used to rotate polygon-edge vertices to correct edge:
+			const remainingTargetAngles = [...targetAngles];
+			// polygon-to-fit angles e.g. [0, pi/2, pi, 3pi/4]
+			let lastTargetAngle = targetAngles[targetAngles.length - 1];
+			// tracks through target angles e.g. 3pi/4 => 0 => pi/2 => pi => 3pi/4
+
+			// corner index trackers, used to space polygon-edge vertices evenly:
+			const remainingCornerIndices = cornerVertices.map(([id, index]) => index);
+			// vertexAngle array indices e.g. [0, 3, 5, 8]
+			let lastCornerIndex =
+				vertexAngles.length - remainingCornerIndices[remainingCornerIndices.length - 1];
+			// starts at number of edge vertices between last & first corner
+
+			return vertexAngles.reduce((acc, [id, _], i) => {
+				// check if vertex angle is closest match to polygon corner
+				if (cornerVertices.find(([cornerId, _]) => id === cornerId)) {
+					// if corner vertex:
+					// shift reference corners forward by one
+					lastCornerIndex = remainingCornerIndices.shift();
+					lastTargetAngle = remainingTargetAngles.shift();
+					lastCorner = nextCorner;
+					nextCorner = {
+						x: x0 + radius * Math.cos(remainingTargetAngles[0] ?? targetAngles[0]),
+						y: y0 + radius * Math.sin(remainingTargetAngles[0] ?? targetAngles[0])
+					};
+					// move vertex to polygon corner
+					return { ...acc, [id]: lastCorner };
+				} else {
+					// if edge vertex, move to polygon edge:
+					// calculate intermediate angle between last & next polygon corner
+					const ratio =
+						(i - lastCornerIndex) /
+						Math.abs((remainingCornerIndices[0] ?? vertexAngles.length) - lastCornerIndex);
+					const relativeAngle =
+						(remainingTargetAngles[0] ?? targetAngles[0] + TWO_PI) - lastTargetAngle;
+					const absoluteAngle = lastTargetAngle + ratio * relativeAngle;
+					// calculate point along polygon edge at intermediate angle
+					const polygonEdge = getLinearParams(lastCorner, nextCorner);
+					const lineFromOrigin = getLinearParams(origin, {
+						x: radius * 3 * Math.cos(absoluteAngle),
+						y: radius * 3 * Math.sin(absoluteAngle)
+					});
+					const intercept = getIntersect(polygonEdge, lineFromOrigin);
+					// move to edge-intercept
+					return { ...acc, [id]: intercept };
+				}
+			}, {});
+		}
+
+		const cornerVertices = getClosestVertexToAngle(vertexAngles, targetAngles);
+
+		const polygon = resolveToPolygon(
+			targetAngles,
+			cornerVertices,
+			vertexAngles,
+			vertices[middleVertexId],
+			radius
+		);
+
+		return polygon;
 	}
 
 	/* EXECUTION */
