@@ -3,6 +3,7 @@
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
 	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
+	import { getIntersect, getLinearParams } from '$lib/utils/mathsUtils.js';
 
 	const INITIAL_SCALE = 300;
 	const DEFAULT_GRID_SIZE = 4;
@@ -370,12 +371,6 @@
 		const vertexId = getNearestVertex(mouseClick, vertices, scale, origin);
 		const candidateQuads = getQuadsFromVertex(vertexId, quads);
 		function checkIfInsideQuad(quad, mouseClick) {
-			function getLinearParams(v1, v2) {
-				const m = (v1.y - v2.y) / (v1.x - v2.x);
-				const c = v1.y - m * v1.x;
-				return { m, c, x1: v1.x, x2: v2.x };
-			}
-
 			const quadLines = quad.map((vertexId, i) => {
 				const j = (i + 1) % quad.length;
 				const v1 = scaleVertex(vertices[vertexId], scale, origin);
@@ -385,19 +380,7 @@
 
 			const lineFromOrigin = getLinearParams({ x: 0, y: 0 }, mouseClick);
 
-			function checkIntersects(line1, line2) {
-				const intersectX = (line1.c - line2.c) / (line2.m - line1.m);
-				const line1XRange = [line1.x1, line1.x2].sort();
-				const line2XRange = [line2.x1, line2.x2].sort();
-				return (
-					intersectX > line1XRange[0] &&
-					intersectX < line1XRange[1] &&
-					intersectX > line2XRange[0] &&
-					intersectX < line2XRange[1]
-				);
-			}
-
-			const intersectingLines = quadLines.filter((line) => checkIntersects(line, lineFromOrigin));
+			const intersectingLines = quadLines.filter((line) => !!getIntersect(line, lineFromOrigin));
 			return intersectingLines.length % 2 === 1;
 		}
 
