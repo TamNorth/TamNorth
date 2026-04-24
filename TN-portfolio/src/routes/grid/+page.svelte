@@ -246,16 +246,13 @@
 			const [end1, end2] = [vertices[v1], vertices[v2]];
 			const dY = end1.y - end2.y; // positive if end1 is lower
 			const dX = end1.x - end2.x; // positive if end1 is to the right
-			const rotation1 = Math.sign(dY);
-			const rotation2 = Number(Math.sign(dY) === Math.sign(dX));
-			const totalRotation = rotation1 * rotation2;
 
-			const bearing = Math.atan(dY / dX);
+			const bearing = Math.atan2(dY, dX);
 			const length = getHypotenuse(dX, dY);
 			const tension = length - springLength;
 
-			const tensionY = totalRotation * tension * Math.sin(bearing);
-			const tensionX = totalRotation * tension * Math.cos(bearing);
+			const tensionY = tension * Math.sin(bearing);
+			const tensionX = tension * Math.cos(bearing);
 
 			if (!acc[v1]) acc[v1] = [];
 			if (!acc[v2]) acc[v2] = [];
