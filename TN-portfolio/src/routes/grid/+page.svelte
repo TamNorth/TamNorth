@@ -4,6 +4,7 @@
 	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
 	import { getIntersect, getLinearParams } from '$lib/utils/mathsUtils.js';
+	import { untrack } from 'svelte';
 
 	const INITIAL_SCALE = 300;
 	const DEFAULT_GRID_SIZE = 4;
@@ -569,30 +570,76 @@
 	let gridSize = $state(DEFAULT_GRID_SIZE);
 	let scale = $derived(INITIAL_SCALE / gridSize);
 
-	const { vertices, edges, quads } = $derived(makeHex(gridSize));
+	let { vertices: originalVertices, edges, quads } = $derived(makeHex(gridSize));
 
-	const canvasFn = ({ canvas, mousePosition, mouseClick, w, h }) => {
-		const { x: xOffset, y: yOffset } = canvas.getBoundingClientRect();
-		const mousePos = { x: mousePosition.x - xOffset, y: mousePosition.y - yOffset };
-		const mouseClickPos = { x: mouseClick.x - xOffset, y: mouseClick.y - yOffset };
+	const canvasFn = ({ canvas, overlayCanvas, mousePosition, mouseClick, w, h }) => {
+		const { x: xOffset, y: yOffset } = $derived(canvas.getBoundingClientRect());
+		const mousePos = $derived({ x: mousePosition.x - xOffset, y: mousePosition.y - yOffset });
+		let mouseClickPos = $derived(
+			typeof mouseClick.x === 'number'
+				? { x: mouseClick.x - xOffset, y: mouseClick.y - yOffset }
+				: null
+		);
+		const context = $derived(canvas.getContext('2d'));
+		const overlayContext = $derived(overlayCanvas.getContext('2d'));
+		const origin = $derived({ x: w / 2, y: h / 2 });
 
-		const context = canvas.getContext('2d');
-		const origin = $state({ x: w / 2, y: h / 2 });
+		let newVertices = $state({});
+		let vertices = $derived({ ...originalVertices, ...newVertices });
+
+		$effect(() => {
+			if (!mouseClickPos) return;
+
+			const selectedVertexId = getNearestVertex(mouseClickPos, vertices, scale, origin);
+			const selectedQuads = getQuadsFromVertex(selectedVertexId, quads);
+			const verticesToAdd = fitPolygon({
+				polygonSides: 4,
+				quadGroup: selectedQuads,
+				vertices: vertices,
+				radius: 0.5
+			});
+
+			for (let vertexId in verticesToAdd) {
+				if (verticesToAdd[vertexId]) newVertices[vertexId] = verticesToAdd[vertexId];
+			}
+		});
+
+		/* PAINT CANVAS */
+
+		$effect(() => {
+			overlayContext.clearRect(0, 0, w, h);
+			paintQuadGroup({ context: overlayContext, mousePos, vertices, quads, scale, origin });
+			paintQuad({ context: overlayContext, mousePos, vertices, quads, scale, origin });
+		});
+
+		$effect(() => {
+			const watch = gridSize;
+			newVertices = [];
+		});
 
 		$effect(() => {
 			context.clearRect(0, 0, w, h);
-			outlineShapes({ context, origin, shapes: edges, scale });
-		});
 
-		$effect(() => {
-			paintQuadGroup({ context, mousePos, vertices, quads, scale, origin });
-			paintQuad({ context, mousePos, vertices, quads, scale, origin });
-		});
+			untrack(() => {
+				// important! breaks reactivity dependency cycle in fitPolygon $effect
+				mouseClickPos = null;
+			});
 
-		$effect(() => {
-			const selectedVertexId = getNearestVertex(mouseClickPos, vertices, scale, origin);
-			const selectedQuads = getQuadsFromVertex(selectedVertexId, quads);
-			fitPolygon({ polygonSides: 4, quadGroup: selectedQuads, vertices });
+			const shapes = quads.map((quad) => ({
+				vertices: quad.map((vertexId) => vertices[vertexId])
+			}));
+			const newShapes = Object.values(newVertices).filter((v) => v);
+
+			outlineShapes({ context, origin, shapes, scale });
+			if (newShapes.length) {
+				outlineShapes({
+					context,
+					origin,
+					shapes: [{ vertices: newShapes }],
+					scale,
+					colour: 'magenta'
+				});
+			}
 		});
 	};
 </script>
