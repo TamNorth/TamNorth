@@ -755,7 +755,26 @@
 			}));
 			const newShapes = Object.values(newVertices).filter((v) => v);
 
-			outlineShapes({ context, origin, shapes, scale });
+			function strokeRule({ context, vertices }) {
+				const prevStrokeStyle = context.strokeStyle;
+
+				if (vertices.some(({ locked }) => locked)) {
+					context.strokeStyle = currentTheme.baseColours['colour-error'];
+					context.stroke();
+					context.strokeStyle = prevStrokeStyle;
+				} else {
+					context.stroke();
+				}
+			}
+
+			outlineShapes({
+				context,
+				origin,
+				shapes,
+				scale,
+				colour: currentTheme.baseColours['colour-info'],
+				strokeRule
+			});
 		});
 	};
 </script>
