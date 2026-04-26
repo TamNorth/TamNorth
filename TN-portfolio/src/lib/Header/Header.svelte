@@ -1,22 +1,14 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { Icon } from 'svelte-icons-pack';
-	import { BsEyeFill, BsEyeSlashFill, BsMoonFill, BsSunFill } from 'svelte-icons-pack/bs';
+	import { BsEyeFill, BsEyeSlashFill } from 'svelte-icons-pack/bs';
+	import StyleSelector from './StyleSelector.svelte';
 
 	const homeButtonText =
 		'<span>tam </span><span style="font-size: xx-large">N</span><span>orth</span>';
 
 	// HEADER OPACITY FADE
 	let accessibilityMode = $state(false);
-
-	// THEME SELECTION
-	let isNightMode = $state(true);
-	let themeClassNames = ['day-mode', 'night-mode'];
-	$effect(() => {
-		document.body.classList.add(themeClassNames[Number(isNightMode)]);
-		document.body.classList.remove(themeClassNames[Number(!isNightMode)]);
-		document.body.classList.add('theme-cockpit');
-	});
 
 	// TOUCH HANDLING
 	let firstTouchDetection = $state(true);
@@ -48,15 +40,7 @@
 		>
 			<Icon src={accessibilityMode ? BsEyeFill : BsEyeSlashFill} />
 		</button>
-		<button
-			class="header-button"
-			onclick={() => {
-				isNightMode = !isNightMode;
-			}}
-			aria-label="toggle theme"
-		>
-			<Icon src={isNightMode ? BsSunFill : BsMoonFill} />
-		</button>
+		<StyleSelector />
 	</div>
 </header>
 

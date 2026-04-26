@@ -12,6 +12,6 @@
 		box-shadow: var(--external-shadow), var(--bevel-1);
 
 		padding: var(--base-spacing);
-		background-color: var(--background-colour-tile);
+		background-color: var(--colour-b-2);
 	}
 </style>

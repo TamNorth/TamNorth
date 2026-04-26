@@ -16,3 +16,10 @@ export function getIntersect(line1, line2) {
         ? { x: intersectX, y: line1.m * intersectX + line1.c }
         : null;
 }
+
+	// function getRgb(red, green, blue) {
+	// 	return (
+	// 		(red & 0xf0 ? '#' : red & 0xf ? '#0' : '#00') +
+	// 		((red << 16) | (green << 8) | blue).toString(16)
+	// 	);
+	// }
