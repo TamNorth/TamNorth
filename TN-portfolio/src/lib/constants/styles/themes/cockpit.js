@@ -4,42 +4,42 @@ import { getBevelParams } from "./utils.js"
 
 const baseColours = { 
     dark: {
-        "--colour-b-0": '#2a2b2a',
-        "--colour-b-1": '#3F403F',
-        "--colour-b-2": '#343c32',
-        "--colour-b-3": '#9FB8AD',
-        "--colour-t-0": '#CED0CE',
-        "--colour-t-1": '#E6E8E6',
-        "--colour-error": '#B3001B',
-        "--colour-alert": '#DD6031',
-        "--colour-warn": '#FF8811',
-        "--colour-positive": '#29BF12',
-        "--colour-info": '#507DBC',
-        "--colour-temp": '#5E0B15',
-        "--colour-temp2": '#A8763E',
-        "--colour-temp3": '#DB504A',
+        "colour-b-0": '#2a2b2a',
+        "colour-b-1": '#3F403F',
+        "colour-b-2": '#343c32',
+        "colour-b-3": '#9FB8AD',
+        "colour-t-0": '#CED0CE',
+        "colour-t-1": '#E6E8E6',
+        "colour-error": '#B3001B',
+        "colour-alert": '#DD6031',
+        "colour-warn": '#FF8811',
+        "colour-positive": '#29BF12',
+        "colour-info": '#507DBC',
+        "colour-temp": '#5E0B15',
+        "colour-temp2": '#A8763E',
+        "colour-temp3": '#DB504A',
     },
     light: {
-        "--colour-b-0": '#E6E8E6',
-        "--colour-b-1": '#CED0CE',
-        "--colour-b-2": '#9FB8AD',
-        "--colour-b-3": '#475841',
-        "--colour-t-0": '#3F403F',
-        "--colour-t-1": '#2a2b2a',
+        "colour-b-0": '#E6E8E6',
+        "colour-b-1": '#CED0CE',
+        "colour-b-2": '#9FB8AD',
+        "colour-b-3": '#475841',
+        "colour-t-0": '#3F403F',
+        "colour-t-1": '#2a2b2a',
     },
 }
 
 const componentColours = { 
     dark: {
-        "--colour-button": '#2a2b2a',
+        "colour-button": '#2a2b2a',
     },
     light: {
-        "--colour-b-0": '#E6E8E6',
-        "--colour-b-1": '#CED0CE',
-        "--colour-b-2": '#9FB8AD',
-        "--colour-b-3": '#475841',
-        "--colour-t-0": '#3F403F',
-        "--colour-t-1": '#2a2b2a',
+        "colour-b-0": '#E6E8E6',
+        "colour-b-1": '#CED0CE',
+        "colour-b-2": '#9FB8AD',
+        "colour-b-3": '#475841',
+        "colour-t-0": '#3F403F',
+        "colour-t-1": '#2a2b2a',
     },
 }
 
@@ -68,4 +68,4 @@ const bevel = getBevelParams({
     }
 })
 
-export const cockpit = [baseColours, bevel]
+export {baseColours, bevel}

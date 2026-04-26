@@ -1,17 +1,24 @@
 <script>
-	import { themes } from '../constants/styles/themes/themes.js';
+	import useTheme from '$lib/hooks/useTheme.svelte.js';
 	import { Icon } from 'svelte-icons-pack';
 	import { BsMoonFill, BsSunFill } from 'svelte-icons-pack/bs';
 
-	const themeNames = Object.keys(themes);
-	let currentThemeName = $state(themeNames[0]);
+	const { themeNames } = useTheme();
+
+	let activeTheme = $state({});
 	let isDarkMode = $state(true);
-	const currentTheme = $derived(themes[currentThemeName]?.[isDarkMode ? 'dark' : 'light']);
+
+	$effect(() => {
+		const { currentTheme } = useTheme(themeNames[0], isDarkMode);
+		activeTheme = currentTheme;
+	});
 
 	$effect(() =>
-		Object.entries(currentTheme).forEach(([propertyName, value]) =>
-			document.documentElement.style.setProperty(propertyName, value)
-		)
+		Object.values(activeTheme).forEach((themeObj) => {
+			Object.entries(themeObj).forEach(([propertyName, value]) =>
+				document.documentElement.style.setProperty(`--${propertyName}`, value)
+			);
+		})
 	);
 </script>
 

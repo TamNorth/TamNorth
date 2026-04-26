@@ -1,4 +1,4 @@
-import * as unformattedThemes from "./cockpit.js"
+import * as cockpit from "./cockpit.js"
 
 // function objectToCss(mode) {
 //     if (!!mode) return Object.entries(mode).map((property) => property.join(": ")).join("; ") + "; "
@@ -11,13 +11,13 @@ function formatCss(mode) {
     )
 }
 
-export const themes = Object.entries(unformattedThemes)
+export const themes = Object.entries({cockpit})
     .reduce((acc, [themeName, themeObj]) => {
-        const themeStyles = themeObj.reduce((acc, {dark, light, shared}) => {
+        const themeStyles = Object.entries(themeObj).reduce((acc, [key, {dark, light, shared}]) => {
             const sharedVariables = formatCss(shared)
             return {
-                dark: {...acc.dark, ...sharedVariables, ...formatCss(dark)},
-                light: {...acc.light, ...sharedVariables, ...formatCss(light)}
+                dark: {...acc.dark, [key]: {...sharedVariables, ...formatCss(dark)}},
+                light: {...acc.light, [key]: {...sharedVariables, ...formatCss(light)}}
             }
         }, {dark: {}, light: {}})
 
