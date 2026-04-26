@@ -1,20 +1,25 @@
 function makePath(context, vertices, scale, origin) {
 	context.beginPath();
 	let firstVertex = null;
+	let paint = false
 
-	vertices.forEach((coord) => {
+	vertices.forEach(({hidden = false, ...coord}) => {
 		const {x, y} = scaleVertex(coord, scale, origin)
 		if (!x || !y) return;
 
-		if (!firstVertex) {
+		firstVertex = firstVertex ?? { x, y }
+
+		if (hidden) {
+			paint = false
+		} else if (!paint) {
 			context.moveTo(x, y);
-			firstVertex = { x, y };
+			paint = true
 		} else {
 			context.lineTo(x, y);
 		}
 	});
 
-	context.lineTo(firstVertex.x, firstVertex.y);
+	if (paint) context.lineTo(firstVertex.x, firstVertex.y);
 }
 
 export function outlineShapes({context, origin, shapes, scale = 1, colour}) {
@@ -38,6 +43,21 @@ export function fillShapes({context, origin, shapes, scale = 1, colour}) {
 		makePath(context, vertices, scale, origin)
 
 		context.fill();
+	})
+}
+
+export function paintVertices({context, origin, vertices, scale = 1, colour: colourOverride}) {
+	const rectSize = 10
+	const rectHalfSize = rectSize / 2
+	const defaultColour = 'red';
+
+	vertices.filter(vertex => vertex).forEach(({ x: x0, y: y0, colour = null }) => {
+		if (!x0 || !y0) return;
+		context.fillStyle = colourOverride ?? colour ?? defaultColour;
+
+		const {x, y} = scaleVertex({x: x0, y: y0}, scale, origin)
+
+		context.fillRect(x - rectHalfSize, y - rectHalfSize, rectSize, rectSize);
 	})
 }
 
