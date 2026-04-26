@@ -51,20 +51,17 @@ const bevel = getBevelParams({
         shadowLength: "2px",
         shadowDirectionX: -1,
         shadowDirectionY: 1,
-        shadowVisibility: "50%",
-        shadowColour: "black",
         insetHighlightColour: "rgb(255, 200, 150)",
-        bevelSize: "2px",
-        bevelBlur: "2px", // = bevelSize
-        bevelVisibility: "20%",
     },
     light: {
         shadowLength: "2px",
         shadowDirectionX: 1,
         shadowDirectionY: 1,
+        insetHighlightColour: "rgb(253, 255, 150)",
+    },
+    shared: {
         shadowVisibility: "50%",
         shadowColour: "black",
-        insetHighlightColour: "rgb(253, 255, 150)",
         bevelSize: "2px",
         bevelBlur: "2px", // = bevelSize
         bevelVisibility: "20%",

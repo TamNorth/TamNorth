@@ -1,4 +1,4 @@
-export function getBevelParams({hasBevel, ...modes}) {
+export function getBevelParams({hasBevel, shared, ...modes}) {
         if (!hasBevel) {
             const noBevel = {
                 "--external-shadow": `
@@ -25,7 +25,7 @@ export function getBevelParams({hasBevel, ...modes}) {
                     bevelSize,
                     bevelBlur,
                     bevelVisibility
-                } = mode
+                } = {...shared, ...mode}
 
                 return {
                     "--external-shadow": `
