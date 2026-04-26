@@ -10,6 +10,7 @@
 		normaliseAngle
 	} from '$lib/utils/mathsUtils.js';
 	import { untrack } from 'svelte';
+	import useTheme from '$lib/hooks/useTheme.svelte.js';
 
 	const INITIAL_SCALE = 300;
 	const DEFAULT_GRID_SIZE = 4;
@@ -456,7 +457,7 @@
 		return candidateQuads.find((quad) => checkIfInsideQuad(quad, mouseClick));
 	}
 
-	function paintQuad({ context, mousePos, vertices, quads, scale, origin }) {
+	function paintQuad({ context, mousePos, vertices, quads, scale, origin, colour, fillRule }) {
 		const singleQuad = getNearestQuad(mousePos, quads, vertices, scale, origin);
 		const shape = { vertices: singleQuad?.map((vertexId) => vertices[vertexId]) };
 
@@ -467,12 +468,13 @@
 				origin,
 				shapes: [shape],
 				scale,
-				colour: 'blue'
+				colour,
+				fillRule
 			})
 		);
 	}
 
-	function paintQuadGroup({ context, mousePos, vertices, quads, scale, origin, fillRule }) {
+	function paintQuadGroup({ context, mousePos, vertices, quads, scale, origin, colour, fillRule }) {
 		const nearestVertexId = getNearestVertex(mousePos, vertices, scale, origin);
 		const selectedQuads = getQuadsFromVertex(nearestVertexId, quads);
 		const shapes = selectedQuads?.map((quad) => {
@@ -486,7 +488,7 @@
 				origin,
 				shapes,
 				scale,
-				colour: 'green',
+				colour,
 				fillRule
 			})
 		);
@@ -663,6 +665,8 @@
 		let newVertices = $state({});
 		let vertices = $derived({ ...originalVertices, ...newVertices });
 
+		const { currentTheme } = useTheme();
+
 		$effect(() => {
 			if (!mouseClickPos) return;
 
@@ -701,9 +705,9 @@
 
 			function fillRule({ context, vertices }) {
 				const prevFillStyle = context.fillStyle;
-				console.log(vertices);
+
 				if (vertices.some(({ locked }) => locked)) {
-					context.fillStyle = 'red';
+					context.fillStyle = currentTheme.baseColours['colour-error'];
 					context.fill();
 					context.fillStyle = prevFillStyle;
 				} else {
@@ -718,9 +722,19 @@
 				quads,
 				scale,
 				origin,
+				colour: currentTheme.baseColours['colour-positive'],
 				fillRule
 			});
-			paintQuad({ context: overlayContext, mousePos, vertices, quads, scale, origin });
+			paintQuad({
+				context: overlayContext,
+				mousePos,
+				vertices,
+				quads,
+				scale,
+				origin,
+				colour: currentTheme.baseColours['colour-info'],
+				fillRule
+			});
 		});
 
 		$effect(() => {

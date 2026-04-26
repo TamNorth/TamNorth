@@ -22,15 +22,19 @@ function makePath(context, vertices, scale, origin) {
 	if (paint) context.lineTo(firstVertex.x, firstVertex.y);
 }
 
-export function outlineShapes({context, origin, shapes, scale = 1, colour}) {
+export function outlineShapes({context, origin, shapes, scale = 1, colour, strokeRule}) {
 	const defaultColour = 'red';
 
 	shapes.forEach(({ vertices, colour: shapeColour }) => {
 		context.strokeStyle = colour ?? shapeColour ?? defaultColour;
 
 		makePath(context, vertices, scale, origin)
-		
-		context.stroke();
+
+		if (strokeRule) {
+			strokeRule({context, vertices})
+		} else {
+			context.stroke()
+		};
 	})
 }
 
