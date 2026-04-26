@@ -371,8 +371,17 @@
 		return loop(startingVertexId, startingDistance);
 	}
 
-	function getQuadsFromVertex(vertexId, quads) {
-		return quads.filter((quad) => quad.some((vid) => vid === vertexId));
+	function getQuadsFromVertex(vertexId, quads, selectionRadius = 1) {
+		let selectedVertices = [vertexId];
+		let selectedQuads = [];
+
+		for (let i = 0; i < selectionRadius; i++) {
+			const newQuads = quads.filter((quad) => quad.some((vId) => selectedVertices.includes(vId)));
+			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
+			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
+		}
+
+		return selectedQuads;
 	}
 
 	function getNearestQuad(mouseClick, quads, vertices, scale, origin) {
