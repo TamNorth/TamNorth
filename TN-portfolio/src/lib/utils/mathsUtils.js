@@ -29,6 +29,22 @@ export function getBearing(v1, v2) {
     return normaliseAngle(Math.atan2(dY, dX));
 }
 
+export function getHypotenuse(dX, dY) {
+    return Math.sqrt(Math.pow(dY, 2) + Math.pow(dX, 2));
+}
+
+export function getDistance(v1, v2) {
+    const dX = v1.x - v2.x;
+    const dY = v1.y - v2.y;
+    return Math.sqrt(Math.pow(dY, 2) + Math.pow(dX, 2));
+}
+
+export function getVector(v1, v2) {
+    const angle = getBearing(v1, v2)
+    const magnitude = getDistance(v1, v2)
+    return {angle, magnitude}
+}
+
 	// function getRgb(red, green, blue) {
 	// 	return (
 	// 		(red & 0xf0 ? '#' : red & 0xf ? '#0' : '#00') +

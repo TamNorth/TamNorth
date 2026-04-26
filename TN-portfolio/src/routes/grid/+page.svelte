@@ -5,8 +5,10 @@
 	import Tile from '$lib/shared/Tile.svelte';
 	import {
 		getBearing,
+		getHypotenuse,
 		getIntersect,
 		getLinearParams,
+		getVector,
 		normaliseAngle
 	} from '$lib/utils/mathsUtils.js';
 	import { untrack } from 'svelte';
@@ -242,30 +244,23 @@
 		return newVertices;
 	}
 
-	function getHypotenuse(dX, dY) {
-		return Math.sqrt(Math.pow(dY, 2) + Math.pow(dX, 2));
-	}
-
 	function getVertexForces({ vertices, edges }) {
 		const springLength = SPRING_LENGTH;
 
-		const unresolvedForces = edges.reduce((acc, [v1, v2]) => {
-			const [end1, end2] = [vertices[v1], vertices[v2]];
-			const dY = end1.y - end2.y; // positive if end1 is lower
-			const dX = end1.x - end2.x; // positive if end1 is to the right
+		const unresolvedForces = edges.reduce((acc, [v1Id, v2Id]) => {
+			const [end1, end2] = [vertices[v1Id], vertices[v2Id]];
 
-			const bearing = Math.atan2(dY, dX);
-			const length = getHypotenuse(dX, dY);
+			const { magnitude: length, angle: bearing } = getVector(end1, end2);
 			const tension = length - springLength;
 
 			const tensionY = tension * Math.sin(bearing);
 			const tensionX = tension * Math.cos(bearing);
 
-			if (!acc[v1]) acc[v1] = [];
-			if (!acc[v2]) acc[v2] = [];
+			if (!acc[v1Id]) acc[v1Id] = [];
+			if (!acc[v2Id]) acc[v2Id] = [];
 
-			acc[v1] = [...acc[v1], { tensionY: -tensionY, tensionX: -tensionX }];
-			acc[v2] = [...acc[v2], { tensionY: tensionY, tensionX: tensionX }];
+			acc[v1Id] = [...acc[v1Id], { tensionY: -tensionY, tensionX: -tensionX }];
+			acc[v2Id] = [...acc[v2Id], { tensionY: tensionY, tensionX: tensionX }];
 			return acc;
 		}, {});
 
@@ -288,7 +283,7 @@
 	function relaxGrid({ vertices, edges }, stepNum = 1) {
 		const springStrength = SPRING_STRENGTH;
 
-		const newVertices = structuredClone($state.snapshot(vertices));
+		const newVertices = $state.snapshot(vertices);
 
 		for (let i = 0; i < stepNum; i++) {
 			const vertexForces = getVertexForces({ vertices: newVertices, edges });
@@ -374,8 +369,6 @@
 
 		const normalisedVertices = normaliseGrid(vertices);
 		const relaxedVertices = relaxGrid({ vertices: normalisedVertices, edges }, RELAXATION_PASSES);
-
-		// const formattedEdges = getEdgeCoords({ vertices: relaxedVertices, edges });
 
 		return { vertices: relaxedVertices, edges, quads };
 	}

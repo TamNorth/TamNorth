@@ -33,7 +33,7 @@
 	let offset = $state({ x: 0, y: 0 });
 
 	const updateBoundingRect = () => {
-		const { x, y } = canvas.getBoundingClientRect();
+		const { x, y } = canvas.getBoundingClientRect() || {};
 		offset.x = x;
 		offset.y = y;
 	};
