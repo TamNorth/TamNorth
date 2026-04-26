@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import './fonts.css';
-@import '../styles/cockpit.css';
 @plugin '@tailwindcss/forms';
 :root {
 	/* FONTS */
