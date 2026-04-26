@@ -6,8 +6,8 @@ export function getLinearParams(v1, v2) {
 
 export function getIntersect(line1, line2) {
     const intersectX = (line1.c - line2.c) / (line2.m - line1.m);
-    const line1XRange = [line1.x1, line1.x2].sort();
-    const line2XRange = [line2.x1, line2.x2].sort();
+    const line1XRange = [line1.x1, line1.x2].sort((a, b) => a-b);
+    const line2XRange = [line2.x1, line2.x2].sort((a, b) => a-b);
     
     return intersectX > line1XRange[0] &&
         intersectX < line1XRange[1] &&
