@@ -1,4 +1,6 @@
 <script lang="js">
+	import { onMount } from "svelte";
+
 	let { canvasFn = () => {}, height = '', width = '', customStyle } = $props();
 
 	const style = `
@@ -12,20 +14,36 @@
 	let overlayCanvas = $state();
 	let mousePosition = $state({ x: null, y: null });
 	let mouseClick = $state({ x: null, y: null });
-	const { x: xOffset, y: yOffset } = $derived(canvas?.getBoundingClientRect() || {});
 
-	const handleMouseMove = (e) => {
+
+	function handleMouseMove(e) {
 		mousePosition.x = e.clientX;
 		mousePosition.y = e.clientY;
 	};
 
-	const handleMouseClick = (e) => {
+	function handleMouseClick(e) {
 		mouseClick.x = e.clientX;
 		mouseClick.y = e.clientY;
 	};
 
 	let w = $state(0);
 	let h = $state(0);
+
+	/** BOUNDING RECT */
+
+	let { xOffset, yOffset } = $state({xOffset: 0, yOffset: 0});
+
+	const updateBoundingRect = () => {
+		const { x, y } = canvas.getBoundingClientRect();
+		xOffset = x;
+		yOffset = y;
+	};
+
+	onMount(() => {
+		window.addEventListener('resize', updateBoundingRect);
+		window.addEventListener('scroll', updateBoundingRect);
+		updateBoundingRect();
+	});
 
 	$effect(() => {
 		canvasFn({ canvas, overlayCanvas, mousePosition, mouseClick, w, h });
