@@ -1,12 +1,7 @@
 <script lang="ts">
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
-	import {
-		fillShapes,
-		outlineShapes,
-		paintVertices,
-		scaleVertex
-	} from '$lib/shared/Canvas2D/utils.js';
+	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
 	import {
 		getBearing,
@@ -477,7 +472,7 @@
 		);
 	}
 
-	function paintQuadGroup({ context, mousePos, vertices, quads, scale, origin }) {
+	function paintQuadGroup({ context, mousePos, vertices, quads, scale, origin, fillRule }) {
 		const nearestVertexId = getNearestVertex(mousePos, vertices, scale, origin);
 		const selectedQuads = getQuadsFromVertex(nearestVertexId, quads);
 		const shapes = selectedQuads?.map((quad) => {
@@ -491,7 +486,8 @@
 				origin,
 				shapes,
 				scale,
-				colour: 'green'
+				colour: 'green',
+				fillRule
 			})
 		);
 	}
@@ -670,16 +666,19 @@
 		$effect(() => {
 			if (!mouseClickPos) return;
 
+			const relaxationRadius = 4;
+			const polygonSides = Math.floor(Math.random() * 3 + 4);
+
 			const selectedVertexId = getNearestVertex(mouseClickPos, vertices, scale, origin);
 			const selectedQuads = getQuadsFromVertex(selectedVertexId, quads);
 			const verticesToAdd = fitPolygon({
-				polygonSides: 4,
+				polygonSides,
 				quadGroup: selectedQuads,
 				vertices: vertices,
 				radius: 0.65
 			});
 
-			const quadsToRelax = getQuadsFromVertex(selectedVertexId, quads, 4);
+			const quadsToRelax = getQuadsFromVertex(selectedVertexId, quads, relaxationRadius);
 
 			const verticesToRelax = {
 				...quadsToRelax
@@ -699,7 +698,28 @@
 
 		$effect(() => {
 			overlayContext.clearRect(0, 0, w, h);
-			paintQuadGroup({ context: overlayContext, mousePos, vertices, quads, scale, origin });
+
+			function fillRule({ context, vertices }) {
+				const prevFillStyle = context.fillStyle;
+				console.log(vertices);
+				if (vertices.some(({ locked }) => locked)) {
+					context.fillStyle = 'red';
+					context.fill();
+					context.fillStyle = prevFillStyle;
+				} else {
+					context.fill();
+				}
+			}
+
+			paintQuadGroup({
+				context: overlayContext,
+				mousePos,
+				vertices,
+				quads,
+				scale,
+				origin,
+				fillRule
+			});
 			paintQuad({ context: overlayContext, mousePos, vertices, quads, scale, origin });
 		});
 

@@ -34,7 +34,7 @@ export function outlineShapes({context, origin, shapes, scale = 1, colour}) {
 	})
 }
 
-export function fillShapes({context, origin, shapes, scale = 1, colour}) {
+export function fillShapes({context, origin, shapes, scale = 1, colour, fillRule = null}) {
 	const defaultColour = 'red';
 
 	shapes.forEach(({ vertices, colour: shapeColour }) => {
@@ -42,7 +42,11 @@ export function fillShapes({context, origin, shapes, scale = 1, colour}) {
 
 		makePath(context, vertices, scale, origin)
 
-		context.fill();
+		if (fillRule) {
+			fillRule({context, vertices})
+		} else {
+			context.fill()
+		};
 	})
 }
 
