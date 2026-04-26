@@ -1,5 +1,5 @@
 <script lang="js">
-	import { onMount } from "svelte";
+	import { onMount } from 'svelte';
 
 	let { canvasFn = () => {}, height = '', width = '', customStyle } = $props();
 
@@ -15,28 +15,27 @@
 	let mousePosition = $state({ x: null, y: null });
 	let mouseClick = $state({ x: null, y: null });
 
-
 	function handleMouseMove(e) {
 		mousePosition.x = e.clientX;
 		mousePosition.y = e.clientY;
-	};
+	}
 
 	function handleMouseClick(e) {
 		mouseClick.x = e.clientX;
 		mouseClick.y = e.clientY;
-	};
+	}
 
 	let w = $state(0);
 	let h = $state(0);
 
 	/** BOUNDING RECT */
 
-	let { xOffset, yOffset } = $state({xOffset: 0, yOffset: 0});
+	let offset = $state({ x: 0, y: 0 });
 
 	const updateBoundingRect = () => {
 		const { x, y } = canvas.getBoundingClientRect();
-		xOffset = x;
-		yOffset = y;
+		offset.x = x;
+		offset.y = y;
 	};
 
 	onMount(() => {
@@ -46,7 +45,7 @@
 	});
 
 	$effect(() => {
-		canvasFn({ canvas, overlayCanvas, mousePosition, mouseClick, w, h });
+		canvasFn({ canvas, overlayCanvas, mousePosition, mouseClick, w, h, offset });
 	});
 </script>
 
@@ -66,7 +65,7 @@
 	height={h}
 	width={w}
 	class="overlay"
-	style="--x-offset: {xOffset}px; --y-offset: {yOffset}px;"
+	style="--x-offset: {offset.x}px; --y-offset: {offset.y}px;"
 ></canvas>
 
 <style>

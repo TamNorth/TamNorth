@@ -650,12 +650,11 @@
 
 	let { vertices: originalVertices, edges, quads } = $derived(makeHex(gridSize));
 
-	const canvasFn = ({ canvas, overlayCanvas, mousePosition, mouseClick, w, h }) => {
-		const { x: xOffset, y: yOffset } = $derived(canvas.getBoundingClientRect());
-		const mousePos = $derived({ x: mousePosition.x - xOffset, y: mousePosition.y - yOffset });
+	const canvasFn = ({ canvas, overlayCanvas, mousePosition, mouseClick, w, h, offset }) => {
+		const mousePos = $derived({ x: mousePosition.x - offset.x, y: mousePosition.y - offset.y });
 		let mouseClickPos = $derived(
 			typeof mouseClick.x === 'number'
-				? { x: mouseClick.x - xOffset, y: mouseClick.y - yOffset }
+				? { x: mouseClick.x - offset.x, y: mouseClick.y - offset.y }
 				: null
 		);
 		const context = $derived(canvas.getContext('2d'));
@@ -665,7 +664,16 @@
 		let newVertices = $state({});
 		let vertices = $derived({ ...originalVertices, ...newVertices });
 
-		const { currentTheme } = useTheme();
+		const {
+			currentTheme: {
+				baseColours: {
+					'colour-warn': colourWarn,
+					'colour-error': colourError,
+					'colour-info': colourInfo,
+					'colour-positive': colourPositive
+				}
+			}
+		} = useTheme();
 
 		$effect(() => {
 			if (!mouseClickPos) return;
@@ -707,7 +715,7 @@
 				const prevFillStyle = context.fillStyle;
 
 				if (vertices.some(({ locked }) => locked)) {
-					context.fillStyle = currentTheme.baseColours['colour-error'];
+					context.fillStyle = `${colourError}88`;
 					context.fill();
 					context.fillStyle = prevFillStyle;
 				} else {
@@ -722,7 +730,7 @@
 				quads,
 				scale,
 				origin,
-				colour: currentTheme.baseColours['colour-positive'],
+				colour: `${colourPositive}88`,
 				fillRule
 			});
 			paintQuad({
@@ -732,7 +740,7 @@
 				quads,
 				scale,
 				origin,
-				colour: currentTheme.baseColours['colour-info'],
+				colour: `${colourInfo}88`,
 				fillRule
 			});
 		});
@@ -759,7 +767,7 @@
 				const prevStrokeStyle = context.strokeStyle;
 
 				if (vertices.some(({ locked }) => locked)) {
-					context.strokeStyle = currentTheme.baseColours['colour-error'];
+					context.strokeStyle = colourError;
 					context.stroke();
 					context.strokeStyle = prevStrokeStyle;
 				} else {
@@ -772,7 +780,7 @@
 				origin,
 				shapes,
 				scale,
-				colour: currentTheme.baseColours['colour-info'],
+				colour: colourInfo,
 				strokeRule
 			});
 		});
