@@ -292,7 +292,7 @@
 	function relaxGrid({ vertices, edges }, stepNum = 1) {
 		const springStrength = SPRING_STRENGTH;
 
-		const newVertices = structuredClone(vertices);
+		const newVertices = structuredClone($state.snapshot(vertices));
 
 		for (let i = 0; i < stepNum; i++) {
 			const vertexForces = getVertexForces({ vertices: newVertices, edges });
@@ -309,6 +309,63 @@
 		return newVertices;
 	}
 
+	function getGridOutline(quads) {
+		// get number of times each vertex is shared by a quad
+		const vertexCounts = quads.reduce((acc, quad) => {
+			quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
+			return acc;
+		}, {});
+
+		// define unshared vertices as quad-group corners,
+		const { cornerVertexIds, edgeVertexIds, middleVertexIds } = Object.entries(vertexCounts).reduce(
+			(acc, [id, count]) => {
+				if (count === 1) acc.cornerVertexIds.push(id);
+				else if (count === 2) acc.edgeVertexIds.push(id);
+				else acc.middleVertexIds.push(id);
+				return acc;
+			},
+			{ cornerVertexIds: [], edgeVertexIds: [], middleVertexIds: [] }
+		);
+
+		return { cornerVertexIds, edgeVertexIds, middleVertexIds };
+	}
+
+	function relaxSubgrid(quadsToRelax, vertices) {
+		const verticesToRelax = {
+			...quadsToRelax
+				.flat()
+				.reduce((acc, vertexId) => ({ ...acc, [vertexId]: vertices[vertexId] }), {})
+		};
+
+		const { cornerVertexIds, edgeVertexIds } = getGridOutline(quadsToRelax);
+
+		let verticesToUnlock = [];
+
+		for (let vertexId in verticesToRelax) {
+			if (
+				[...cornerVertexIds, ...edgeVertexIds].includes(vertexId) &&
+				!verticesToRelax[vertexId].locked
+			) {
+				verticesToRelax[vertexId].locked = true;
+				verticesToUnlock.push(vertexId);
+			}
+		}
+
+		const relaxedVertices = relaxGrid(
+			{
+				vertices: verticesToRelax,
+				edges: edges.filter((edge) =>
+					edge.every((vId) => Object.keys(verticesToRelax).includes(vId))
+				)
+			},
+			3
+		);
+
+		verticesToUnlock.forEach((vertexId) => (relaxedVertices[vertexId].locked = false));
+
+		return relaxedVertices;
+	}
+
 	function getEdgeCoords({ vertices, edges }) {
 		return edges.map(([v1, v2]) => ({ vertices: [vertices[v1], vertices[v2]] }));
 	}
@@ -322,9 +379,9 @@
 		const normalisedVertices = normaliseGrid(vertices);
 		const relaxedVertices = relaxGrid({ vertices: normalisedVertices, edges }, RELAXATION_PASSES);
 
-		const formattedEdges = getEdgeCoords({ vertices: relaxedVertices, edges });
+		// const formattedEdges = getEdgeCoords({ vertices: relaxedVertices, edges });
 
-		return { vertices: relaxedVertices, edges: formattedEdges, quads };
+		return { vertices: relaxedVertices, edges, quads };
 	}
 
 	function getNearestVertex(mouseClick, vertices, scale, origin) {
@@ -444,22 +501,10 @@
 		if (quadGroup.flat().some((vertexId) => vertices[vertexId]?.locked === true)) return null;
 
 		const TWO_PI = 2 * Math.PI;
-		// get number of times each vertex is shared by a quad
-		const vertexCounts = quadGroup.reduce((acc, quad) => {
-			quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
-			return acc;
-		}, {});
 
-		// define unshared vertices as quad-group corners,
-		const { cornerVertexIds, edgeVertexIds, middleVertexId } = Object.entries(vertexCounts).reduce(
-			(acc, [id, count]) => {
-				if (count === 1) acc.cornerVertexIds.push(id);
-				else if (count === 2) acc.edgeVertexIds.push(id);
-				else acc.middleVertexId = id;
-				return acc;
-			},
-			{ cornerVertexIds: [], edgeVertexIds: [], middleVertexId: '' }
-		);
+		const { cornerVertexIds, edgeVertexIds, middleVertexIds } = getGridOutline(quadGroup);
+
+		const middleVertexId = middleVertexIds[0];
 
 		const middleVertex = vertices[middleVertexId];
 
@@ -634,8 +679,19 @@
 				radius: 0.65
 			});
 
-			for (let vertexId in verticesToAdd) {
-				if (verticesToAdd[vertexId]) newVertices[vertexId] = verticesToAdd[vertexId];
+			const quadsToRelax = getQuadsFromVertex(selectedVertexId, quads, 4);
+
+			const verticesToRelax = {
+				...quadsToRelax
+					.flat()
+					.reduce((acc, vertexId) => ({ ...acc, [vertexId]: vertices[vertexId] }), {}),
+				...verticesToAdd
+			};
+
+			const relaxedVertices = relaxSubgrid(quadsToRelax, verticesToRelax);
+
+			for (let vertexId in relaxedVertices) {
+				if (relaxedVertices[vertexId]) newVertices[vertexId] = relaxedVertices[vertexId];
 			}
 		});
 
