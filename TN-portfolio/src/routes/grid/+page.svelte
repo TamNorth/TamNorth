@@ -8,7 +8,12 @@
 		scaleVertex
 	} from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
-	import { getIntersect, getLinearParams } from '$lib/utils/mathsUtils.js';
+	import {
+		getBearing,
+		getIntersect,
+		getLinearParams,
+		normaliseAngle
+	} from '$lib/utils/mathsUtils.js';
 	import { untrack } from 'svelte';
 
 	const INITIAL_SCALE = 300;
@@ -426,15 +431,17 @@
 	}
 
 	function fitPolygon({ polygonSides = 4, quadGroup, vertices, radius }) {
-		if (quadGroup.some((quad) => quad.some((vertexId) => vertices[vertexId]?.locked === true)))
-			return null;
+		// return null if a vertex is locked
+		if (quadGroup.flat().some((vertexId) => vertices[vertexId]?.locked === true)) return null;
 
 		const TWO_PI = 2 * Math.PI;
+		// get number of times each vertex is shared by a quad
 		const vertexCounts = quadGroup.reduce((acc, quad) => {
 			quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
 			return acc;
 		}, {});
 
+		// define unshared vertices as quad-group corners,
 		const { cornerVertexIds, edgeVertexIds, middleVertexId } = Object.entries(vertexCounts).reduce(
 			(acc, [id, count]) => {
 				if (count === 1) acc.cornerVertexIds.push(id);
@@ -445,25 +452,33 @@
 			{ cornerVertexIds: [], edgeVertexIds: [], middleVertexId: '' }
 		);
 
-		if (!middleVertexId || [...cornerVertexIds, ...edgeVertexIds].length < polygonSides) {
+		const middleVertex = vertices[middleVertexId];
+
+		// if polygon cannot be fit, return null
+		if (!middleVertex || [...cornerVertexIds, ...edgeVertexIds].length < polygonSides) {
 			return null;
 		}
 
+		// get the angle to fit the first corner of the polygon to
+		const firstCornerId = cornerVertexIds[0];
+		const firstCornerAngle = getBearing(vertices[firstCornerId], middleVertex);
+
+		// get bearing of each vertex from middle vertex...
 		const vertexAngles = [...cornerVertexIds, ...edgeVertexIds]
-			.reduce((acc, vertexId) => {
-				function getBearing(vertex1Id, vertex2Id) {
-					const dX = vertices[vertex1Id].x - vertices[vertex2Id].x;
-					const dY = vertices[vertex1Id].y - vertices[vertex2Id].y;
-					return (Math.atan2(dY, dX) + TWO_PI) % TWO_PI;
-				}
-				return [...acc, [vertexId, getBearing(vertexId, middleVertexId)]];
-			}, [])
-			.sort((a, b) => a[1] - b[1]);
+			.map((vertexId) => {
+				const vertex = vertices[vertexId];
+				return [vertexId, getBearing(vertex, middleVertex)];
+			})
+			// ...in order, starting at first corner angle
+			.sort((a, b) => {
+				const angleA = a[1] >= firstCornerAngle ? a[1] : a[1] + TWO_PI;
+				const angleB = b[1] >= firstCornerAngle ? b[1] : b[1] + TWO_PI;
+				return angleA - angleB;
+			});
 
 		const targetAngles = fillWithCount(Array(polygonSides), 0).map((index) => {
 			const angleInterval = TWO_PI / polygonSides;
-			const firstAngle = vertexAngles[0][1];
-			return (firstAngle + index * angleInterval) % TWO_PI;
+			return normaliseAngle(firstCornerAngle + index * angleInterval);
 		});
 
 		function getClosestVertexToAngle(vertexAngles, targetAngles) {
@@ -490,6 +505,7 @@
 					}
 					vertexIndex++;
 				} else {
+					// console.log({ [targetAngles[targetIndex]]: vertexAngles[vertexIndex][1] });
 					targetIndex++;
 				}
 			}
@@ -501,54 +517,56 @@
 			const { x: x0, y: y0 } = origin;
 
 			// Trackers:
+
+			// polygon corner angle trackers, used to rotate polygon-edge vertices to correct edge:
+			const remainingTargetAngles = [...targetAngles];
+			// polygon-to-fit angles e.g. [0, pi/2, pi, 3pi/4]
+			let prevTargetAngle = targetAngles[targetAngles.length - 1];
+			// tracks through target angles e.g. 3pi/4 => 0 => pi/2 => pi => 3pi/4
+
+			// corner index trackers, used to space polygon-edge vertices evenly:
+			const remainingCornerIndices = cornerVertices.map(([id, index]) => index);
+			// vertexAngle array indices e.g. [0, 3, 5, 8]
+			let prevCornerIndex =
+				vertexAngles.length - remainingCornerIndices[remainingCornerIndices.length - 1];
+			// starts at number of edge vertices between last & first corner
+
 			// corner position trackers, used to place polygon-corner vertices and get polygon-edge linear equations:
-			let lastCorner = {
-				x: x0 + radius * Math.cos(targetAngles[targetAngles.length - 1]),
-				y: y0 + radius * Math.sin(targetAngles[targetAngles.length - 1])
+			let prevCorner = {
+				x: x0 + radius * Math.cos(prevTargetAngle),
+				y: y0 + radius * Math.sin(prevTargetAngle)
 			};
 			let nextCorner = {
 				x: x0 + radius * Math.cos(targetAngles[0]),
 				y: y0 + radius * Math.sin(targetAngles[0])
 			};
 
-			// polygon corner angle trackers, used to rotate polygon-edge vertices to correct edge:
-			const remainingTargetAngles = [...targetAngles];
-			// polygon-to-fit angles e.g. [0, pi/2, pi, 3pi/4]
-			let lastTargetAngle = targetAngles[targetAngles.length - 1];
-			// tracks through target angles e.g. 3pi/4 => 0 => pi/2 => pi => 3pi/4
-
-			// corner index trackers, used to space polygon-edge vertices evenly:
-			const remainingCornerIndices = cornerVertices.map(([id, index]) => index);
-			// vertexAngle array indices e.g. [0, 3, 5, 8]
-			let lastCornerIndex =
-				vertexAngles.length - remainingCornerIndices[remainingCornerIndices.length - 1];
-			// starts at number of edge vertices between last & first corner
-
 			return vertexAngles.reduce((acc, [id, _], i) => {
 				// check if vertex angle is closest match to polygon corner
 				if (cornerVertices.find(([cornerId, _]) => id === cornerId)) {
 					// if corner vertex:
 					// shift reference corners forward by one
-					lastCornerIndex = remainingCornerIndices.shift();
-					lastTargetAngle = remainingTargetAngles.shift();
-					lastCorner = nextCorner;
+					prevCornerIndex = remainingCornerIndices.shift();
+					prevTargetAngle = remainingTargetAngles.shift();
+					prevCorner = nextCorner;
 					nextCorner = {
 						x: x0 + radius * Math.cos(remainingTargetAngles[0] ?? targetAngles[0]),
 						y: y0 + radius * Math.sin(remainingTargetAngles[0] ?? targetAngles[0])
 					};
 					// move vertex to polygon corner
-					return { ...acc, [id]: { ...lastCorner, locked: true } };
+					return { ...acc, [id]: { ...prevCorner, locked: true } };
 				} else {
 					// if edge vertex, move to polygon edge:
 					// calculate intermediate angle between last & next polygon corner
 					const ratio =
-						(i - lastCornerIndex) /
-						Math.abs((remainingCornerIndices[0] ?? vertexAngles.length) - lastCornerIndex);
-					const relativeAngle =
-						(remainingTargetAngles[0] ?? targetAngles[0] + TWO_PI) - lastTargetAngle;
-					const absoluteAngle = lastTargetAngle + ratio * relativeAngle;
+						(i - prevCornerIndex) /
+						Math.abs((remainingCornerIndices[0] ?? vertexAngles.length) - prevCornerIndex);
+					const relativeAngle = normaliseAngle(
+						(remainingTargetAngles[0] ?? targetAngles[0] + TWO_PI) - prevTargetAngle
+					);
+					const absoluteAngle = prevTargetAngle + ratio * relativeAngle;
 					// calculate point along polygon edge at intermediate angle
-					const polygonEdge = getLinearParams(lastCorner, nextCorner);
+					const polygonEdge = getLinearParams(prevCorner, nextCorner);
 					const lineFromOrigin = getLinearParams(origin, {
 						x: origin.x + radius * 3 * Math.cos(absoluteAngle),
 						y: origin.y + radius * 3 * Math.sin(absoluteAngle)

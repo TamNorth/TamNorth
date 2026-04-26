@@ -1,3 +1,5 @@
+const TWO_PI = 2 * Math.PI;
+        
 export function getLinearParams(v1, v2) {
     const m = (v1.y - v2.y) / (v1.x - v2.x);
     const c = v1.y - m * v1.x;
@@ -15,6 +17,16 @@ export function getIntersect(line1, line2) {
         intersectX < line2XRange[1]
         ? { x: intersectX, y: line1.m * intersectX + line1.c }
         : null;
+}
+
+export function normaliseAngle(angle) {
+    return (angle + TWO_PI) % TWO_PI
+}
+
+export function getBearing(v1, v2) {
+    const dX = v1.x - v2.x;
+    const dY = v1.y - v2.y;
+    return normaliseAngle(Math.atan2(dY, dX));
 }
 
 	// function getRgb(red, green, blue) {
