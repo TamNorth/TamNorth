@@ -21,12 +21,9 @@
 	}}
 />
 
-<!-- <svelte:body class:{themeClassNames[Number(!isNightMode)]}/> -->
-
 <header class="header {accessibilityMode ? '' : 'header-hidden'}">
 	<!-- NAVIGATION -->
 	<nav class="navigation">
-		<!-- <a href={resolve('/about')} class="header-button">About</a> -->
 		<a href={resolve('/')} aria-label="go to homepage" class="header-button home-button">
 			{@html homeButtonText}
 		</a>

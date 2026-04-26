@@ -13,10 +13,11 @@ function formatCss(mode) {
 
 export const themes = Object.entries(unformattedThemes)
     .reduce((acc, [themeName, themeObj]) => {
-        const themeStyles = themeObj.reduce((acc, {dark, light}) => {
+        const themeStyles = themeObj.reduce((acc, {dark, light, shared}) => {
+            const sharedVariables = formatCss(shared)
             return {
-                dark: {...acc.dark, ...formatCss(dark)},
-                light: {...acc.light, ...formatCss(light)}
+                dark: {...acc.dark, ...sharedVariables, ...formatCss(dark)},
+                light: {...acc.light, ...sharedVariables, ...formatCss(light)}
             }
         }, {dark: {}, light: {}})
 

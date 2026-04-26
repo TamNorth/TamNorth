@@ -1,20 +1,20 @@
 function makePath(context, vertices, scale, origin) {
-		context.beginPath();
-		let firstVertex = null;
+	context.beginPath();
+	let firstVertex = null;
 
-		vertices.forEach((coord) => {
-			const {x, y} = scaleVertex(coord, scale, origin)
-			if (!x || !y) return;
+	vertices.forEach((coord) => {
+		const {x, y} = scaleVertex(coord, scale, origin)
+		if (!x || !y) return;
 
-			if (!firstVertex) {
-				context.moveTo(x, y);
-				firstVertex = { x, y };
-			} else {
-				context.lineTo(x, y);
-			}
-		});
+		if (!firstVertex) {
+			context.moveTo(x, y);
+			firstVertex = { x, y };
+		} else {
+			context.lineTo(x, y);
+		}
+	});
 
-		context.lineTo(firstVertex.x, firstVertex.y);
+	context.lineTo(firstVertex.x, firstVertex.y);
 }
 
 export function outlineShapes({context, origin, shapes, scale = 1, colour}) {
