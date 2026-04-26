@@ -1,7 +1,12 @@
 <script lang="ts">
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
-	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
+	import {
+		fillShapes,
+		outlineShapes,
+		paintVertices,
+		scaleVertex
+	} from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
 	import { getIntersect, getLinearParams } from '$lib/utils/mathsUtils.js';
 	import { untrack } from 'svelte';
@@ -473,7 +478,7 @@
 
 				if (
 					newAngleDiff < currentAngleDiff ||
-					vertexAngles.length - vertexIndex <= targetAngles.length - targetIndex
+					vertexAngles.length - vertexIndex <= targetAngles.length - targetIndex - 1
 				) {
 					if (results[targetIndex]) {
 						results[targetIndex] = [id, vertexIndex];
@@ -529,7 +534,7 @@
 						y: y0 + radius * Math.sin(remainingTargetAngles[0] ?? targetAngles[0])
 					};
 					// move vertex to polygon corner
-					return { ...acc, [id]: lastCorner };
+					return { ...acc, [id]: { ...lastCorner, locked: true } };
 				} else {
 					// if edge vertex, move to polygon edge:
 					// calculate intermediate angle between last & next polygon corner
@@ -542,12 +547,12 @@
 					// calculate point along polygon edge at intermediate angle
 					const polygonEdge = getLinearParams(lastCorner, nextCorner);
 					const lineFromOrigin = getLinearParams(origin, {
-						x: radius * 3 * Math.cos(absoluteAngle),
-						y: radius * 3 * Math.sin(absoluteAngle)
+						x: origin.x + radius * 3 * Math.cos(absoluteAngle),
+						y: origin.y + radius * 3 * Math.sin(absoluteAngle)
 					});
 					const intercept = getIntersect(polygonEdge, lineFromOrigin);
 					// move to edge-intercept
-					return { ...acc, [id]: intercept };
+					return { ...acc, [id]: { ...intercept, locked: true } };
 				}
 			}, {});
 		}
@@ -562,7 +567,7 @@
 			radius
 		);
 
-		return polygon;
+		return { ...polygon, [middleVertexId]: { ...vertices[middleVertexId], hidden: true } };
 	}
 
 	/* EXECUTION */
@@ -596,7 +601,7 @@
 				polygonSides: 4,
 				quadGroup: selectedQuads,
 				vertices: vertices,
-				radius: 0.5
+				radius: 0.65
 			});
 
 			for (let vertexId in verticesToAdd) {
@@ -631,15 +636,6 @@
 			const newShapes = Object.values(newVertices).filter((v) => v);
 
 			outlineShapes({ context, origin, shapes, scale });
-			if (newShapes.length) {
-				outlineShapes({
-					context,
-					origin,
-					shapes: [{ vertices: newShapes }],
-					scale,
-					colour: 'magenta'
-				});
-			}
 		});
 	};
 </script>
