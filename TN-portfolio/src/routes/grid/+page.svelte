@@ -426,6 +426,9 @@
 	}
 
 	function fitPolygon({ polygonSides = 4, quadGroup, vertices, radius }) {
+		if (quadGroup.some((quad) => quad.some((vertexId) => vertices[vertexId]?.locked === true)))
+			return null;
+
 		const TWO_PI = 2 * Math.PI;
 		const vertexCounts = quadGroup.reduce((acc, quad) => {
 			quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
