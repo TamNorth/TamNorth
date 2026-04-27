@@ -4,12 +4,15 @@
 	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
 	import {
+		getAveragePosition,
 		getBearing,
 		getHypotenuse,
 		getIntersect,
 		getLinearParams,
 		getVector,
-		normaliseAngle
+		normaliseAngle,
+		resolveVector,
+		sumDimensions
 	} from '$lib/utils/mathsUtils.js';
 	import { untrack } from 'svelte';
 	import useTheme from '$lib/hooks/useTheme.svelte.js';
@@ -259,25 +262,35 @@
 			if (!acc[v1Id]) acc[v1Id] = [];
 			if (!acc[v2Id]) acc[v2Id] = [];
 
-			acc[v1Id] = [...acc[v1Id], { tensionY: -tensionY, tensionX: -tensionX }];
-			acc[v2Id] = [...acc[v2Id], { tensionY: tensionY, tensionX: tensionX }];
+			acc[v1Id] = [...acc[v1Id], { y: -tensionY, x: -tensionX }];
+			acc[v2Id] = [...acc[v2Id], { y: tensionY, x: tensionX }];
 			return acc;
 		}, {});
 
-		function resolveForces(vertex) {
-			return vertex.reduce(
-				(acc, { tensionY, tensionX }) => ({
-					y: acc.y + tensionY,
-					x: acc.x + tensionX
-				}),
-				{ x: 0, y: 0 }
-			);
-		}
-
 		return Object.entries(unresolvedForces).reduce(
-			(acc, [id, vertex]) => ({ ...acc, [id]: resolveForces(vertex) }),
+			(acc, [id, vertex]) => ({ ...acc, [id]: sumDimensions(vertex) }),
 			{}
 		);
+	}
+
+	function getRigidBodyForces(vertices, vertexForces) {
+		const rotationalCentre = getAveragePosition(Object.values(vertices));
+		const linearForce = sumDimensions(Object.values(vertexForces));
+
+		const angularForce = Object.entries(vertices).reduce((acc, [vertexId, coords]) => {
+			const { magnitude: perpendicularDistance, angle: radialAngle } = getVector(
+				rotationalCentre,
+				coords
+			);
+			const tangentAngle = normaliseAngle(radialAngle + Math.PI / 2);
+			const forceVector = getVector(vertexForces[vertexId], { x: 0, y: 0 });
+			const { parallel: tangentialForce } = resolveVector(forceVector, tangentAngle);
+			const torque = tangentialForce * perpendicularDistance;
+
+			return acc + torque;
+		}, 0);
+
+		return { centre: rotationalCentre, angular: angularForce, linear: linearForce };
 	}
 
 	function relaxGrid({ vertices, edges }, stepNum = 1) {

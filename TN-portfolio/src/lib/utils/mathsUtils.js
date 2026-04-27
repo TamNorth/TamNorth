@@ -45,6 +45,32 @@ export function getVector(v1, v2) {
     return {angle, magnitude}
 }
 
+export function resolveVector(vector, angle) {
+    const angleDiff = vector.angle - angle
+    const parallelMagnitude = vector.magnitude * Math.cos(angleDiff)
+    const perpendicularMagnitude = vector.magnitude * Math.sin(angleDiff)
+    return {parallel: parallelMagnitude, perpendicular: perpendicularMagnitude}
+}
+
+export function sumDimensions(positions) {
+    return positions.reduce(
+        (acc, { x, y }) => {
+            acc.x += x;
+            acc.y += y;
+            return acc;
+        },
+        { x: 0, y: 0 }
+    );
+}
+
+export function getAveragePosition(vertices) {
+    const vertexCount = vertices.length
+    return vertices.reduce((acc, {x, y}) => ({
+        x: acc.x + x / vertexCount,
+        y: acc.y + y / vertexCount,
+    }), {x: 0, y: 0})
+}
+
 	// function getRgb(red, green, blue) {
 	// 	return (
 	// 		(red & 0xf0 ? '#' : red & 0xf ? '#0' : '#00') +
