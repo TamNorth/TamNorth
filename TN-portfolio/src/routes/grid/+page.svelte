@@ -19,7 +19,8 @@
 
 	const INITIAL_SCALE = 300;
 	const DEFAULT_GRID_SIZE = 4;
-	const POLYGON_SIDES = 6; //() => Math.floor(Math.random() * 3 + 4);
+	const POLYGON_SIDES = 4; //() => Math.floor(Math.random() * 3 + 4);
+	const POLYGON_RADIUS = POLYGON_SIDES < 5 ? 0.65 : 0.6;
 	const RELAXATION_RADIUS = 4;
 
 	/* RELAXATION PARAMS */
@@ -602,7 +603,7 @@
 
 				if (
 					newAngleDiff < currentAngleDiff ||
-					vertexAngles.length - vertexIndex <= targetAngles.length - targetIndex - 1
+					vertexAngles.length - vertexIndex <= targetAngles.length - targetIndex - 2
 				) {
 					if (results[targetIndex]) {
 						results[targetIndex] = [id, vertexIndex];
@@ -743,7 +744,7 @@
 				polygonSides: POLYGON_SIDES,
 				quadGroup: selectedQuads,
 				vertices: vertices,
-				radius: 0.65
+				radius: POLYGON_RADIUS
 			});
 
 			const quadsToRelax = getQuadsFromVertex(selectedVertexId, quads, RELAXATION_RADIUS);
