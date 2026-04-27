@@ -538,7 +538,10 @@
 
 	function fitPolygon({ polygonSides = 4, quadGroup, vertices, radius }) {
 		// return null if a vertex is locked
-		if (quadGroup.flat().some((vertexId) => vertices[vertexId]?.locked === true)) return null;
+		if (
+			quadGroup.flat().some((vertexId) => vertices[vertexId]?.locked || vertices[vertexId]?.group)
+		)
+			return null;
 
 		const TWO_PI = 2 * Math.PI;
 
@@ -762,7 +765,7 @@
 			function fillRule({ context, vertices }) {
 				const prevFillStyle = context.fillStyle;
 
-				if (vertices.some(({ locked }) => locked)) {
+				if (vertices.some(({ locked, group }) => locked || group)) {
 					context.fillStyle = `${colourError}88`;
 					context.fill();
 					context.fillStyle = prevFillStyle;
@@ -809,12 +812,11 @@
 			const shapes = quads.map((quad) => ({
 				vertices: quad.map((vertexId) => vertices[vertexId])
 			}));
-			const newShapes = Object.values(newVertices).filter((v) => v);
 
 			function strokeRule({ context, vertices }) {
 				const prevStrokeStyle = context.strokeStyle;
 
-				if (vertices.some(({ locked }) => locked)) {
+				if (vertices.some(({ locked, group }) => locked || group)) {
 					context.strokeStyle = colourError;
 					context.stroke();
 					context.strokeStyle = prevStrokeStyle;
