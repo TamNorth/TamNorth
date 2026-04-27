@@ -3,11 +3,11 @@ function makePath(context, vertices, scale, origin) {
 	let firstVertex = null;
 	let paint = false
 
-	vertices.forEach(({hidden = false, ...coord}) => {
+	vertices.forEach(({hidden = false, ...coord}, i) => {
 		const {x, y} = scaleVertex(coord, scale, origin)
 		if (!x || !y) return;
 
-		firstVertex = firstVertex ?? { x, y }
+		if (!hidden && i === 0) firstVertex = { x, y }
 
 		if (hidden) {
 			paint = false
@@ -19,7 +19,7 @@ function makePath(context, vertices, scale, origin) {
 		}
 	});
 
-	if (paint) context.lineTo(firstVertex.x, firstVertex.y);
+	if (paint && firstVertex) context.lineTo(firstVertex.x, firstVertex.y);
 }
 
 export function outlineShapes({context, origin, shapes, scale = 1, colour, strokeRule}) {
