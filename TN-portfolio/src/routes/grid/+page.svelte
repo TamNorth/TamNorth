@@ -19,10 +19,12 @@
 
 	const INITIAL_SCALE = 300;
 	const DEFAULT_GRID_SIZE = 4;
+	const POLYGON_SIDES = 6; //() => Math.floor(Math.random() * 3 + 4);
+	const RELAXATION_RADIUS = 4;
 
 	/* RELAXATION PARAMS */
 	const SPRING_LENGTH = 0.2;
-	const SPRING_STRENGTH = 0.2;
+	const SPRING_STRENGTH = 0.3;
 	const RELAXATION_PASSES = 5;
 	const ROTATIONAL_DAMPING = 2;
 
@@ -370,7 +372,7 @@
 		return { cornerVertexIds, edgeVertexIds, middleVertexIds };
 	}
 
-	function relaxSubgrid(quadsToRelax, vertices) {
+	function relaxSubgrid(quadsToRelax, vertices, stepNums = 10) {
 		const verticesToRelax = {
 			...quadsToRelax
 				.flat()
@@ -398,7 +400,7 @@
 					edge.every((vId) => Object.keys(verticesToRelax).includes(vId))
 				)
 			},
-			3
+			stepNums
 		);
 
 		verticesToUnlock.forEach((vertexId) => (relaxedVertices[vertexId].locked = false));
@@ -602,7 +604,6 @@
 					}
 					vertexIndex++;
 				} else {
-					// console.log({ [targetAngles[targetIndex]]: vertexAngles[vertexIndex][1] });
 					targetIndex++;
 				}
 			}
@@ -729,19 +730,16 @@
 		$effect(() => {
 			if (!mouseClickPos) return;
 
-			const relaxationRadius = 4;
-			const polygonSides = Math.floor(Math.random() * 3 + 4);
-
 			const selectedVertexId = getNearestVertex(mouseClickPos, vertices, scale, origin);
 			const selectedQuads = getQuadsFromVertex(selectedVertexId, quads);
 			const verticesToAdd = fitPolygon({
-				polygonSides,
+				polygonSides: POLYGON_SIDES,
 				quadGroup: selectedQuads,
 				vertices: vertices,
 				radius: 0.65
 			});
 
-			const quadsToRelax = getQuadsFromVertex(selectedVertexId, quads, relaxationRadius);
+			const quadsToRelax = getQuadsFromVertex(selectedVertexId, quads, RELAXATION_RADIUS);
 
 			const verticesToRelax = {
 				...quadsToRelax
