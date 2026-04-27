@@ -331,18 +331,25 @@
 
 			for (let groupId in groupedVertices) {
 				const group = groupedVertices[groupId];
-				const { centre, angular, linear } = getRigidBodyForces(group, vertexForces);
-				const bodyMass = Object.keys(group).length;
 
-				for (let vertexId in group) {
-					let vertex = newVertices[vertexId];
-					if (!vertex.locked) {
-						const { magnitude: radius, angle: bearing } = getVector(vertex, centre);
-						vertex.x += (angular / bodyMass) * ROTATIONAL_DAMPING * radius * -Math.sin(bearing);
-						vertex.y += (angular / bodyMass) * ROTATIONAL_DAMPING * radius * Math.cos(bearing);
+				if (
+					// if not all grouped nodes available, do not modify
+					groupId.split('+').length === Object.keys(group).length &&
+					Object.values(group).every((vertex) => !vertex.locked)
+				) {
+					const { centre, angular, linear } = getRigidBodyForces(group, vertexForces);
+					const bodyMass = Object.keys(group).length;
 
-						vertex.x += (linear.x / bodyMass) * springStrength;
-						vertex.y += (linear.y / bodyMass) * springStrength;
+					for (let vertexId in group) {
+						let vertex = newVertices[vertexId];
+						if (!vertex.locked) {
+							const { magnitude: radius, angle: bearing } = getVector(vertex, centre);
+							vertex.x += (angular / bodyMass) * ROTATIONAL_DAMPING * radius * -Math.sin(bearing);
+							vertex.y += (angular / bodyMass) * ROTATIONAL_DAMPING * radius * Math.cos(bearing);
+
+							vertex.x += (linear.x / bodyMass) * springStrength;
+							vertex.y += (linear.y / bodyMass) * springStrength;
+						}
 					}
 				}
 			}
