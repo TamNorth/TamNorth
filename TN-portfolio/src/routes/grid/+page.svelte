@@ -24,6 +24,7 @@
 	const SPRING_LENGTH = 0.2;
 	const SPRING_STRENGTH = 0.2;
 	const RELAXATION_PASSES = 5;
+	const ROTATIONAL_DAMPING = 2;
 
 	/* DEFINITIONS */
 
@@ -253,14 +254,21 @@
 		const unresolvedForces = edges.reduce((acc, [v1Id, v2Id]) => {
 			const [end1, end2] = [vertices[v1Id], vertices[v2Id]];
 
+			if (!acc[v1Id]) acc[v1Id] = [];
+			if (!acc[v2Id]) acc[v2Id] = [];
+
+			if (end1.group && end1.group === end2.group) {
+				// disregard tensions internal to groups
+				acc[v1Id] = [...acc[v1Id], { y: 0, x: 0 }];
+				acc[v2Id] = [...acc[v2Id], { y: 0, x: 0 }];
+				return acc;
+			}
+
 			const { magnitude: length, angle: bearing } = getVector(end1, end2);
 			const tension = length - springLength;
 
 			const tensionY = tension * Math.sin(bearing);
 			const tensionX = tension * Math.cos(bearing);
-
-			if (!acc[v1Id]) acc[v1Id] = [];
-			if (!acc[v2Id]) acc[v2Id] = [];
 
 			acc[v1Id] = [...acc[v1Id], { y: -tensionY, x: -tensionX }];
 			acc[v2Id] = [...acc[v2Id], { y: tensionY, x: tensionX }];
@@ -279,8 +287,8 @@
 
 		const angularForce = Object.entries(vertices).reduce((acc, [vertexId, coords]) => {
 			const { magnitude: perpendicularDistance, angle: radialAngle } = getVector(
-				rotationalCentre,
-				coords
+				coords,
+				rotationalCentre
 			);
 			const tangentAngle = normaliseAngle(radialAngle + Math.PI / 2);
 			const forceVector = getVector(vertexForces[vertexId], { x: 0, y: 0 });
@@ -297,15 +305,43 @@
 		const springStrength = SPRING_STRENGTH;
 
 		const newVertices = $state.snapshot(vertices);
+		let groupedVertices = {};
 
 		for (let i = 0; i < stepNum; i++) {
 			const vertexForces = getVertexForces({ vertices: newVertices, edges });
 
 			for (let vertexId in newVertices) {
 				let vertex = newVertices[vertexId];
-				if (!vertex.locked) {
+				if (vertex.group) {
+					groupedVertices[vertex.group] = {
+						...(groupedVertices?.[vertex.group] || []),
+						[vertexId]: vertex
+					};
+				} else if (!vertex.locked) {
 					vertex.x += vertexForces[vertexId].x * springStrength;
 					vertex.y += vertexForces[vertexId].y * springStrength;
+				}
+			}
+		}
+
+		for (let i = 0; i < 10; i++) {
+			const vertexForces = getVertexForces({ vertices: newVertices, edges });
+
+			for (let groupId in groupedVertices) {
+				const group = groupedVertices[groupId];
+				const { centre, angular, linear } = getRigidBodyForces(group, vertexForces);
+				const bodyMass = Object.keys(group).length;
+
+				for (let vertexId in group) {
+					let vertex = newVertices[vertexId];
+					if (!vertex.locked) {
+						const { magnitude: radius, angle: bearing } = getVector(vertex, centre);
+						vertex.x += (angular / bodyMass) * ROTATIONAL_DAMPING * radius * -Math.sin(bearing);
+						vertex.y += (angular / bodyMass) * ROTATIONAL_DAMPING * radius * Math.cos(bearing);
+
+						vertex.x += (linear.x / bodyMass) * springStrength;
+						vertex.y += (linear.y / bodyMass) * springStrength;
+					}
 				}
 			}
 		}
@@ -571,7 +607,7 @@
 			return results;
 		}
 
-		function resolveToPolygon(targetAngles, cornerVertices, vertexAngles, origin, radius) {
+		function resolveToPolygon(targetAngles, cornerVertices, vertexAngles, origin, radius, groupId) {
 			const { x: x0, y: y0 } = origin;
 
 			// Trackers:
@@ -612,7 +648,7 @@
 						y: y0 + radius * Math.sin(remainingTargetAngles[0] ?? targetAngles[0])
 					};
 					// move vertex to polygon corner
-					return { ...acc, [id]: { ...prevCorner, locked: true } };
+					return { ...acc, [id]: { ...prevCorner, group: groupId } };
 				} else {
 					// if edge vertex, move to polygon edge:
 					// calculate intermediate angle between last & next polygon corner
@@ -631,22 +667,28 @@
 					});
 					const intercept = getIntersect(polygonEdge, lineFromOrigin);
 					// move to edge-intercept
-					return { ...acc, [id]: { ...intercept, locked: true } };
+					return { ...acc, [id]: { ...intercept, group: groupId } };
 				}
 			}, {});
 		}
 
 		const cornerVertices = getClosestVertexToAngle(vertexAngles, targetAngles);
 
+		const groupId = [...cornerVertexIds, ...edgeVertexIds, middleVertexId].join('+');
+
 		const polygon = resolveToPolygon(
 			targetAngles,
 			cornerVertices,
 			vertexAngles,
 			vertices[middleVertexId],
-			radius
+			radius,
+			groupId
 		);
 
-		return { ...polygon, [middleVertexId]: { ...vertices[middleVertexId], hidden: true } };
+		return {
+			...polygon,
+			[middleVertexId]: { ...vertices[middleVertexId], group: groupId, hidden: true }
+		};
 	}
 
 	/* EXECUTION */
