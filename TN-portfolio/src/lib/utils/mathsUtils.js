@@ -71,6 +71,9 @@ export function getAveragePosition(vertices) {
     }), {x: 0, y: 0})
 }
 
+export const fillWithCount = (array, start = 0) =>
+    array.fill(0).map((_, i) => i + start);
+
 	// function getRgb(red, green, blue) {
 	// 	return (
 	// 		(red & 0xf0 ? '#' : red & 0xf ? '#0' : '#00') +
