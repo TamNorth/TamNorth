@@ -6,19 +6,14 @@
 	import { getHypotenuse, getIntersect, getLinearParams } from '$lib/utils/mathsUtils.js';
 	import { untrack } from 'svelte';
 	import useTheme from '$lib/hooks/useTheme.svelte.js';
-	import { gridManager } from './engine.svelte.ts';
+	import { GridManager } from './engine.svelte.ts';
 
 	const INITIAL_SCALE = 300;
 	const DEFAULT_GRID_SIZE = 4;
 	const POLYGON_SIDES = 4; //() => Math.floor(Math.random() * 3 + 4);
 	const POLYGON_RADIUS = POLYGON_SIDES < 5 ? 0.65 : 0.6;
-	const RELAXATION_RADIUS = 4;
 
 	/* DEFINITIONS */
-
-	function getEdgeCoords({ vertices, edges }) {
-		return edges.map(([v1, v2]) => ({ vertices: [vertices[v1], vertices[v2]] }));
-	}
 
 	function getNearestVertex(mouseClick, vertices, scale, origin) {
 		const startingVertexId = '0/0';
@@ -116,7 +111,7 @@
 
 	function paintQuadGroup({ context, mousePos, vertices, quads, scale, origin, colour, fillRule }) {
 		const nearestVertexId = getNearestVertex(mousePos, vertices, scale, origin);
-		const selectedQuads = getQuadsFromVertex(nearestVertexId, quads);
+		const selectedQuads = gridManager.getQuadsFromVertex(nearestVertexId);
 		const shapes = selectedQuads?.map((quad) => {
 			return { vertices: quad.map((vertexId) => vertices[vertexId]) };
 		});
@@ -139,7 +134,8 @@
 	let gridSize = $state(DEFAULT_GRID_SIZE);
 	let scale = $derived(INITIAL_SCALE / gridSize);
 
-	let { vertices: originalVertices, edges, quads } = $derived(gridManager.makeHex(gridSize));
+	let gridManager = $derived(new GridManager(gridSize));
+	let { vertices: originalVertices, quads } = $derived(gridManager.makeHex());
 
 	const canvasFn = ({ canvas, overlayCanvas, mousePosition, mouseClick, w, h, offset }) => {
 		const mousePos = $derived({ x: mousePosition.x - offset.x, y: mousePosition.y - offset.y });
@@ -170,24 +166,12 @@
 			if (!mouseClickPos) return;
 
 			const selectedVertexId = getNearestVertex(mouseClickPos, vertices, scale, origin);
-			const selectedQuads = getQuadsFromVertex(selectedVertexId, quads);
-			const verticesToAdd = gridManager.fitPolygon(
-				vertices,
-				selectedQuads,
+
+			const relaxedVertices = gridManager.insertPolygon(
+				selectedVertexId,
 				POLYGON_RADIUS,
 				POLYGON_SIDES
 			);
-
-			const quadsToRelax = getQuadsFromVertex(selectedVertexId, quads, RELAXATION_RADIUS);
-
-			const verticesToRelax = {
-				...quadsToRelax
-					.flat()
-					.reduce((acc, vertexId) => ({ ...acc, [vertexId]: vertices[vertexId] }), {}),
-				...verticesToAdd
-			};
-
-			const relaxedVertices = gridManager.relaxSubgrid(verticesToRelax, edges, quadsToRelax);
 
 			for (let vertexId in relaxedVertices) {
 				if (relaxedVertices[vertexId]) newVertices[vertexId] = relaxedVertices[vertexId];

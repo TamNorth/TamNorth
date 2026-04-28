@@ -6,18 +6,34 @@ type Vertex = {readonly x: number, readonly y: number, readonly hidden?: boolean
 type MutableVertex = {x: number, y: number, hidden?: boolean, locked?: boolean, group?: string }
 type Vertices = {readonly [index: string]: Vertex}
 type MutableVertices = {[index: string]: MutableVertex}
-type Grid = {vertices: Vertices, edges: readonly string[][], quads: readonly string[][]}
+type Grid = {vertices: Vertices, quads: readonly string[][]}
 
-class GridManager {
-    constructor(
+export class GridManager {
+    public constructor(
         private hexSize: number = 6, 
 	    private initialScale: number = 300,
         private springLength: number = 0.2,
 	    private springStrength: number = 0.3,
 	    private relaxationPasses: number = 5,
 	    private rotationalDamping: number = 2,
+        private relaxationRadius: number = 4,
 ) {
 
+    }
+    private vertices: MutableVertices = {}
+
+    public getVertices(): MutableVertices {
+        const verticesCopy: MutableVertices = structuredClone(this.vertices)
+        return verticesCopy
+    }
+
+    private edges: string[][] = []
+
+    private quads: string[][] = []
+
+    public getQuads(): string[][] {
+        const quadsCopy: string[][] = [...this.quads.map(quad => [...quad])]
+        return quadsCopy
     }
 
     private getHexgridTriangles(size: number): Triangle[] {
@@ -145,7 +161,7 @@ class GridManager {
 			: [..._mergedShapes, mergedVertices];
 	}
 
-    private interpolate(shapes: readonly Coord[][], size: number): Grid {
+    private interpolate(shapes: readonly Coord[][], size: number): {vertices: Vertices, edges: readonly string[][], quads: readonly string[][]} {
 		const { vertices, edges, quads } = shapes.reduce(
 			(acc, shape) => {
 				let { mX, mY }: {mX: number, mY: number} = shape.reduce(
@@ -371,13 +387,36 @@ class GridManager {
 		const normalisedVertices = this.normaliseGrid(vertices);
 		const relaxedVertices = this.relaxGrid(normalisedVertices, edges, this.relaxationPasses);
 
-		return { vertices: relaxedVertices, edges, quads };
+        this.vertices = {...this.vertices, ...relaxedVertices}
+        this.edges = [...this.edges, ...edges]
+        this.quads = [...this.quads, ...quads]
+
+		return { vertices: this.getVertices(), quads: this.getQuads() };
 	}
 
-    public fitPolygon( vertices: Vertices, quadGroup: readonly string[][], radius: number, polygonSides = 4 ): Vertices | null {
+    private makeSpatialBuckets() {
+
+    }
+
+    public getQuadsFromVertex(vertexId: string, selectionRadius = 1): readonly string[][] {
+		let selectedVertices = [vertexId];
+		let selectedQuads: readonly string[][] = [];
+
+		for (let i = 0; i < selectionRadius; i++) {
+			const newQuads = this.quads
+                .filter((quad) => quad.some((vId) => selectedVertices.includes(vId)))
+                .map(quad => [...quad]);
+			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
+			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
+		}
+
+		return selectedQuads;
+	}
+
+    private fitPolygon( quadGroup: readonly string[][], radius: number, polygonSides = 4 ): Vertices | null {
 		// return null if a vertex is locked
 		if (
-			quadGroup.flat().some((vertexId) => vertices[vertexId]?.locked || vertices[vertexId]?.group)
+			quadGroup.flat().some((vertexId) => this.vertices[vertexId]?.locked || this.vertices[vertexId]?.group)
 		)
 			return null;
 
@@ -387,7 +426,7 @@ class GridManager {
 
 		const middleVertexId = middleVertexIds[0];
 
-		const middleVertex = vertices[middleVertexId];
+		const middleVertex = this.vertices[middleVertexId];
 
 		// if polygon cannot be fit, return null
 		if (!middleVertex || [...cornerVertexIds, ...edgeVertexIds].length < polygonSides) {
@@ -396,12 +435,12 @@ class GridManager {
 
 		// get the angle to fit the first corner of the polygon to
 		const firstCornerId = cornerVertexIds[0];
-		const firstCornerAngle = getBearing(vertices[firstCornerId], middleVertex);
+		const firstCornerAngle = getBearing(this.vertices[firstCornerId], middleVertex);
 
 		// get bearing of each vertex from middle vertex...
 		const vertexAngles: [string, number][] = [...cornerVertexIds, ...edgeVertexIds]
 			.map((vertexId) => {
-				const vertex = vertices[vertexId];
+				const vertex = this.vertices[vertexId];
 				return [vertexId, getBearing(vertex, middleVertex)] as [string, number];
 			})
 			// ...in order, starting at first corner angle
@@ -527,18 +566,18 @@ class GridManager {
 			targetAngles,
 			cornerVertices,
 			vertexAngles,
-			vertices[middleVertexId],
+			this.vertices[middleVertexId],
 			radius,
 			groupId
 		);
 
 		return {
 			...polygon,
-			[middleVertexId]: { ...vertices[middleVertexId], group: groupId, hidden: true }
+			[middleVertexId]: { ...this.vertices[middleVertexId], group: groupId, hidden: true }
 		};
 	}
 
-    public relaxSubgrid(vertices: Vertices, edges: string[][], quadsToRelax: string[][], stepNums = 10): Vertices {
+    private relaxSubgrid(vertices: Vertices, edges: string[][], quadsToRelax: readonly string[][], stepNums = 10): Vertices {
 		const verticesToRelax: MutableVertices = {
 			...quadsToRelax
 				.flat()
@@ -571,6 +610,28 @@ class GridManager {
 
 		return relaxedVertices;
 	}
-}
 
-export const gridManager = new GridManager()
+    public insertPolygon(vertexId: string, polygonRadius: number, polygonSides: number): Vertices {
+			const selectedQuads = this.getQuadsFromVertex(vertexId);
+			const verticesToAdd = this.fitPolygon(
+				selectedQuads,
+				polygonRadius,
+				polygonSides
+			);
+
+			const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
+
+			const verticesToRelax = {
+				...quadsToRelax
+					.flat()
+					.reduce((acc, vertexId) => ({ ...acc, [vertexId]: this.vertices[vertexId] }), {}),
+				...verticesToAdd
+			};
+
+			const relaxedVertices = this.relaxSubgrid(verticesToRelax, this.edges, quadsToRelax);
+
+            this.vertices = {...this.vertices, ...relaxedVertices}
+
+            return this.getVertices()
+        }
+}
