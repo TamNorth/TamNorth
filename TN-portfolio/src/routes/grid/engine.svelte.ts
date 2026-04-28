@@ -1,9 +1,11 @@
-import { fillWithCount, getAveragePosition, getVector, normaliseAngle, resolveVector, sumDimensions } from "$lib/utils/mathsUtils.js";
+import { fillWithCount, getAveragePosition, getBearing, getIntersect, getLinearParams, getVector, normaliseAngle, resolveVector, sumDimensions } from "$lib/utils/mathsUtils.js";
 
 type Coord = {x: number, y: number}
 type Triangle = {id: Coord, vertices: Coord[], pointsUp: boolean}
-type Vertex = {x: number, y: number, hidden?: boolean, locked?: boolean, group?: string }
-type Vertices = {[index: string]: Vertex}
+type Vertex = {readonly x: number, readonly y: number, readonly hidden?: boolean, readonly locked?: boolean, readonly group?: string }
+type MutableVertex = {x: number, y: number, hidden?: boolean, locked?: boolean, group?: string }
+type Vertices = {readonly [index: string]: Vertex}
+type MutableVertices = {[index: string]: MutableVertex}
 type Grid = {vertices: Vertices, edges: readonly string[][], quads: readonly string[][]}
 
 class GridManager {
@@ -212,7 +214,7 @@ class GridManager {
 
 				return acc;
 			},
-			{ vertices: {}, edges: {}, quads: [] } as {vertices: Vertices | Record<string, never>, edges: {[index: string]: string[]} | Record<string, never>, quads: string[][]}
+			{ vertices: {}, edges: {}, quads: [] } as {vertices: MutableVertices | Record<string, never>, edges: {[index: string]: string[]} | Record<string, never>, quads: string[][]}
 		);
 
 		return { vertices, edges: Object.values(edges), quads };
@@ -222,7 +224,7 @@ class GridManager {
 		const xScalingFactor = 0.5;
 		const yScalingFactor = Math.sin(Math.PI * (2 / 3));
 
-		const newVertices: Vertices = {};
+		const newVertices: MutableVertices = {};
 
 		for (const vertex in vertices) {
 			newVertices[vertex] = {
@@ -235,7 +237,7 @@ class GridManager {
 		return newVertices;
 	}
 
-    private getVertexForces(vertices: Vertices, edges: string[][]): {[index: string]: Coord} {
+    private getVertexForces(vertices: Vertices, edges: readonly string[][]): {[index: string]: Coord} {
 
 		const unresolvedForces = edges.reduce((acc, [v1Id, v2Id]) => {
 			const [end1, end2] = [vertices[v1Id], vertices[v2Id]];
@@ -287,9 +289,9 @@ class GridManager {
 		return { centre: rotationalCentre, angular: angularForce, linear: linearForce };
 	}
 
-    private relaxGrid(vertices: Vertices, edges: readonly string[][], stepNum = 1): Vertices {
+    private relaxGrid(vertices: Vertices, edges: readonly string[][], stepNum = 1): MutableVertices {
 
-		const newVertices = $state.snapshot(vertices);
+		const newVertices: MutableVertices = $state.snapshot(vertices);
 		const groupedVertices: {[index: string]: {[index: string]: Vertex}} = {};
 
 		for (let i = 0; i < stepNum; i++) {
@@ -372,11 +374,175 @@ class GridManager {
 		return { vertices: relaxedVertices, edges, quads };
 	}
 
-    private relaxSubgrid(vertices: Vertices, edges: string[][], quadsToRelax: string[][], stepNums = 10): Vertices {
-		const verticesToRelax: Vertices = {
+    public fitPolygon( vertices: Vertices, quadGroup: readonly string[][], radius: number, polygonSides = 4 ): Vertices | null {
+		// return null if a vertex is locked
+		if (
+			quadGroup.flat().some((vertexId) => vertices[vertexId]?.locked || vertices[vertexId]?.group)
+		)
+			return null;
+
+		const TWO_PI = 2 * Math.PI;
+
+		const { cornerVertexIds, edgeVertexIds, middleVertexIds } = this.getGridOutline(quadGroup);
+
+		const middleVertexId = middleVertexIds[0];
+
+		const middleVertex = vertices[middleVertexId];
+
+		// if polygon cannot be fit, return null
+		if (!middleVertex || [...cornerVertexIds, ...edgeVertexIds].length < polygonSides) {
+			return null;
+		}
+
+		// get the angle to fit the first corner of the polygon to
+		const firstCornerId = cornerVertexIds[0];
+		const firstCornerAngle = getBearing(vertices[firstCornerId], middleVertex);
+
+		// get bearing of each vertex from middle vertex...
+		const vertexAngles: [string, number][] = [...cornerVertexIds, ...edgeVertexIds]
+			.map((vertexId) => {
+				const vertex = vertices[vertexId];
+				return [vertexId, getBearing(vertex, middleVertex)] as [string, number];
+			})
+			// ...in order, starting at first corner angle
+			.sort((a, b) => {
+				const angleA = a[1] >= firstCornerAngle ? a[1] : a[1] + TWO_PI;
+				const angleB = b[1] >= firstCornerAngle ? b[1] : b[1] + TWO_PI;
+				return angleA - angleB;
+			});
+
+		const targetAngles = fillWithCount(Array(polygonSides), 0).map((index: number) => {
+			const angleInterval = TWO_PI / polygonSides;
+			return normaliseAngle(firstCornerAngle + index * angleInterval);
+		});
+
+		function getClosestVerticesToAngle(vertexAngles: [string, number][], targetAngles: number[]) {
+			let vertexIndex = 1;
+			let targetIndex = 1;
+			const results: [[string, number]] = [[vertexAngles[0][0], 0]];
+
+			while (vertexIndex < vertexAngles.length && targetIndex < targetAngles.length) {
+				const [id, angle] = vertexAngles[vertexIndex];
+				const targetAngle = targetAngles[targetIndex];
+				const currentClosestAngleIndex = results[targetIndex]?.[1];
+				const currentClosestAngle = vertexAngles[currentClosestAngleIndex]?.[1] ?? TWO_PI;
+				const currentAngleDiff = Math.abs(currentClosestAngle - targetAngle);
+				const newAngleDiff = Math.abs(angle - targetAngle);
+
+				if (
+					newAngleDiff < currentAngleDiff ||
+					vertexAngles.length - vertexIndex <= targetAngles.length - targetIndex - 2
+				) {
+					if (results[targetIndex]) {
+						results[targetIndex] = [id, vertexIndex];
+					} else {
+						results.push([id, vertexIndex]);
+					}
+					vertexIndex++;
+				} else {
+					targetIndex++;
+				}
+			}
+
+			return results;
+		}
+
+		function resolveToPolygon(
+            targetAngles: number[], 
+            cornerVertices: [string, number][], 
+            vertexAngles: [string, number][], 
+            origin: Coord, 
+            radius: number, 
+            groupId: string
+        ) {
+			const { x: x0, y: y0 } = origin;
+
+			// Trackers:
+
+			// polygon corner angle trackers, used to rotate polygon-edge vertices to correct edge:
+			const remainingTargetAngles = [...targetAngles];
+			// polygon-to-fit angles e.g. [0, pi/2, pi, 3pi/4]
+			let prevTargetAngle = targetAngles[targetAngles.length - 1];
+			// tracks through target angles e.g. 3pi/4 => 0 => pi/2 => pi => 3pi/4
+
+			// corner index trackers, used to space polygon-edge vertices evenly:
+			const remainingCornerIndices = cornerVertices.map(([_, index]) => index);
+			// vertexAngle array indices e.g. [0, 3, 5, 8]
+			let prevCornerIndex =
+				vertexAngles.length - remainingCornerIndices[remainingCornerIndices.length - 1];
+			// starts at number of edge vertices between last & first corner
+
+			// corner position trackers, used to place polygon-corner vertices and get polygon-edge linear equations:
+			let prevCorner = {
+				x: x0 + radius * Math.cos(prevTargetAngle),
+				y: y0 + radius * Math.sin(prevTargetAngle)
+			};
+			let nextCorner = {
+				x: x0 + radius * Math.cos(targetAngles[0]),
+				y: y0 + radius * Math.sin(targetAngles[0])
+			};
+
+			return vertexAngles.reduce((acc, [id, _], i) => {
+				// check if vertex angle is closest match to polygon corner
+				if (cornerVertices.find(([cornerId, _]) => id === cornerId)) {
+					// if corner vertex:
+					// shift reference corners forward by one
+					prevCornerIndex = remainingCornerIndices.shift();
+					prevTargetAngle = remainingTargetAngles.shift();
+					prevCorner = nextCorner;
+					nextCorner = {
+						x: x0 + radius * Math.cos(remainingTargetAngles[0] ?? targetAngles[0]),
+						y: y0 + radius * Math.sin(remainingTargetAngles[0] ?? targetAngles[0])
+					};
+					// move vertex to polygon corner
+					return { ...acc, [id]: { ...prevCorner, group: groupId } };
+				} else {
+					// if edge vertex, move to polygon edge:
+					// calculate intermediate angle between last & next polygon corner
+					const ratio =
+						(i - prevCornerIndex) /
+						Math.abs((remainingCornerIndices[0] ?? vertexAngles.length) - prevCornerIndex);
+					const relativeAngle = normaliseAngle(
+						(remainingTargetAngles[0] ?? targetAngles[0] + TWO_PI) - prevTargetAngle
+					);
+					const absoluteAngle = prevTargetAngle + ratio * relativeAngle;
+					// calculate point along polygon edge at intermediate angle
+					const polygonEdge = getLinearParams(prevCorner, nextCorner);
+					const lineFromOrigin = getLinearParams(origin, {
+						x: origin.x + radius * 3 * Math.cos(absoluteAngle),
+						y: origin.y + radius * 3 * Math.sin(absoluteAngle)
+					});
+					const intercept = getIntersect(polygonEdge, lineFromOrigin);
+					// move to edge-intercept
+					return { ...acc, [id]: { ...intercept, group: groupId } };
+				}
+			}, {});
+		}
+
+		const cornerVertices = getClosestVerticesToAngle(vertexAngles, targetAngles);
+
+		const groupId = [...cornerVertexIds, ...edgeVertexIds, middleVertexId].join('+');
+
+		const polygon = resolveToPolygon(
+			targetAngles,
+			cornerVertices,
+			vertexAngles,
+			vertices[middleVertexId],
+			radius,
+			groupId
+		);
+
+		return {
+			...polygon,
+			[middleVertexId]: { ...vertices[middleVertexId], group: groupId, hidden: true }
+		};
+	}
+
+    public relaxSubgrid(vertices: Vertices, edges: string[][], quadsToRelax: string[][], stepNums = 10): Vertices {
+		const verticesToRelax: MutableVertices = {
 			...quadsToRelax
 				.flat()
-				.reduce((acc, vertexId) => ({ ...acc, [vertexId]: vertices[vertexId] }), {})
+				.reduce((acc, vertexId) => ({ ...acc, [vertexId]: {...vertices[vertexId]} }), {})
 		};
 
 		const { cornerVertexIds, edgeVertexIds } = this.getGridOutline(quadsToRelax);
