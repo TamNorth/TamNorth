@@ -19,7 +19,8 @@ type MutableVertex = {
 	y: number;
 	hidden?: boolean;
 	locked?: boolean;
-	group?: string | null;
+	groupId?: string | null;
+	group?: string[];
 };
 type MutableVertices = { [index: string]: MutableVertex };
 type ShapeRefs = readonly string[][];
@@ -75,10 +76,16 @@ export class GridManager {
 		return selectedQuads.length ? selectedQuads.map((quad) => this.getQuadVertices(quad)) : [];
 	}
 
-	public insertPolygon(position: Coord, polygonRadius: number, polygonSides: number): void {
+	public insertPolygon(
+		position: Coord,
+		groupId: string,
+		polygonRadius: number,
+		polygonSides: number
+	): string | null {
 		const vertexId = this.getNearestVertex(position);
 		const selectedQuads = this.getQuadsFromVertex(vertexId);
-		const verticesToAdd = this.fitPolygon(selectedQuads, polygonRadius, polygonSides);
+		const { vertices: verticesToAdd, id: polygonId } =
+			this.fitPolygon(selectedQuads, polygonRadius, polygonSides, groupId) || {};
 
 		const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
 
@@ -94,6 +101,8 @@ export class GridManager {
 		const relaxedVertices = this.relaxSubgrid(quadsToRelax);
 
 		this.setVertices(relaxedVertices);
+
+		return polygonId || null;
 	}
 
 	public eraseModifications(position: Coord, radius: number): void {
@@ -451,9 +460,9 @@ export class GridManager {
 
 			for (const vertexId in newVertices) {
 				const vertex = newVertices[vertexId];
-				if (vertex.group) {
-					groupedVertices[vertex.group] = {
-						...(groupedVertices?.[vertex.group] || []),
+				if (vertex.groupId) {
+					groupedVertices[vertex.groupId] = {
+						...(groupedVertices?.[vertex.groupId] || []),
 						[vertexId]: vertex
 					};
 				} else if (!vertex.locked) {
@@ -468,10 +477,11 @@ export class GridManager {
 
 			for (const groupId in groupedVertices) {
 				const group = groupedVertices[groupId];
+				const expectedGroup = Object.values(group)[0].group;
 
 				if (
 					// if not all grouped nodes available, do not modify
-					groupId.split('+').length === Object.keys(group).length &&
+					expectedGroup.length === Object.keys(group).length &&
 					Object.values(group).every((vertex) => !vertex.locked)
 				) {
 					const { centre, angular, linear } = this.getRigidBodyForces(group, vertexForces);
@@ -521,7 +531,12 @@ export class GridManager {
 		);
 	}
 
-	private fitPolygon(quadGroup: ShapeRefs, radius: number, polygonSides = 4): Vertices | null {
+	private fitPolygon(
+		quadGroup: ShapeRefs,
+		radius: number,
+		polygonSides = 4,
+		groupId: string
+	): { vertices: Vertices; id: string } | null {
 		// return null if a vertex is locked
 		if (
 			quadGroup
@@ -596,13 +611,14 @@ export class GridManager {
 			return results;
 		}
 
+		const group = [...cornerVertexIds, ...edgeVertexIds, middleVertexId];
+
 		function resolveToPolygon(
 			targetAngles: number[],
 			cornerVertices: [string, number][],
 			vertexAngles: [string, number][],
 			origin: Coord,
-			radius: number,
-			groupId: string
+			radius: number
 		) {
 			const { x: x0, y: y0 } = origin;
 
@@ -644,7 +660,7 @@ export class GridManager {
 						y: y0 + radius * Math.sin(remainingTargetAngles[0] ?? targetAngles[0])
 					};
 					// move vertex to polygon corner
-					return { ...acc, [id]: { ...prevCorner, group: groupId } };
+					return { ...acc, [id]: { ...prevCorner, groupId, group } };
 				} else {
 					// if edge vertex, move to polygon edge:
 					// calculate intermediate angle between last & next polygon corner
@@ -663,27 +679,27 @@ export class GridManager {
 					});
 					const intercept = getIntersect(polygonEdge, lineFromOrigin);
 					// move to edge-intercept
-					return { ...acc, [id]: { ...intercept, group: groupId } };
+					return { ...acc, [id]: { ...intercept, groupId, group } };
 				}
 			}, {});
 		}
 
 		const cornerVertices = getClosestVerticesToAngle(vertexAngles, targetAngles);
 
-		const groupId = [...cornerVertexIds, ...edgeVertexIds, middleVertexId].join('+');
-
 		const polygon = resolveToPolygon(
 			targetAngles,
 			cornerVertices,
 			vertexAngles,
 			this.vertices[middleVertexId],
-			radius,
-			groupId
+			radius
 		);
 
 		return {
-			...polygon,
-			[middleVertexId]: { ...this.vertices[middleVertexId], group: groupId, hidden: true }
+			vertices: {
+				...polygon,
+				[middleVertexId]: { ...this.vertices[middleVertexId], group, groupId, hidden: true }
+			},
+			id: groupId
 		};
 	} // wants major refactor
 

@@ -42,6 +42,7 @@
 	let gridManager = $derived(new GridManager(gridSize));
 	let grid = $derived(gridManager.subscribeGrid());
 	let scale = $state(INITIAL_SCALE);
+	let currentGroupId = $state(1);
 
 	const canvasFn = ({
 		canvas,
@@ -147,13 +148,11 @@
 		});
 
 		$effect(() => {
-			// if (scale > 0 && scale < 200) {
 			scale = (DEFAULT_GRID_SIZE * (INITIAL_SCALE + mouseWheel / 36.8)) / gridSize;
 			untrack(() => {
 				canvasManager.scaleCanvas(scale);
 				overlayCanvasManager.scaleCanvas(scale);
 			});
-			// }
 		});
 
 		/* Mouse click effects */
@@ -162,7 +161,13 @@
 			if (mouseClick) {
 				if (mouseClick.button === 0) {
 					untrack(() => {
-						gridManager.insertPolygon(mouseClickPos as Coord, POLYGON_RADIUS, POLYGON_SIDES);
+						const newId = gridManager.insertPolygon(
+							mouseClickPos as Coord,
+							`${currentGroupId}`,
+							POLYGON_RADIUS,
+							POLYGON_SIDES
+						);
+						currentGroupId++;
 					});
 				}
 

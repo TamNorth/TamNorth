@@ -6,6 +6,7 @@ export type Vertex = {
 	readonly y: number;
 	readonly hidden?: boolean;
 	readonly locked?: boolean;
-	readonly group?: string | null;
+	readonly groupId?: string | null;
+	readonly group?: string[];
 };
 export type Vertices = { readonly [index: string]: Vertex };
