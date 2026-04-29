@@ -125,16 +125,28 @@
 		});
 
 		$effect(() => {
-			if (mouseClickPos) gridManager.insertPolygon(mouseClickPos, POLYGON_RADIUS, POLYGON_SIDES);
+			if (mouseClickPos) {
+				if (mouseClick.button === 0) {
+					untrack(() => {
+						gridManager.insertPolygon(mouseClickPos, POLYGON_RADIUS, POLYGON_SIDES);
+					});
+				}
+
+				if (mouseClick.button === 2) {
+					untrack(() => gridManager.eraseModifications(mouseClickPos, 2));
+				}
+
+				mouseClickPos = null;
+			}
 		});
 
 		$effect(() => {
 			context.clearRect(0, 0, w, h);
 
-			untrack(() => {
-				// important! breaks reactivity dependency cycle in fitPolygon $effect
-				mouseClickPos = null;
-			});
+			// untrack(() => {
+			// 	// important! breaks reactivity dependency cycle in fitPolygon $effect
+			// 	mouseClickPos = null;
+			// });
 
 			function strokeRule({ context, vertices }) {
 				const prevStrokeStyle = context.strokeStyle;

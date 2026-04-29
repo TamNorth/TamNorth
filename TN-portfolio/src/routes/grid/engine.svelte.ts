@@ -2,7 +2,7 @@ import { fillWithCount, getAveragePosition, getBearing, getHypotenuse, getInters
 
 type Coord = {x: number, y: number}
 type Triangle = {id: Coord, vertices: Coord[], pointsUp: boolean}
-type Vertex = {readonly x: number, readonly y: number, readonly hidden?: boolean, readonly locked?: boolean, readonly group?: string }
+type Vertex = {readonly x: number, readonly y: number, readonly hidden?: boolean, readonly locked?: boolean, readonly group?: string | null }
 type MutableVertex = {x: number, y: number, hidden?: boolean, locked?: boolean, group?: string }
 type Vertices = {readonly [index: string]: Vertex}
 type MutableVertices = {[index: string]: MutableVertex}
@@ -83,7 +83,7 @@ export class GridManager {
         return selectedQuad ?? null
 	}
 
-    public insertPolygon(position: Coord, polygonRadius: number, polygonSides: number): Vertices {
+    public insertPolygon(position: Coord, polygonRadius: number, polygonSides: number): void {
         const vertexId = this.getNearestVertex(position)
         const selectedQuads = this.getQuadsFromVertex(vertexId);
         const verticesToAdd = this.fitPolygon(
@@ -101,12 +101,60 @@ export class GridManager {
             ...verticesToAdd
         };
 
-        const relaxedVertices = this.relaxSubgrid(verticesToRelax, this.edges, quadsToRelax);
+        this.setVertices(verticesToRelax)
 
-        this.vertices = {...this.vertices, ...relaxedVertices}
+        const relaxedVertices = this.relaxSubgrid(quadsToRelax);
 
-        return this.getVertices()
+        this.setVertices(relaxedVertices)
     }
+
+    public eraseModifications(position: Coord, radius: number): void {
+        const vertexId = this.getNearestVertex(position)
+        const quadsToReset = this.getQuadsFromVertex(vertexId, radius)
+        const vertexIdsToReset = quadsToReset.flat()
+        const vertices = this.getVertices()
+
+        const newVertices = vertexIdsToReset.reduce((acc, vId) => ({...acc, [vId]: {...vertices[vId], hidden: false, locked: false, group: null}}), {} as Vertices)
+        this.setVertices(newVertices)
+
+        const quadsToRelax = this.getQuadsFromVertex(vertexId, radius + 2)
+        const relaxedVertices = this.relaxSubgrid(quadsToRelax)
+        this.setVertices(relaxedVertices)
+    }
+
+    /** PRIVATE METHODS */
+
+    /** Getters & setters */
+
+    private getVertices(): MutableVertices {
+        return $state.snapshot(this.vertices)
+    }
+
+    private getEdges(): ShapeRefs {
+        return $state.snapshot(this.edges)
+    }
+
+    private getQuads(): ShapeRefs {
+        return $state.snapshot(this.quads)
+    }
+
+    private getQuadVertices(quad: string[]) {
+        return {vertices: quad.map(vertexId => ({...this.vertices[vertexId]}))}
+    }
+
+    private setVertices(newVertices: Vertices): void {
+        this.vertices = {...this.vertices, ...newVertices}
+    }
+
+    private setEdges(newEdges: ShapeRefs): void {
+        this.edges = [...this.edges, ...newEdges]
+    }
+
+    private setQuads(newQuads: ShapeRefs): void {
+        this.quads = [...this.quads, ...newQuads]
+    }
+
+    /** Generate grid */
 
     private getHexgridTriangles(size: number): Triangle[] {
 		const getStart = (rowNumber: number): number => Math.abs(rowNumber) - 2 * size + 0.5;
@@ -166,40 +214,6 @@ export class GridManager {
 			return [...acc, { id, vertices: triangle, pointsUp }];
 		}, []);
 	}
-
-    /** PRIVATE METHODS */
-
-    /** Getters & setters */
-
-    private getVertices(): MutableVertices {
-        return $state.snapshot(this.vertices)
-    }
-
-    private getEdges(): ShapeRefs {
-        return $state.snapshot(this.edges)
-    }
-
-    private getQuads(): ShapeRefs {
-        return $state.snapshot(this.quads)
-    }
-
-    private getQuadVertices(quad: string[]) {
-        return {vertices: quad.map(vertexId => ({...this.vertices[vertexId]}))}
-    }
-
-    private setVertices(newVertices: MutableVertices) {
-        this.vertices = {...this.vertices, ...newVertices}
-    }
-
-    private setEdges(newEdges: ShapeRefs) {
-        this.edges = [...this.edges, ...newEdges]
-    }
-
-    private setQuads(newQuads: ShapeRefs) {
-        this.quads = [...this.quads, ...newQuads]
-    }
-
-    /** Generate grid */
 
     private mergeShapes(shapes: readonly Triangle[], _remainingIndices: number[] = [], _mergedShapes: Coord[][] = []): Coord[][] {
 		// const shapesCopy = structuredClone(shapes)
@@ -650,7 +664,9 @@ export class GridManager {
 		};
 	} // wants major refactor
 
-    private relaxSubgrid(vertices: Vertices, edges: MutableShapeRefs, quadsToRelax: ShapeRefs, stepNums = 10): Vertices {
+    private relaxSubgrid(quadsToRelax: ShapeRefs, stepNums = 10): Vertices {
+        const edges = this.getEdges()
+        const vertices = this.getVertices()
 		const verticesToRelax: MutableVertices = {
 			...quadsToRelax
 				.flat()
