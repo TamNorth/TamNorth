@@ -2,11 +2,11 @@
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
 	import Tile from '$lib/shared/Tile.svelte';
-	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import { untrack } from 'svelte';
 	import useTheme from '$lib/hooks/useTheme.svelte.js';
 	import { GridManager } from './gridManager.svelte.ts';
 	import { CanvasManager } from './canvasManager.svelte.ts';
+	import type { Coord, Vertex } from './types.ts';
 
 	const INITIAL_SCALE = 75;
 	const DEFAULT_GRID_SIZE = 4;
@@ -15,7 +15,7 @@
 	const {
 		currentTheme: {
 			baseColours: {
-				'colour-warn': colourWarn,
+				// 'colour-warn': colourWarn,
 				'colour-error': colourError,
 				'colour-info': colourInfo,
 				'colour-positive': colourPositive
@@ -25,14 +25,14 @@
 
 	/* DEFINITIONS */
 
-	function canvasToGridPos(pos, scale, origin) {
+	function canvasToGridPos(pos: Coord, scale: number, origin: Coord): Coord {
 		return {
 			x: (pos?.x - origin.x) / scale,
 			y: (pos?.y - origin.y) / scale
 		};
 	}
 
-	function applyOffset(pos, offset) {
+	function applyOffset(pos: Coord, offset: Coord): Coord {
 		return { x: pos.x - offset.x, y: pos.y - offset.y };
 	}
 
@@ -52,6 +52,15 @@
 		w,
 		h,
 		offset
+	}: {
+		canvas: HTMLCanvasElement;
+		overlayCanvas: HTMLCanvasElement;
+		mousePosition: Coord;
+		mouseClick: { x: number; y: number; button: number } | null;
+		mouseWheel: number;
+		w: number;
+		h: number;
+		offset: Coord;
 	}) => {
 		const origin = $derived({ x: w / 2, y: h / 2 });
 
@@ -62,7 +71,7 @@
 			origin
 		);
 
-		const scaleToGrid = (pos) => canvasToGridPos(pos, canvasManager.scale, origin);
+		const scaleToGrid = (pos: Coord): Coord => canvasToGridPos(pos, canvasManager.scale, origin);
 		const mousePos = $derived(scaleToGrid(applyOffset(mousePosition, offset)));
 		let mouseClickPos = $derived(mouseClick ? scaleToGrid(applyOffset(mouseClick, offset)) : null);
 
@@ -77,7 +86,13 @@
 			// 	mouseClickPos = null;
 			// });
 
-			function strokeRule({ context, vertices }) {
+			function strokeRule({
+				context,
+				vertices
+			}: {
+				context: CanvasRenderingContext2D;
+				vertices: Vertex[];
+			}): void {
 				const prevStrokeStyle = context.strokeStyle;
 
 				if (vertices.some(({ locked, group }) => locked || group)) {
@@ -97,7 +112,13 @@
 		$effect(() => {
 			overlayCanvasManager.clearCanvas(w, h);
 
-			function fillRule({ context, vertices }) {
+			function fillRule({
+				context,
+				vertices
+			}: {
+				context: CanvasRenderingContext2D;
+				vertices: Vertex[];
+			}): void {
 				const prevFillStyle = context.fillStyle;
 
 				if (vertices.some(({ locked, group }) => locked || group)) {
@@ -138,15 +159,15 @@
 		/* Mouse click effects */
 
 		$effect(() => {
-			if (mouseClickPos) {
+			if (mouseClick) {
 				if (mouseClick.button === 0) {
 					untrack(() => {
-						gridManager.insertPolygon(mouseClickPos, POLYGON_RADIUS, POLYGON_SIDES);
+						gridManager.insertPolygon(mouseClickPos as Coord, POLYGON_RADIUS, POLYGON_SIDES);
 					});
 				}
 
 				if (mouseClick.button === 2) {
-					untrack(() => gridManager.eraseModifications(mouseClickPos, 1));
+					untrack(() => gridManager.eraseModifications(mouseClickPos as Coord, 1));
 				}
 
 				mouseClickPos = null;
@@ -167,7 +188,7 @@
 	<Tile>
 		<label>
 			Zoom: {Math.round((100 / INITIAL_SCALE) * scale)}%
-			<input type="range" bind:value={scale} min="0" max="200" step="5" />
+			<input type="range" bind:value={scale} min="0" max={2 * INITIAL_SCALE} step="5" />
 		</label>
 	</Tile>
 </div>
@@ -179,6 +200,7 @@
 		margin: var(--header-height) var(--base-spacing) 0;
 		display: flex;
 		flex-direction: column;
+		gap: var(--base-spacing);
 
 		label {
 			display: flex;
