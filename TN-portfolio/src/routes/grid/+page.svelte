@@ -39,19 +39,31 @@
 	/* EXECUTION */
 
 	let gridSize = $state(DEFAULT_GRID_SIZE);
-	let scale = $derived(INITIAL_SCALE / gridSize);
-
 	let gridManager = $derived(new GridManager(gridSize));
 	let grid = $derived(gridManager.subscribeGrid());
 
-	const canvasFn = ({ canvas, overlayCanvas, mousePosition, mouseClick, w, h, offset }) => {
-		const scaleToGrid = (pos) => canvasToGridPos(pos, scale, origin);
+	const canvasFn = ({
+		canvas,
+		overlayCanvas,
+		mousePosition,
+		mouseClick,
+		mouseWheel,
+		w,
+		h,
+		offset
+	}) => {
 		const origin = $derived({ x: w / 2, y: h / 2 });
+
+		const canvasManager = new CanvasManager(canvas, INITIAL_SCALE / DEFAULT_GRID_SIZE, origin);
+		const overlayCanvasManager = new CanvasManager(
+			overlayCanvas,
+			INITIAL_SCALE / DEFAULT_GRID_SIZE,
+			origin
+		);
+
+		const scaleToGrid = (pos) => canvasToGridPos(pos, canvasManager.scale, origin);
 		const mousePos = $derived(scaleToGrid(applyOffset(mousePosition, offset)));
 		let mouseClickPos = $derived(mouseClick ? scaleToGrid(applyOffset(mouseClick, offset)) : null);
-
-		const canvasManager = new CanvasManager(canvas, scale, origin);
-		const overlayCanvasManager = new CanvasManager(overlayCanvas, scale, origin);
 
 		/* PAINT CANVAS */
 
@@ -103,6 +115,14 @@
 			const singleQuad = gridManager.getShapesFromPosition(mousePos);
 
 			if (singleQuad) overlayCanvasManager.fillShapes(singleQuad, `${colourInfo}88`, fillRule);
+		});
+
+		/* Zoom on mouse wheel */
+
+		$effect(() => {
+			const zoom = (INITIAL_SCALE + mouseWheel / 20) / gridSize;
+			canvasManager.scaleCanvas(zoom);
+			overlayCanvasManager.scaleCanvas(zoom);
 		});
 
 		/* Mouse click effects */

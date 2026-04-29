@@ -13,9 +13,17 @@ export class CanvasManager {
 
 	private context: CanvasRenderingContext2D;
 
-	private scale: number = $state(0);
+	public scale: number = $state(1);
 
 	/** PUBLIC METHODS */
+
+	/** transform canvas */
+
+	public scaleCanvas(newScale: number) {
+		this.scale = newScale;
+	}
+
+	/** paint canvas */
 
 	public fillShapes(shapes: Shapes, colour?: string, fillRule?): void {
 		const defaultColour = 'red';

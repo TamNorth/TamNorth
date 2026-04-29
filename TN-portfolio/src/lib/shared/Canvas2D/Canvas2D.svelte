@@ -14,6 +14,7 @@
 	let overlayCanvas = $state();
 	let mousePosition = $state({ x: null, y: null });
 	let mouseClick = $state(null);
+	let mouseWheel = $state(0);
 
 	function handleMouseMove(e) {
 		mousePosition.x = e.clientX;
@@ -27,6 +28,11 @@
 			y: e.clientY,
 			button: e.buttons
 		};
+	}
+
+	function handleScroll(e) {
+		e.preventDefault();
+		mouseWheel += e.deltaY;
 	}
 
 	let w = $state(0);
@@ -49,7 +55,7 @@
 	});
 
 	$effect(() => {
-		canvasFn({ canvas, overlayCanvas, mousePosition, mouseClick, w, h, offset });
+		canvasFn({ canvas, overlayCanvas, mousePosition, mouseClick, mouseWheel, w, h, offset });
 	});
 </script>
 
@@ -62,6 +68,7 @@
 	onmousemove={handleMouseMove}
 	onclick={handleMouseClick}
 	oncontextmenu={handleMouseClick}
+	onwheel={handleScroll}
 	class="canvas"
 	{style}
 ></canvas>
