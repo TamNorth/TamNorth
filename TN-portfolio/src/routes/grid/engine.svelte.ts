@@ -3,7 +3,7 @@ import { fillWithCount, getAveragePosition, getBearing, getHypotenuse, getInters
 type Coord = {x: number, y: number}
 type Triangle = {id: Coord, vertices: Coord[], pointsUp: boolean}
 type Vertex = {readonly x: number, readonly y: number, readonly hidden?: boolean, readonly locked?: boolean, readonly group?: string | null }
-type MutableVertex = {x: number, y: number, hidden?: boolean, locked?: boolean, group?: string }
+type MutableVertex = {x: number, y: number, hidden?: boolean, locked?: boolean, group?: string | null }
 type Vertices = {readonly [index: string]: Vertex}
 type MutableVertices = {[index: string]: MutableVertex}
 type ShapeRefs = readonly string[][]
@@ -93,11 +93,12 @@ export class GridManager {
 
     public eraseModifications(position: Coord, radius: number): void {
         const vertexId = this.getNearestVertex(position)
-        const quadsToReset = radius === 0 
-            ? [this.getNearestQuad(position)]
-            : this.getQuadsFromVertex(vertexId, radius)
-        const vertexIdsToReset = quadsToReset.flat()
-        console.log(vertexIdsToReset)
+        const vertexIdsToReset = radius === 0 
+            ? this.getNearestQuad(position)
+            : this.getQuadsFromVertex(vertexId, radius).flat()
+
+        if (!vertexIdsToReset) return
+
         const vertices = this.getVertices()
 
         const newVertices = vertexIdsToReset.reduce((acc, vId) => ({...acc, [vId]: {...vertices[vId], hidden: false, group: null}}), {} as Vertices)
@@ -413,7 +414,7 @@ export class GridManager {
 
     private relaxGrid(vertices: Vertices, edges: ShapeRefs, stepNum = 1): MutableVertices {
 
-		const newVertices: MutableVertices = $state.snapshot(vertices);
+		const newVertices = structuredClone(vertices) as MutableVertices;
 		const groupedVertices: {[index: string]: {[index: string]: Vertex}} = {};
 
 		for (let i = 0; i < stepNum; i++) {
@@ -701,7 +702,7 @@ export class GridManager {
 			startingPos.y - position.y
 		);
 
-		function loop(vertexId, currentDistance) {
+		function loop(vertexId: string, currentDistance: number): string {
 			const [idY, idX] = vertexId.split('/').map((id) => Number(id));
 			const neighbourIds = [1, 0.5, 0.3, 0.7]
 				.reduce(
@@ -716,7 +717,7 @@ export class GridManager {
 						[idY - delta, idX - delta],
 						[idY - delta, idX + delta]
 					],
-					[]
+					[] as number[][]
 				)
 				.map((id) => id.join('/'));
 
@@ -728,7 +729,7 @@ export class GridManager {
 					if (distance < acc?.distance) return { id, distance };
 					return acc;
 				},
-				{ id: vertexId, distance: currentDistance }
+				{ id: vertexId, distance: currentDistance } as {id: string, distance: number}
 			);
 
 			return closestNeighbour === vertexId ? vertexId : loop(closestNeighbour, newDistance);
