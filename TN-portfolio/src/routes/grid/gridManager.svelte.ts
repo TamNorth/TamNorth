@@ -45,6 +45,8 @@ export class GridManager {
 
 	private grid: Shapes = $derived(this.quads.map((quad) => this.getQuadVertices(quad)));
 
+	private groups: { [index: string]: string[] } = {};
+
 	/** PUBLIC METHODS */
 
 	public subscribeGrid(): Shapes {
@@ -78,14 +80,21 @@ export class GridManager {
 
 	public insertPolygon(
 		position: Coord,
-		groupId: string,
+		polygonId: string,
 		polygonRadius: number,
 		polygonSides: number
 	): string | null {
 		const vertexId = this.getNearestVertex(position);
 		const selectedQuads = this.getQuadsFromVertex(vertexId);
-		const { vertices: verticesToAdd, id: polygonId } =
-			this.fitPolygon(selectedQuads, polygonRadius, polygonSides, groupId) || {};
+		const {
+			vertices: verticesToAdd,
+			groupId,
+			group
+		} = this.fitPolygon(selectedQuads, polygonRadius, polygonSides, polygonId) || {};
+
+		if (!group || !groupId) return null;
+
+		this.groups[groupId] = group;
 
 		const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
 
@@ -102,7 +111,7 @@ export class GridManager {
 
 		this.setVertices(relaxedVertices);
 
-		return polygonId || null;
+		return groupId;
 	}
 
 	public eraseModifications(position: Coord, radius: number): void {
@@ -539,7 +548,7 @@ export class GridManager {
 		radius: number,
 		polygonSides = 4,
 		groupId: string
-	): { vertices: Vertices; id: string } | null {
+	): { vertices: Vertices; groupId: string; group: string[] } | null {
 		// return null if a vertex is locked
 		if (
 			quadGroup
@@ -702,7 +711,8 @@ export class GridManager {
 				...polygon,
 				[middleVertexId]: { ...this.vertices[middleVertexId], group, groupId, hidden: true }
 			},
-			id: groupId
+			groupId,
+			group
 		};
 	} // wants major refactor
 
