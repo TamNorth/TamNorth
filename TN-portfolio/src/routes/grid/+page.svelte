@@ -8,7 +8,7 @@
 	import { GridManager } from './gridManager.svelte.ts';
 	import { CanvasManager } from './canvasManager.svelte.ts';
 
-	const INITIAL_SCALE = 300;
+	const INITIAL_SCALE = 75;
 	const DEFAULT_GRID_SIZE = 4;
 	const POLYGON_SIDES = 4; //() => Math.floor(Math.random() * 3 + 4);
 	const POLYGON_RADIUS = POLYGON_SIDES < 5 ? 0.65 : 0.6;
@@ -41,6 +41,7 @@
 	let gridSize = $state(DEFAULT_GRID_SIZE);
 	let gridManager = $derived(new GridManager(gridSize));
 	let grid = $derived(gridManager.subscribeGrid());
+	let scale = $state(INITIAL_SCALE);
 
 	const canvasFn = ({
 		canvas,
@@ -120,9 +121,18 @@
 		/* Zoom on mouse wheel */
 
 		$effect(() => {
-			const zoom = (INITIAL_SCALE + mouseWheel / 20) / gridSize;
-			canvasManager.scaleCanvas(zoom);
-			overlayCanvasManager.scaleCanvas(zoom);
+			canvasManager.scaleCanvas(scale);
+			overlayCanvasManager.scaleCanvas(scale);
+		});
+
+		$effect(() => {
+			// if (scale > 0 && scale < 200) {
+			scale = (DEFAULT_GRID_SIZE * (INITIAL_SCALE + mouseWheel / 36.8)) / gridSize;
+			untrack(() => {
+				canvasManager.scaleCanvas(scale);
+				overlayCanvasManager.scaleCanvas(scale);
+			});
+			// }
 		});
 
 		/* Mouse click effects */
@@ -150,8 +160,14 @@
 <div class="toolbar">
 	<Tile>
 		<label>
-			<input type="range" bind:value={gridSize} min="1" max="10" />
 			Grid size: {gridSize}
+			<input type="range" bind:value={gridSize} min="1" max="10" />
+		</label>
+	</Tile>
+	<Tile>
+		<label>
+			Zoom: {Math.round((100 / INITIAL_SCALE) * scale)}%
+			<input type="range" bind:value={scale} min="0" max="200" step="5" />
 		</label>
 	</Tile>
 </div>
@@ -163,5 +179,12 @@
 		margin: var(--header-height) var(--base-spacing) 0;
 		display: flex;
 		flex-direction: column;
+
+		label {
+			display: flex;
+			flex-direction: column;
+			text-align: center;
+			gap: var(--base-spacing);
+		}
 	}
 </style>
