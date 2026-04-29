@@ -1,43 +1,64 @@
-import { fillWithCount, getAveragePosition, getBearing, getHypotenuse, getIntersect, getLinearParams, getVector, normaliseAngle, resolveVector, sumDimensions } from "$lib/utils/mathsUtils.js";
+import {
+	fillWithCount,
+	getAveragePosition,
+	getBearing,
+	getHypotenuse,
+	getIntersect,
+	getLinearParams,
+	getVector,
+	normaliseAngle,
+	resolveVector,
+	sumDimensions
+} from '$lib/utils/mathsUtils.js';
+import { SvelteSet } from 'svelte/reactivity';
 
-type Coord = {x: number, y: number}
-type Triangle = {id: Coord, vertices: Coord[], pointsUp: boolean}
-type Vertex = {readonly x: number, readonly y: number, readonly hidden?: boolean, readonly locked?: boolean, readonly group?: string | null }
-type MutableVertex = {x: number, y: number, hidden?: boolean, locked?: boolean, group?: string | null }
-type Vertices = {readonly [index: string]: Vertex}
-type MutableVertices = {[index: string]: MutableVertex}
-type ShapeRefs = readonly string[][]
-type MutableShapeRefs = string[][]
-type Shape = {vertices: Vertex[]}
-type Shapes = Shape[]
+type Coord = { x: number; y: number };
+type Triangle = { id: Coord; vertices: Coord[]; pointsUp: boolean };
+type Vertex = {
+	readonly x: number;
+	readonly y: number;
+	readonly hidden?: boolean;
+	readonly locked?: boolean;
+	readonly group?: string | null;
+};
+type MutableVertex = {
+	x: number;
+	y: number;
+	hidden?: boolean;
+	locked?: boolean;
+	group?: string | null;
+};
+type Vertices = { readonly [index: string]: Vertex };
+type MutableVertices = { [index: string]: MutableVertex };
+type ShapeRefs = readonly string[][];
+type MutableShapeRefs = string[][];
+type Shape = { vertices: Vertex[] };
+type Shapes = Shape[];
 
 export class GridManager {
-    public constructor(
-        private hexSize: number = 6, 
-        private springLength: number = 0.2,
-	    private springStrength: number = 0.3,
-	    private relaxationPasses: number = 5,
-	    private rotationalDamping: number = 2,
-        private relaxationRadius: number = 4,
-) {
-    this.makeHex()
-    }
-    private vertices: MutableVertices = $state.raw({})
+	public constructor(
+		private hexSize: number = 6,
+		private springLength: number = 0.2,
+		private springStrength: number = 0.3,
+		private relaxationPasses: number = 5,
+		private rotationalDamping: number = 2,
+		private relaxationRadius: number = 4
+	) {
+		this.makeHex();
+	}
+	private vertices: MutableVertices = $state.raw({});
 
-    private edges: MutableShapeRefs = $state.raw([])
+	private edges: MutableShapeRefs = $state.raw([]);
 
-    private quads: MutableShapeRefs = $state.raw([])
+	private quads: MutableShapeRefs = $state.raw([]);
 
-    private grid: Shapes = $derived(this.quads.map(quad => (
-            this.getQuadVertices(quad)
-        )
-    ))
+	private grid: Shapes = $derived(this.quads.map((quad) => this.getQuadVertices(quad)));
 
-    /** PUBLIC METHODS */
+	/** PUBLIC METHODS */
 
-    public subscribeGrid() {
-        return this.grid
-    }
+	public subscribeGrid(): Shapes {
+		return this.grid;
+	}
 
 	public makeHex(hexSize: number = this.hexSize) {
 		const shapes = this.getHexgridTriangles(hexSize);
@@ -48,102 +69,104 @@ export class GridManager {
 		const normalisedVertices = this.normaliseGrid(vertices);
 		const relaxedVertices = this.relaxGrid(normalisedVertices, edges, this.relaxationPasses);
 
-        this.setVertices(relaxedVertices)
-        this.setEdges(edges)
-        this.setQuads(quads)
+		this.setVertices(relaxedVertices);
+		this.setEdges(edges);
+		this.setQuads(quads);
 	} // Think about virtualising by hex... talk to Carmen - all on one big object with an indexing array? or separate objects?
 
-    public getShapesFromPosition(position: Coord, selectionRadius?: number | undefined): Shapes {
-        const vertexId = this.getNearestVertex(position)
-        const selectedQuads = this.getQuadsFromVertex(vertexId, selectionRadius)
-        return selectedQuads.length ? selectedQuads.map(quad => this.getQuadVertices(quad)) : []
-    }
-
-    public getNearestShape(position: Coord): Shape | null {
-		const quad = this.getNearestQuad(position)
-        const selectedShape = quad ? this.getQuadVertices(quad) : null
-
-        return selectedShape ?? null
+	public getShapesFromPosition(position: Coord, selectionRadius?: number | undefined): Shapes {
+		const vertexId = this.getNearestVertex(position);
+		const selectedQuads = this.getQuadsFromVertex(vertexId, selectionRadius);
+		return selectedQuads.length ? selectedQuads.map((quad) => this.getQuadVertices(quad)) : [];
 	}
 
-    public insertPolygon(position: Coord, polygonRadius: number, polygonSides: number): void {
-        const vertexId = this.getNearestVertex(position)
-        const selectedQuads = this.getQuadsFromVertex(vertexId);
-        const verticesToAdd = this.fitPolygon(
-            selectedQuads,
-            polygonRadius,
-            polygonSides
-        );
+	public getNearestShape(position: Coord): Shape | null {
+		const quad = this.getNearestQuad(position);
+		const selectedShape = quad ? this.getQuadVertices(quad) : null;
 
-        const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
+		return selectedShape ?? null;
+	}
 
-        const verticesToRelax = {
-            ...quadsToRelax
-                .flat()
-                .reduce((acc, vertexId) => ({ ...acc, [vertexId]: this.vertices[vertexId] }), {}),
-            ...verticesToAdd
-        };
+	public insertPolygon(position: Coord, polygonRadius: number, polygonSides: number): void {
+		const vertexId = this.getNearestVertex(position);
+		const selectedQuads = this.getQuadsFromVertex(vertexId);
+		const verticesToAdd = this.fitPolygon(selectedQuads, polygonRadius, polygonSides);
 
-        this.setVertices(verticesToRelax)
+		const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
 
-        const relaxedVertices = this.relaxSubgrid(quadsToRelax);
+		const verticesToRelax = {
+			...quadsToRelax
+				.flat()
+				.reduce((acc, vertexId) => ({ ...acc, [vertexId]: this.vertices[vertexId] }), {}),
+			...verticesToAdd
+		};
 
-        this.setVertices(relaxedVertices)
-    }
+		this.setVertices(verticesToRelax);
 
-    public eraseModifications(position: Coord, radius: number): void {
-        const vertexId = this.getNearestVertex(position)
-        const vertexIdsToReset = radius === 0 
-            ? this.getNearestQuad(position)
-            : this.getQuadsFromVertex(vertexId, radius).flat()
+		const relaxedVertices = this.relaxSubgrid(quadsToRelax);
 
-        if (!vertexIdsToReset) return
+		this.setVertices(relaxedVertices);
+	}
 
-        const vertices = this.getVertices()
+	public eraseModifications(position: Coord, radius: number): void {
+		const vertexId = this.getNearestVertex(position);
+		const vertexIdsToReset =
+			radius === 0
+				? this.getNearestQuad(position)
+				: this.getQuadsFromVertex(vertexId, radius).flat();
 
-        const newVertices = vertexIdsToReset.reduce((acc, vId) => ({...acc, [vId]: {...vertices[vId], hidden: false, group: null}}), {} as Vertices)
-        this.setVertices(newVertices)
+		if (!vertexIdsToReset) return;
 
-        const quadsToRelax = this.getQuadsFromVertex(vertexId, radius + 2)
-        const relaxedVertices = this.relaxSubgrid(quadsToRelax)
-        this.setVertices(relaxedVertices)
-    }
+		const vertices = this.getVertices();
 
-    /** PRIVATE METHODS */
+		const newVertices = vertexIdsToReset.reduce(
+			(acc, vId) => ({ ...acc, [vId]: { ...vertices[vId], hidden: false, group: null } }),
+			{} as Vertices
+		);
+		this.setVertices(newVertices);
 
-    /** Getters & setters */
+		const quadsToRelax = this.getQuadsFromVertex(vertexId, radius + 2);
+		const relaxedVertices = this.relaxSubgrid(quadsToRelax);
+		this.setVertices(relaxedVertices);
+	}
 
-    private getVertices(): MutableVertices {
-        return $state.snapshot(this.vertices)
-    }
+	public;
 
-    private getEdges(): ShapeRefs {
-        return $state.snapshot(this.edges)
-    }
+	/** PRIVATE METHODS */
 
-    private getQuads(): ShapeRefs {
-        return $state.snapshot(this.quads)
-    }
+	/** Getters & setters */
 
-    private getQuadVertices(quad: string[]) {
-        return {vertices: quad.map(vertexId => ({...this.vertices[vertexId]}))}
-    }
+	private getVertices(): MutableVertices {
+		return $state.snapshot(this.vertices);
+	}
 
-    private setVertices(newVertices: Vertices): void {
-        this.vertices = {...this.vertices, ...newVertices}
-    }
+	private getEdges(): ShapeRefs {
+		return $state.snapshot(this.edges);
+	}
 
-    private setEdges(newEdges: ShapeRefs): void {
-        this.edges = [...this.edges, ...newEdges]
-    }
+	private getQuads(): ShapeRefs {
+		return $state.snapshot(this.quads);
+	}
 
-    private setQuads(newQuads: ShapeRefs): void {
-        this.quads = [...this.quads, ...newQuads]
-    }
+	private getQuadVertices(quad: string[]) {
+		return { vertices: quad.map((vertexId) => ({ ...this.vertices[vertexId] })) };
+	}
 
-    /** Generate grid */
+	private setVertices(newVertices: Vertices): void {
+		this.vertices = { ...this.vertices, ...newVertices };
+	}
 
-    private getHexgridTriangles(size: number): Triangle[] {
+	private setEdges(newEdges: ShapeRefs): void {
+		this.edges = [...this.edges, ...newEdges];
+	}
+
+	private setQuads(newQuads: ShapeRefs): void {
+		this.quads = [...this.quads, ...newQuads];
+	}
+
+	/** Generate grid */
+
+	private getHexgridTriangles(size: number): Triangle[] {
 		const getStart = (rowNumber: number): number => Math.abs(rowNumber) - 2 * size + 0.5;
 		const numOfRows = size * 2;
 		const rowNums = fillWithCount(Array(numOfRows), -size).map((rowNum: number) => rowNum + 0.5);
@@ -152,7 +175,10 @@ export class GridManager {
 			const rowLength = 2 * (2 * size - Math.abs(rowNum));
 			const rowStart = getStart(rowNum);
 			const xValues = fillWithCount(Array(rowLength), rowStart);
-			return [...acc, ...xValues.reduce((acc: Coord[], val: number) => [...acc, { x: val, y: rowNum }], [])];
+			return [
+				...acc,
+				...xValues.reduce((acc: Coord[], val: number) => [...acc, { x: val, y: rowNum }], [])
+			];
 		}, []);
 
 		function drawTriangle(pointsUp: boolean, centreCoord: Coord): Coord[] {
@@ -202,7 +228,11 @@ export class GridManager {
 		}, []);
 	}
 
-    private mergeShapes(shapes: readonly Triangle[], _remainingIndices: number[] = [], _mergedShapes: Coord[][] = []): Coord[][] {
+	private mergeShapes(
+		shapes: readonly Triangle[],
+		_remainingIndices: number[] = [],
+		_mergedShapes: Coord[][] = []
+	): Coord[][] {
 		// const shapesCopy = structuredClone(shapes)
 		_remainingIndices = _remainingIndices.length
 			? _remainingIndices
@@ -216,7 +246,9 @@ export class GridManager {
 			id: { x: x1, y: y1 }
 		} = t1;
 
-		function selectPartner(previousTries: string[] = []): {t2: Triangle, t2Index: number, direction: string} | Record<string, never> {
+		function selectPartner(
+			previousTries: string[] = []
+		): { t2: Triangle; t2Index: number; direction: string } | Record<string, never> {
 			if (previousTries.length >= 3) return {};
 			const directionMap = ['right', 'left', t1.pointsUp ? 'down' : 'up'].filter(
 				(direction) => !previousTries.includes(direction)
@@ -268,10 +300,13 @@ export class GridManager {
 			: [..._mergedShapes, mergedVertices];
 	}
 
-    private interpolate(shapes: readonly Coord[][], size: number): {vertices: Vertices, edges: ShapeRefs, quads: ShapeRefs} {
+	private interpolate(
+		shapes: readonly Coord[][],
+		size: number
+	): { vertices: Vertices; edges: ShapeRefs; quads: ShapeRefs } {
 		const { vertices, edges, quads } = shapes.reduce(
 			(acc, shape) => {
-				let { mX, mY }: {mX: number, mY: number} = shape.reduce(
+				let { mX, mY }: { mX: number; mY: number } = shape.reduce(
 					(acc, { x, y }) => {
 						acc.mX += x / shape.length;
 						acc.mY += y / shape.length;
@@ -337,13 +372,17 @@ export class GridManager {
 
 				return acc;
 			},
-			{ vertices: {}, edges: {}, quads: [] } as {vertices: MutableVertices | Record<string, never>, edges: {[index: string]: string[]} | Record<string, never>, quads: MutableShapeRefs}
+			{ vertices: {}, edges: {}, quads: [] } as {
+				vertices: MutableVertices | Record<string, never>;
+				edges: { [index: string]: string[] } | Record<string, never>;
+				quads: MutableShapeRefs;
+			}
 		);
 
 		return { vertices, edges: Object.values(edges), quads };
 	} // doesn't need to reurn vertices/edges/quads if modifies this... directly?
 
-    private normaliseGrid(vertices: Vertices): Vertices {
+	private normaliseGrid(vertices: Vertices): Vertices {
 		const xScalingFactor = 0.5;
 		const yScalingFactor = Math.sin(Math.PI * (2 / 3));
 
@@ -360,31 +399,33 @@ export class GridManager {
 		return newVertices;
 	} // doesn't need to return vertices if modifies this.vertices directly?
 
-    private getVertexForces(vertices: Vertices, edges: ShapeRefs): {[index: string]: Coord} {
+	private getVertexForces(vertices: Vertices, edges: ShapeRefs): { [index: string]: Coord } {
+		const unresolvedForces = edges.reduce(
+			(acc, [v1Id, v2Id]) => {
+				const [end1, end2] = [vertices[v1Id], vertices[v2Id]];
 
-		const unresolvedForces = edges.reduce((acc, [v1Id, v2Id]) => {
-			const [end1, end2] = [vertices[v1Id], vertices[v2Id]];
+				if (!acc[v1Id]) acc[v1Id] = [];
+				if (!acc[v2Id]) acc[v2Id] = [];
 
-			if (!acc[v1Id]) acc[v1Id] = [];
-			if (!acc[v2Id]) acc[v2Id] = [];
+				if (end1.group && end1.group === end2.group) {
+					// disregard tensions internal to groups
+					acc[v1Id] = [...acc[v1Id], { y: 0, x: 0 }];
+					acc[v2Id] = [...acc[v2Id], { y: 0, x: 0 }];
+					return acc;
+				}
 
-			if (end1.group && end1.group === end2.group) {
-				// disregard tensions internal to groups
-				acc[v1Id] = [...acc[v1Id], { y: 0, x: 0 }];
-				acc[v2Id] = [...acc[v2Id], { y: 0, x: 0 }];
+				const { magnitude: length, angle: bearing } = getVector(end1, end2);
+				const tension = length - this.springLength;
+
+				const tensionY = tension * Math.sin(bearing);
+				const tensionX = tension * Math.cos(bearing);
+
+				acc[v1Id] = [...acc[v1Id], { y: -tensionY, x: -tensionX }];
+				acc[v2Id] = [...acc[v2Id], { y: tensionY, x: tensionX }];
 				return acc;
-			}
-
-			const { magnitude: length, angle: bearing } = getVector(end1, end2);
-			const tension = length - this.springLength;
-
-			const tensionY = tension * Math.sin(bearing);
-			const tensionX = tension * Math.cos(bearing);
-
-			acc[v1Id] = [...acc[v1Id], { y: -tensionY, x: -tensionX }];
-			acc[v2Id] = [...acc[v2Id], { y: tensionY, x: tensionX }];
-			return acc;
-		}, {} as {[index: string]: Coord[]});
+			},
+			{} as { [index: string]: Coord[] }
+		);
 
 		return Object.entries(unresolvedForces).reduce(
 			(acc, [id, vertex]) => ({ ...acc, [id]: sumDimensions(vertex) }),
@@ -392,7 +433,10 @@ export class GridManager {
 		);
 	} // should use this.edges?
 
-    private getRigidBodyForces(vertices: Vertices, vertexForces: {[index: string]: Coord}): {centre: Coord, angular: number, linear: Coord} {
+	private getRigidBodyForces(
+		vertices: Vertices,
+		vertexForces: { [index: string]: Coord }
+	): { centre: Coord; angular: number; linear: Coord } {
 		const rotationalCentre = getAveragePosition(Object.values(vertices));
 		const linearForce = sumDimensions(Object.values(vertexForces));
 
@@ -412,10 +456,9 @@ export class GridManager {
 		return { centre: rotationalCentre, angular: angularForce, linear: linearForce };
 	} // linear needs work
 
-    private relaxGrid(vertices: Vertices, edges: ShapeRefs, stepNum = 1): MutableVertices {
-
+	private relaxGrid(vertices: Vertices, edges: ShapeRefs, stepNum = 1): MutableVertices {
 		const newVertices = structuredClone(vertices) as MutableVertices;
-		const groupedVertices: {[index: string]: {[index: string]: Vertex}} = {};
+		const groupedVertices: { [index: string]: { [index: string]: Vertex } } = {};
 
 		for (let i = 0; i < stepNum; i++) {
 			const vertexForces = this.getVertexForces(newVertices, edges);
@@ -452,8 +495,10 @@ export class GridManager {
 						const vertex = newVertices[vertexId];
 						if (!vertex.locked) {
 							const { magnitude: radius, angle: bearing } = getVector(vertex, centre);
-							vertex.x += (angular / bodyMass) * this.rotationalDamping * radius * -Math.sin(bearing);
-							vertex.y += (angular / bodyMass) * this.rotationalDamping * radius * Math.cos(bearing);
+							vertex.x +=
+								(angular / bodyMass) * this.rotationalDamping * radius * -Math.sin(bearing);
+							vertex.y +=
+								(angular / bodyMass) * this.rotationalDamping * radius * Math.cos(bearing);
 
 							vertex.x += (linear.x / bodyMass) * this.springStrength;
 							vertex.y += (linear.y / bodyMass) * this.springStrength;
@@ -466,14 +511,17 @@ export class GridManager {
 		return newVertices;
 	} // should use this.vertices (?) & this.edges
 
-    /** Modify grid */
+	/** Modify grid */
 
-    private getGridOutline(quads: ShapeRefs): Record<string, string[]> {
+	private getGridOutline(quads: ShapeRefs): Record<string, string[]> {
 		// get number of times each vertex is shared by a quad
-		const vertexCounts = quads.reduce((acc, quad) => {
-			quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
-			return acc;
-		}, {} as Record<string, number>);
+		const vertexCounts = quads.reduce(
+			(acc, quad) => {
+				quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
+				return acc;
+			},
+			{} as Record<string, number>
+		);
 
 		// define unshared vertices as quad-group corners,
 		return Object.entries(vertexCounts).reduce(
@@ -487,10 +535,12 @@ export class GridManager {
 		);
 	}
 
-    private fitPolygon( quadGroup: ShapeRefs, radius: number, polygonSides = 4 ): Vertices | null {
+	private fitPolygon(quadGroup: ShapeRefs, radius: number, polygonSides = 4): Vertices | null {
 		// return null if a vertex is locked
 		if (
-			quadGroup.flat().some((vertexId) => this.vertices[vertexId]?.locked || this.vertices[vertexId]?.group)
+			quadGroup
+				.flat()
+				.some((vertexId) => this.vertices[vertexId]?.locked || this.vertices[vertexId]?.group)
 		)
 			return null;
 
@@ -561,13 +611,13 @@ export class GridManager {
 		}
 
 		function resolveToPolygon(
-            targetAngles: number[], 
-            cornerVertices: [string, number][], 
-            vertexAngles: [string, number][], 
-            origin: Coord, 
-            radius: number, 
-            groupId: string
-        ) {
+			targetAngles: number[],
+			cornerVertices: [string, number][],
+			vertexAngles: [string, number][],
+			origin: Coord,
+			radius: number,
+			groupId: string
+		) {
 			const { x: x0, y: y0 } = origin;
 
 			// Trackers:
@@ -651,13 +701,13 @@ export class GridManager {
 		};
 	} // wants major refactor
 
-    private relaxSubgrid(quadsToRelax: ShapeRefs, stepNums = 10): Vertices {
-        const edges = this.getEdges()
-        const vertices = this.getVertices()
+	private relaxSubgrid(quadsToRelax: ShapeRefs, stepNums = 10): Vertices {
+		const edges = this.getEdges();
+		const vertices = this.getVertices();
 		const verticesToRelax: MutableVertices = {
 			...quadsToRelax
 				.flat()
-				.reduce((acc, vertexId) => ({ ...acc, [vertexId]: {...vertices[vertexId]} }), {})
+				.reduce((acc, vertexId) => ({ ...acc, [vertexId]: { ...vertices[vertexId] } }), {})
 		};
 
 		const { cornerVertexIds, edgeVertexIds } = this.getGridOutline(quadsToRelax);
@@ -675,10 +725,8 @@ export class GridManager {
 		}
 
 		const relaxedVertices = this.relaxGrid(
-            verticesToRelax,
-            edges.filter((edge) =>
-                edge.every((vId) => Object.keys(verticesToRelax).includes(vId))
-            ),
+			verticesToRelax,
+			edges.filter((edge) => edge.every((vId) => Object.keys(verticesToRelax).includes(vId))),
 			stepNums
 		);
 
@@ -687,20 +735,15 @@ export class GridManager {
 		return relaxedVertices;
 	} // should use this.vertices & this.edges
 
-    /** Positional */
+	/** Positional */
 
-    private makeSpatialBuckets() {
+	private makeSpatialBuckets() {}
 
-    }
-
-    private getNearestVertex(position: Coord): string {
-        const vertices = this.getVertices()
+	private getNearestVertex(position: Coord): string {
+		const vertices = this.getVertices();
 		const startingVertexId = '0/0';
 		const startingPos = vertices[startingVertexId];
-		const startingDistance = getHypotenuse(
-			startingPos.x - position.x,
-			startingPos.y - position.y
-		);
+		const startingDistance = getHypotenuse(startingPos.x - position.x, startingPos.y - position.y);
 
 		function loop(vertexId: string, currentDistance: number): string {
 			const [idY, idX] = vertexId.split('/').map((id) => Number(id));
@@ -729,7 +772,7 @@ export class GridManager {
 					if (distance < acc?.distance) return { id, distance };
 					return acc;
 				},
-				{ id: vertexId, distance: currentDistance } as {id: string, distance: number}
+				{ id: vertexId, distance: currentDistance } as { id: string; distance: number }
 			);
 
 			return closestNeighbour === vertexId ? vertexId : loop(closestNeighbour, newDistance);
@@ -738,25 +781,25 @@ export class GridManager {
 		return loop(startingVertexId, startingDistance);
 	}
 
-    private getQuadsFromVertex(vertexId: string, selectionRadius = 1): ShapeRefs {
+	private getQuadsFromVertex(vertexId: string, selectionRadius = 1): ShapeRefs {
 		let selectedVertices = [vertexId];
-		let selectedQuads: ShapeRefs = [];
+		const selectedQuads: Set<string[]> = new SvelteSet();
 
 		for (let i = 0; i < selectionRadius; i++) {
-			const newQuads = this.quads
-                .filter((quad) => quad.some((vId) => selectedVertices.includes(vId)))
-                .map(quad => [...quad]);
-			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
+			const newQuads = this.getQuads().filter((quad) =>
+				quad.some((vId) => selectedVertices.includes(vId))
+			);
+			newQuads.forEach((quad) => selectedQuads.add(quad));
 			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
 		}
 
-		return selectedQuads;
+		return [...selectedQuads];
 	}
 
-    private getNearestQuad(position: Coord): string[] | null {
-        const vertexId = this.getNearestVertex(position)
-        const candidateQuads = this.getQuadsFromVertex(vertexId)
-		const candidateShapes = candidateQuads.map(quad => this.getQuadVertices(quad))
+	private getNearestQuad(position: Coord): string[] | null {
+		const vertexId = this.getNearestVertex(position);
+		const candidateQuads = this.getQuadsFromVertex(vertexId);
+		const candidateShapes = candidateQuads.map((quad) => this.getQuadVertices(quad));
 
 		function checkIfInsideQuad(quad: Shape, coord: Coord): boolean | null {
 			const quadLines = (quad.vertices ?? []).map((vertex, i) => {
@@ -766,7 +809,7 @@ export class GridManager {
 				return getLinearParams(v1, v2);
 			});
 
-            if (!quadLines) return null
+			if (!quadLines) return null;
 
 			const lineFromOrigin = getLinearParams({ x: 0, y: 0 }, coord);
 
@@ -774,8 +817,10 @@ export class GridManager {
 			return intersectingLines.length % 2 === 1;
 		}
 
-		const selectedQuadIndex = candidateShapes.findIndex((quad) => checkIfInsideQuad(quad, position));
+		const selectedQuadIndex = candidateShapes.findIndex((quad) =>
+			checkIfInsideQuad(quad, position)
+		);
 
-        return candidateQuads[selectedQuadIndex] ?? null
+		return candidateQuads[selectedQuadIndex] ?? null;
 	}
 }
