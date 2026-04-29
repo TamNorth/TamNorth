@@ -59,28 +59,11 @@ export class GridManager {
         return selectedQuads.length ? selectedQuads.map(quad => this.getQuadVertices(quad)) : []
     }
 
-    public getNearestQuad(position: Coord): Shape | null {
-		const candidateQuads = this.getShapesFromPosition(position);
+    public getNearestShape(position: Coord): Shape | null {
+		const quad = this.getNearestQuad(position)
+        const selectedShape = quad ? this.getQuadVertices(quad) : null
 
-		function checkIfInsideQuad(quad: Shape, coord: Coord): boolean | null {
-			const quadLines = (quad.vertices ?? []).map((vertex, i) => {
-				const j = (i + 1) % quad.vertices.length;
-				const v1 = vertex;
-				const v2 = quad.vertices[j];
-				return getLinearParams(v1, v2);
-			});
-
-            if (!quadLines) return null
-
-			const lineFromOrigin = getLinearParams({ x: 0, y: 0 }, coord);
-
-			const intersectingLines = quadLines.filter((line) => !!getIntersect(line, lineFromOrigin));
-			return intersectingLines.length % 2 === 1;
-		}
-
-		const selectedQuad = candidateQuads.find((quad) => checkIfInsideQuad(quad, position));
-
-        return selectedQuad ?? null
+        return selectedShape ?? null
 	}
 
     public insertPolygon(position: Coord, polygonRadius: number, polygonSides: number): void {
@@ -110,8 +93,11 @@ export class GridManager {
 
     public eraseModifications(position: Coord, radius: number): void {
         const vertexId = this.getNearestVertex(position)
-        const quadsToReset = this.getQuadsFromVertex(vertexId, radius)
+        const quadsToReset = radius === 0 
+            ? [this.getNearestQuad(position)]
+            : this.getQuadsFromVertex(vertexId, radius)
         const vertexIdsToReset = quadsToReset.flat()
+        console.log(vertexIdsToReset)
         const vertices = this.getVertices()
 
         const newVertices = vertexIdsToReset.reduce((acc, vId) => ({...acc, [vId]: {...vertices[vId], hidden: false, group: null}}), {} as Vertices)
@@ -688,10 +674,10 @@ export class GridManager {
 		}
 
 		const relaxedVertices = this.relaxGrid(
-				verticesToRelax,
-				edges.filter((edge) =>
-					edge.every((vId) => Object.keys(verticesToRelax).includes(vId))
-				),
+            verticesToRelax,
+            edges.filter((edge) =>
+                edge.every((vId) => Object.keys(verticesToRelax).includes(vId))
+            ),
 			stepNums
 		);
 
@@ -764,5 +750,31 @@ export class GridManager {
 		}
 
 		return selectedQuads;
+	}
+
+    private getNearestQuad(position: Coord): string[] | null {
+        const vertexId = this.getNearestVertex(position)
+        const candidateQuads = this.getQuadsFromVertex(vertexId)
+		const candidateShapes = candidateQuads.map(quad => this.getQuadVertices(quad))
+
+		function checkIfInsideQuad(quad: Shape, coord: Coord): boolean | null {
+			const quadLines = (quad.vertices ?? []).map((vertex, i) => {
+				const j = (i + 1) % quad.vertices.length;
+				const v1 = vertex;
+				const v2 = quad.vertices[j];
+				return getLinearParams(v1, v2);
+			});
+
+            if (!quadLines) return null
+
+			const lineFromOrigin = getLinearParams({ x: 0, y: 0 }, coord);
+
+			const intersectingLines = quadLines.filter((line) => !!getIntersect(line, lineFromOrigin));
+			return intersectingLines.length % 2 === 1;
+		}
+
+		const selectedQuadIndex = candidateShapes.findIndex((quad) => checkIfInsideQuad(quad, position));
+
+        return candidateQuads[selectedQuadIndex] ?? null
 	}
 }

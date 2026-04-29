@@ -15,7 +15,7 @@
 	/* DEFINITIONS */
 
 	function paintQuad({ context, mousePos, scale, origin, colour, fillRule }) {
-		const singleQuad = gridManager.getNearestQuad(mousePos, scale, origin);
+		const singleQuad = gridManager.getNearestShape(mousePos, scale, origin);
 
 		return (
 			singleQuad &&
@@ -133,7 +133,7 @@
 				}
 
 				if (mouseClick.button === 2) {
-					untrack(() => gridManager.eraseModifications(mouseClickPos, 2));
+					untrack(() => gridManager.eraseModifications(mouseClickPos, 1));
 				}
 
 				mouseClickPos = null;
