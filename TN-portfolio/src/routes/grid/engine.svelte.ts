@@ -114,7 +114,7 @@ export class GridManager {
         const vertexIdsToReset = quadsToReset.flat()
         const vertices = this.getVertices()
 
-        const newVertices = vertexIdsToReset.reduce((acc, vId) => ({...acc, [vId]: {...vertices[vId], hidden: false, locked: false, group: null}}), {} as Vertices)
+        const newVertices = vertexIdsToReset.reduce((acc, vId) => ({...acc, [vId]: {...vertices[vId], hidden: false, group: null}}), {} as Vertices)
         this.setVertices(newVertices)
 
         const quadsToRelax = this.getQuadsFromVertex(vertexId, radius + 2)
