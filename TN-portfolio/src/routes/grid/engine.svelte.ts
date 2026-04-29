@@ -11,29 +11,108 @@ type Grid = {vertices: Vertices, quads: readonly string[][]}
 export class GridManager {
     public constructor(
         private hexSize: number = 6, 
-	    private initialScale: number = 300,
         private springLength: number = 0.2,
 	    private springStrength: number = 0.3,
 	    private relaxationPasses: number = 5,
 	    private rotationalDamping: number = 2,
         private relaxationRadius: number = 4,
 ) {
-
+    
     }
-    private vertices: MutableVertices = {}
+    private vertices: MutableVertices = $state.raw({}) // make reactive state?
 
-    public getVertices(): MutableVertices {
-        const verticesCopy: MutableVertices = structuredClone(this.vertices)
-        return verticesCopy
+    private edges: string[][] = $state.raw([])
+
+    private quads: string[][] = $state.raw([])
+
+    private grid = $derived(this.quads.map(quad => ({
+            vertices: quad.map(vertexId => ({...this.vertices[vertexId]}))
+        })
+    ))
+
+    /** PUBLIC METHODS */
+
+    private getVertices(): MutableVertices {
+        return $state.snapshot(this.vertices)
+    } // return reactive $state
+
+    private getEdges(): string[][] {
+        return $state.snapshot(this.edges)
     }
 
-    private edges: string[][] = []
+    private getQuads(): string[][] {
+        return $state.snapshot(this.quads)
+    }
 
-    private quads: string[][] = []
+    private setVertices(newVertices: MutableVertices) {
+        this.vertices = {...this.vertices, ...newVertices}
+    }
 
-    public getQuads(): string[][] {
-        const quadsCopy: string[][] = [...this.quads.map(quad => [...quad])]
-        return quadsCopy
+    private setEdges(newEdges: readonly string[][]) {
+        this.edges = [...this.edges, ...newEdges]
+    }
+
+    private setQuads(newQuads: readonly string[][]) {
+        this.quads = [...this.quads, ...newQuads]
+    }
+
+    public subscribeGrid() {
+        return this.grid
+    }
+
+	public makeHex(hexSize: number = this.hexSize): Grid {
+		const shapes = this.getHexgridTriangles(hexSize);
+
+		const mergedShapes = this.mergeShapes(shapes);
+		const { vertices, edges, quads } = this.interpolate(mergedShapes, hexSize);
+
+		const normalisedVertices = this.normaliseGrid(vertices);
+		const relaxedVertices = this.relaxGrid(normalisedVertices, edges, this.relaxationPasses);
+
+        this.setVertices(relaxedVertices)
+        this.setEdges(edges)
+        this.setQuads(quads)
+
+		return { vertices: this.getVertices(), quads: this.getQuads() };
+	} // return $state.snapshot? Think about virtualising by hex... talk to Carmen - all on one big object with an indexing array? or separate objects?
+
+    public getQuadsFromVertex(vertexId: string, selectionRadius = 1): readonly string[][] {
+		let selectedVertices = [vertexId];
+		let selectedQuads: readonly string[][] = [];
+
+		for (let i = 0; i < selectionRadius; i++) {
+			const newQuads = this.quads
+                .filter((quad) => quad.some((vId) => selectedVertices.includes(vId)))
+                .map(quad => [...quad]);
+			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
+			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
+		}
+
+		return selectedQuads;
+	}
+
+    public insertPolygon(vertexId: string, polygonRadius: number, polygonSides: number): Vertices {
+        const selectedQuads = this.getQuadsFromVertex(vertexId);
+        const verticesToAdd = this.fitPolygon(
+            selectedQuads,
+            polygonRadius,
+            polygonSides
+        );
+
+        const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
+
+        const verticesToRelax = {
+            ...quadsToRelax
+                .flat()
+                .reduce((acc, vertexId) => ({ ...acc, [vertexId]: this.vertices[vertexId] }), {}),
+            ...verticesToAdd
+        };
+
+        const relaxedVertices = this.relaxSubgrid(verticesToRelax, this.edges, quadsToRelax);
+
+        this.vertices = {...this.vertices, ...relaxedVertices}
+
+        return this.getVertices()
     }
 
     private getHexgridTriangles(size: number): Triangle[] {
@@ -94,6 +173,8 @@ export class GridManager {
 			return [...acc, { id, vertices: triangle, pointsUp }];
 		}, []);
 	}
+
+    /** PRIVATE METHODS */
 
     private mergeShapes(shapes: readonly Triangle[], _remainingIndices: number[] = [], _mergedShapes: Coord[][] = []): Coord[][] {
 		// const shapesCopy = structuredClone(shapes)
@@ -234,7 +315,7 @@ export class GridManager {
 		);
 
 		return { vertices, edges: Object.values(edges), quads };
-	}
+	} // doesn't need to reurn vertices/edges/quads if modifies this... directly?
 
     private normaliseGrid(vertices: Vertices): Vertices {
 		const xScalingFactor = 0.5;
@@ -251,7 +332,7 @@ export class GridManager {
 		}
 
 		return newVertices;
-	}
+	} // doesn't need to return vertices if modifies this.vertices directly?
 
     private getVertexForces(vertices: Vertices, edges: readonly string[][]): {[index: string]: Coord} {
 
@@ -283,7 +364,7 @@ export class GridManager {
 			(acc, [id, vertex]) => ({ ...acc, [id]: sumDimensions(vertex) }),
 			{}
 		);
-	}
+	} // should use this.edges?
 
     private getRigidBodyForces(vertices: Vertices, vertexForces: {[index: string]: Coord}): {centre: Coord, angular: number, linear: Coord} {
 		const rotationalCentre = getAveragePosition(Object.values(vertices));
@@ -303,7 +384,7 @@ export class GridManager {
 		}, 0);
 
 		return { centre: rotationalCentre, angular: angularForce, linear: linearForce };
-	}
+	} // linear needs work
 
     private relaxGrid(vertices: Vertices, edges: readonly string[][], stepNum = 1): MutableVertices {
 
@@ -357,7 +438,7 @@ export class GridManager {
 		}
 
 		return newVertices;
-	}
+	} // should use this.vertices (?) & this.edges
 
     private getGridOutline(quads: readonly string[][]): Record<string, string[]> {
 		// get number of times each vertex is shared by a quad
@@ -378,40 +459,9 @@ export class GridManager {
 		);
 	}
 
-	public makeHex(hexSize: number = this.hexSize): Grid {
-		const shapes = this.getHexgridTriangles(hexSize);
-
-		const mergedShapes = this.mergeShapes(shapes);
-		const { vertices, edges, quads } = this.interpolate(mergedShapes, hexSize);
-
-		const normalisedVertices = this.normaliseGrid(vertices);
-		const relaxedVertices = this.relaxGrid(normalisedVertices, edges, this.relaxationPasses);
-
-        this.vertices = {...this.vertices, ...relaxedVertices}
-        this.edges = [...this.edges, ...edges]
-        this.quads = [...this.quads, ...quads]
-
-		return { vertices: this.getVertices(), quads: this.getQuads() };
-	}
-
     private makeSpatialBuckets() {
 
     }
-
-    public getQuadsFromVertex(vertexId: string, selectionRadius = 1): readonly string[][] {
-		let selectedVertices = [vertexId];
-		let selectedQuads: readonly string[][] = [];
-
-		for (let i = 0; i < selectionRadius; i++) {
-			const newQuads = this.quads
-                .filter((quad) => quad.some((vId) => selectedVertices.includes(vId)))
-                .map(quad => [...quad]);
-			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
-			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
-		}
-
-		return selectedQuads;
-	}
 
     private fitPolygon( quadGroup: readonly string[][], radius: number, polygonSides = 4 ): Vertices | null {
 		// return null if a vertex is locked
@@ -575,7 +625,7 @@ export class GridManager {
 			...polygon,
 			[middleVertexId]: { ...this.vertices[middleVertexId], group: groupId, hidden: true }
 		};
-	}
+	} // wants major refactor
 
     private relaxSubgrid(vertices: Vertices, edges: string[][], quadsToRelax: readonly string[][], stepNums = 10): Vertices {
 		const verticesToRelax: MutableVertices = {
@@ -609,29 +659,5 @@ export class GridManager {
 		verticesToUnlock.forEach((vertexId) => (relaxedVertices[vertexId].locked = false));
 
 		return relaxedVertices;
-	}
-
-    public insertPolygon(vertexId: string, polygonRadius: number, polygonSides: number): Vertices {
-			const selectedQuads = this.getQuadsFromVertex(vertexId);
-			const verticesToAdd = this.fitPolygon(
-				selectedQuads,
-				polygonRadius,
-				polygonSides
-			);
-
-			const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
-
-			const verticesToRelax = {
-				...quadsToRelax
-					.flat()
-					.reduce((acc, vertexId) => ({ ...acc, [vertexId]: this.vertices[vertexId] }), {}),
-				...verticesToAdd
-			};
-
-			const relaxedVertices = this.relaxSubgrid(verticesToRelax, this.edges, quadsToRelax);
-
-            this.vertices = {...this.vertices, ...relaxedVertices}
-
-            return this.getVertices()
-        }
+	} // should use this.vertices & this.edges
 }

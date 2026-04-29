@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Page from '$lib/shared/Page.svelte';
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
-	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import Tile from '$lib/shared/Tile.svelte';
+	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import { getHypotenuse, getIntersect, getLinearParams } from '$lib/utils/mathsUtils.js';
 	import { untrack } from 'svelte';
 	import useTheme from '$lib/hooks/useTheme.svelte.js';
@@ -59,22 +59,9 @@
 		return loop(startingVertexId, startingDistance);
 	}
 
-	function getQuadsFromVertex(vertexId, quads, selectionRadius = 1) {
-		let selectedVertices = [vertexId];
-		let selectedQuads = [];
-
-		for (let i = 0; i < selectionRadius; i++) {
-			const newQuads = quads.filter((quad) => quad.some((vId) => selectedVertices.includes(vId)));
-			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
-			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
-		}
-
-		return selectedQuads;
-	}
-
-	function getNearestQuad(mouseClick, quads, vertices, scale, origin) {
+	function getNearestQuad(mouseClick, vertices, scale, origin) {
 		const vertexId = getNearestVertex(mouseClick, vertices, scale, origin);
-		const candidateQuads = getQuadsFromVertex(vertexId, quads);
+		const candidateQuads = gridManager.getQuadsFromVertex(vertexId);
 		function checkIfInsideQuad(quad, mouseClick) {
 			const quadLines = quad.map((vertexId, i) => {
 				const j = (i + 1) % quad.length;
@@ -92,8 +79,8 @@
 		return candidateQuads.find((quad) => checkIfInsideQuad(quad, mouseClick));
 	}
 
-	function paintQuad({ context, mousePos, vertices, quads, scale, origin, colour, fillRule }) {
-		const singleQuad = getNearestQuad(mousePos, quads, vertices, scale, origin);
+	function paintQuad({ context, mousePos, vertices, scale, origin, colour, fillRule }) {
+		const singleQuad = getNearestQuad(mousePos, vertices, scale, origin);
 		const shape = { vertices: singleQuad?.map((vertexId) => vertices[vertexId]) };
 
 		return (
@@ -109,7 +96,7 @@
 		);
 	}
 
-	function paintQuadGroup({ context, mousePos, vertices, quads, scale, origin, colour, fillRule }) {
+	function paintQuadGroup({ context, mousePos, vertices, scale, origin, colour, fillRule }) {
 		const nearestVertexId = getNearestVertex(mousePos, vertices, scale, origin);
 		const selectedQuads = gridManager.getQuadsFromVertex(nearestVertexId);
 		const shapes = selectedQuads?.map((quad) => {
@@ -135,7 +122,9 @@
 	let scale = $derived(INITIAL_SCALE / gridSize);
 
 	let gridManager = $derived(new GridManager(gridSize));
-	let { vertices: originalVertices, quads } = $derived(gridManager.makeHex());
+	let grid = $derived(gridManager.subscribeGrid());
+	$inspect(grid);
+	let { vertices: originalVertices, quads } = gridManager.makeHex();
 
 	const canvasFn = ({ canvas, overlayCanvas, mousePosition, mouseClick, w, h, offset }) => {
 		const mousePos = $derived({ x: mousePosition.x - offset.x, y: mousePosition.y - offset.y });
@@ -199,7 +188,6 @@
 				context: overlayContext,
 				mousePos,
 				vertices,
-				quads,
 				scale,
 				origin,
 				colour: `${colourPositive}88`,
@@ -209,7 +197,6 @@
 				context: overlayContext,
 				mousePos,
 				vertices,
-				quads,
 				scale,
 				origin,
 				colour: `${colourInfo}88`,
@@ -230,10 +217,6 @@
 				mouseClickPos = null;
 			});
 
-			const shapes = quads.map((quad) => ({
-				vertices: quad.map((vertexId) => vertices[vertexId])
-			}));
-
 			function strokeRule({ context, vertices }) {
 				const prevStrokeStyle = context.strokeStyle;
 
@@ -246,14 +229,15 @@
 				}
 			}
 
-			outlineShapes({
-				context,
-				origin,
-				shapes,
-				scale,
-				colour: colourInfo,
-				strokeRule
-			});
+			if (grid.length)
+				outlineShapes({
+					context,
+					origin,
+					shapes: grid,
+					scale,
+					colour: colourInfo,
+					strokeRule
+				});
 		});
 	};
 </script>
