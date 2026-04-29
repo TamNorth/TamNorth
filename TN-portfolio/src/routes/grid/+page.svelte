@@ -32,6 +32,10 @@
 		};
 	}
 
+	function applyOffset(pos, offset) {
+		return { x: pos.x - offset.x, y: pos.y - offset.y };
+	}
+
 	/* EXECUTION */
 
 	let gridSize = $state(DEFAULT_GRID_SIZE);
@@ -41,19 +45,10 @@
 	let grid = $derived(gridManager.subscribeGrid());
 
 	const canvasFn = ({ canvas, overlayCanvas, mousePosition, mouseClick, w, h, offset }) => {
+		const scaleToGrid = (pos) => canvasToGridPos(pos, scale, origin);
 		const origin = $derived({ x: w / 2, y: h / 2 });
-		const mousePos = $derived(
-			canvasToGridPos(
-				{ x: mousePosition.x - offset.x, y: mousePosition.y - offset.y },
-				scale,
-				origin
-			)
-		);
-		let mouseClickPos = $derived(
-			typeof mouseClick.x === 'number'
-				? canvasToGridPos({ x: mouseClick.x - offset.x, y: mouseClick.y - offset.y }, scale, origin)
-				: null
-		);
+		const mousePos = $derived(scaleToGrid(applyOffset(mousePosition, offset)));
+		let mouseClickPos = $derived(mouseClick ? scaleToGrid(applyOffset(mouseClick, offset)) : null);
 
 		const canvasManager = new CanvasManager(canvas, scale, origin);
 		const overlayCanvasManager = new CanvasManager(overlayCanvas, scale, origin);
@@ -63,6 +58,7 @@
 		/* Draw grid */
 
 		$effect(() => {
+			canvasManager.clearCanvas(w, h);
 			// untrack(() => {
 			// 	// important! breaks reactivity dependency cycle in fitPolygon $effect
 			// 	mouseClickPos = null;

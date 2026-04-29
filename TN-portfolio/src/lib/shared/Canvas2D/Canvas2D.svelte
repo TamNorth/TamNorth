@@ -13,7 +13,7 @@
 	let canvas = $state();
 	let overlayCanvas = $state();
 	let mousePosition = $state({ x: null, y: null });
-	let mouseClick = $state({ x: null, y: null, button: null });
+	let mouseClick = $state(null);
 
 	function handleMouseMove(e) {
 		mousePosition.x = e.clientX;
@@ -22,9 +22,11 @@
 
 	function handleMouseClick(e) {
 		e.preventDefault();
-		mouseClick.x = e.clientX;
-		mouseClick.y = e.clientY;
-		mouseClick.button = e.buttons;
+		mouseClick = {
+			x: e.clientX,
+			y: e.clientY,
+			button: e.buttons
+		};
 	}
 
 	let w = $state(0);

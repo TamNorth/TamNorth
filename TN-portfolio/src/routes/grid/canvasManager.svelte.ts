@@ -15,6 +15,8 @@ export class CanvasManager {
 
 	private scale: number = $state(0);
 
+	/** PUBLIC METHODS */
+
 	public fillShapes(shapes: Shapes, colour?: string, fillRule?): void {
 		const defaultColour = 'red';
 
@@ -48,6 +50,8 @@ export class CanvasManager {
 	public clearCanvas(w: number, h: number, x: number = 0, y: number = 0) {
 		this.context.clearRect(x, y, w, h);
 	}
+
+	/** PRIVATE METHODS */
 
 	private makePath(vertices: Vertex[]) {
 		this.context.beginPath();
