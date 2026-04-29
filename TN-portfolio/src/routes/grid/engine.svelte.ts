@@ -53,14 +53,14 @@ export class GridManager {
         this.setQuads(quads)
 	} // Think about virtualising by hex... talk to Carmen - all on one big object with an indexing array? or separate objects?
 
-    public getShapesFromVertex(position: Coord, selectionRadius?: number | undefined): Shapes {
+    public getShapesFromPosition(position: Coord, selectionRadius?: number | undefined): Shapes {
         const vertexId = this.getNearestVertex(position)
         const selectedQuads = this.getQuadsFromVertex(vertexId, selectionRadius)
         return selectedQuads.length ? selectedQuads.map(quad => this.getQuadVertices(quad)) : []
     }
 
     public getNearestQuad(position: Coord): Shape | null {
-		const candidateQuads = this.getShapesFromVertex(position);
+		const candidateQuads = this.getShapesFromPosition(position);
 
 		function checkIfInsideQuad(quad: Shape, coord: Coord): boolean | null {
 			const quadLines = (quad.vertices ?? []).map((vertex, i) => {

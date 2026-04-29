@@ -31,7 +31,7 @@
 	}
 
 	function paintQuadGroup({ context, mousePos, scale, origin, colour, fillRule }) {
-		const selectedQuads = gridManager.getShapesFromVertex(mousePos);
+		const selectedQuads = gridManager.getShapesFromPosition(mousePos);
 
 		return (
 			selectedQuads.length &&
