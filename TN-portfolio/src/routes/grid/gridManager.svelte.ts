@@ -117,7 +117,10 @@ export class GridManager {
 		const vertices = this.getVertices();
 
 		const newVertices = vertexIdsToReset.reduce(
-			(acc, vId) => ({ ...acc, [vId]: { ...vertices[vId], hidden: false, group: null } }),
+			(acc, vId) => ({
+				...acc,
+				[vId]: { ...vertices[vId], hidden: false, groupId: null, group: null }
+			}),
 			{} as Vertices
 		);
 		this.setVertices(newVertices);
