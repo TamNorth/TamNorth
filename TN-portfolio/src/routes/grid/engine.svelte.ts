@@ -1,4 +1,4 @@
-import { fillWithCount, getAveragePosition, getBearing, getIntersect, getLinearParams, getVector, normaliseAngle, resolveVector, sumDimensions } from "$lib/utils/mathsUtils.js";
+import { fillWithCount, getAveragePosition, getBearing, getHypotenuse, getIntersect, getLinearParams, getVector, normaliseAngle, resolveVector, sumDimensions } from "$lib/utils/mathsUtils.js";
 
 type Coord = {x: number, y: number}
 type Triangle = {id: Coord, vertices: Coord[], pointsUp: boolean}
@@ -6,7 +6,10 @@ type Vertex = {readonly x: number, readonly y: number, readonly hidden?: boolean
 type MutableVertex = {x: number, y: number, hidden?: boolean, locked?: boolean, group?: string }
 type Vertices = {readonly [index: string]: Vertex}
 type MutableVertices = {[index: string]: MutableVertex}
-type Grid = {vertices: Vertices, quads: readonly string[][]}
+type ShapeRefs = readonly string[][]
+type MutableShapeRefs = string[][]
+type Shape = {vertices: Vertex[]}
+type Shapes = Shape[]
 
 export class GridManager {
     public constructor(
@@ -17,18 +20,22 @@ export class GridManager {
 	    private rotationalDamping: number = 2,
         private relaxationRadius: number = 4,
 ) {
-    
+    this.makeHex()
     }
     private vertices: MutableVertices = $state.raw({}) // make reactive state?
 
-    private edges: string[][] = $state.raw([])
+    private edges: MutableShapeRefs = $state.raw([])
 
-    private quads: string[][] = $state.raw([])
+    private quads: MutableShapeRefs = $state.raw([])
 
-    private grid = $derived(this.quads.map(quad => ({
-            vertices: quad.map(vertexId => ({...this.vertices[vertexId]}))
-        })
+    private grid = $derived(this.quads.map(quad => (
+            this.getQuadVertices(quad)
+        )
     ))
+
+    private getQuadVertices(quad: string[]) {
+        return {vertices: quad.map(vertexId => ({...this.vertices[vertexId]}))}
+    }
 
     /** PUBLIC METHODS */
 
@@ -36,11 +43,11 @@ export class GridManager {
         return $state.snapshot(this.vertices)
     } // return reactive $state
 
-    private getEdges(): string[][] {
+    private getEdges(): ShapeRefs {
         return $state.snapshot(this.edges)
     }
 
-    private getQuads(): string[][] {
+    private getQuads(): ShapeRefs {
         return $state.snapshot(this.quads)
     }
 
@@ -48,11 +55,11 @@ export class GridManager {
         this.vertices = {...this.vertices, ...newVertices}
     }
 
-    private setEdges(newEdges: readonly string[][]) {
+    private setEdges(newEdges: ShapeRefs) {
         this.edges = [...this.edges, ...newEdges]
     }
 
-    private setQuads(newQuads: readonly string[][]) {
+    private setQuads(newQuads: ShapeRefs) {
         this.quads = [...this.quads, ...newQuads]
     }
 
@@ -60,7 +67,7 @@ export class GridManager {
         return this.grid
     }
 
-	public makeHex(hexSize: number = this.hexSize): Grid {
+	public makeHex(hexSize: number = this.hexSize) {
 		const shapes = this.getHexgridTriangles(hexSize);
 
 		const mergedShapes = this.mergeShapes(shapes);
@@ -72,26 +79,40 @@ export class GridManager {
         this.setVertices(relaxedVertices)
         this.setEdges(edges)
         this.setQuads(quads)
-
-		return { vertices: this.getVertices(), quads: this.getQuads() };
 	} // return $state.snapshot? Think about virtualising by hex... talk to Carmen - all on one big object with an indexing array? or separate objects?
 
-    public getQuadsFromVertex(vertexId: string, selectionRadius = 1): readonly string[][] {
-		let selectedVertices = [vertexId];
-		let selectedQuads: readonly string[][] = [];
+    public getShapesFromVertex(position: Coord, selectionRadius?: number | undefined): Shapes {
+        const vertexId = this.getNearestVertex(position)
+        const selectedQuads = this.getQuadsFromVertex(vertexId, selectionRadius)
+        return selectedQuads.length ? selectedQuads.map(quad => this.getQuadVertices(quad)) : []
+    }
 
-		for (let i = 0; i < selectionRadius; i++) {
-			const newQuads = this.quads
-                .filter((quad) => quad.some((vId) => selectedVertices.includes(vId)))
-                .map(quad => [...quad]);
-			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
-			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
+    public getNearestQuad(position: Coord): Shape | null {
+		const candidateQuads = this.getShapesFromVertex(position);
+
+		function checkIfInsideQuad(quad: Shape, coord: Coord): boolean | null {
+			const quadLines = (quad.vertices ?? []).map((vertex, i) => {
+				const j = (i + 1) % quad.vertices.length;
+				const v1 = vertex;
+				const v2 = quad.vertices[j];
+				return getLinearParams(v1, v2);
+			});
+
+            if (!quadLines) return null
+
+			const lineFromOrigin = getLinearParams({ x: 0, y: 0 }, coord);
+
+			const intersectingLines = quadLines.filter((line) => !!getIntersect(line, lineFromOrigin));
+			return intersectingLines.length % 2 === 1;
 		}
 
-		return selectedQuads;
+		const selectedQuad = candidateQuads.find((quad) => checkIfInsideQuad(quad, position));
+
+        return selectedQuad ?? null
 	}
 
-    public insertPolygon(vertexId: string, polygonRadius: number, polygonSides: number): Vertices {
+    public insertPolygon(position: Coord, polygonRadius: number, polygonSides: number): Vertices {
+        const vertexId = this.getNearestVertex(position)
         const selectedQuads = this.getQuadsFromVertex(vertexId);
         const verticesToAdd = this.fitPolygon(
             selectedQuads,
@@ -242,7 +263,7 @@ export class GridManager {
 			: [..._mergedShapes, mergedVertices];
 	}
 
-    private interpolate(shapes: readonly Coord[][], size: number): {vertices: Vertices, edges: readonly string[][], quads: readonly string[][]} {
+    private interpolate(shapes: readonly Coord[][], size: number): {vertices: Vertices, edges: ShapeRefs, quads: ShapeRefs} {
 		const { vertices, edges, quads } = shapes.reduce(
 			(acc, shape) => {
 				let { mX, mY }: {mX: number, mY: number} = shape.reduce(
@@ -311,7 +332,7 @@ export class GridManager {
 
 				return acc;
 			},
-			{ vertices: {}, edges: {}, quads: [] } as {vertices: MutableVertices | Record<string, never>, edges: {[index: string]: string[]} | Record<string, never>, quads: string[][]}
+			{ vertices: {}, edges: {}, quads: [] } as {vertices: MutableVertices | Record<string, never>, edges: {[index: string]: string[]} | Record<string, never>, quads: MutableShapeRefs}
 		);
 
 		return { vertices, edges: Object.values(edges), quads };
@@ -334,7 +355,7 @@ export class GridManager {
 		return newVertices;
 	} // doesn't need to return vertices if modifies this.vertices directly?
 
-    private getVertexForces(vertices: Vertices, edges: readonly string[][]): {[index: string]: Coord} {
+    private getVertexForces(vertices: Vertices, edges: ShapeRefs): {[index: string]: Coord} {
 
 		const unresolvedForces = edges.reduce((acc, [v1Id, v2Id]) => {
 			const [end1, end2] = [vertices[v1Id], vertices[v2Id]];
@@ -386,7 +407,7 @@ export class GridManager {
 		return { centre: rotationalCentre, angular: angularForce, linear: linearForce };
 	} // linear needs work
 
-    private relaxGrid(vertices: Vertices, edges: readonly string[][], stepNum = 1): MutableVertices {
+    private relaxGrid(vertices: Vertices, edges: ShapeRefs, stepNum = 1): MutableVertices {
 
 		const newVertices: MutableVertices = $state.snapshot(vertices);
 		const groupedVertices: {[index: string]: {[index: string]: Vertex}} = {};
@@ -440,7 +461,7 @@ export class GridManager {
 		return newVertices;
 	} // should use this.vertices (?) & this.edges
 
-    private getGridOutline(quads: readonly string[][]): Record<string, string[]> {
+    private getGridOutline(quads: ShapeRefs): Record<string, string[]> {
 		// get number of times each vertex is shared by a quad
 		const vertexCounts = quads.reduce((acc, quad) => {
 			quad.forEach((vertexId) => (acc[vertexId] = (acc[vertexId] ?? 0) + 1));
@@ -463,7 +484,67 @@ export class GridManager {
 
     }
 
-    private fitPolygon( quadGroup: readonly string[][], radius: number, polygonSides = 4 ): Vertices | null {
+    private getNearestVertex(position: Coord): string {
+        const vertices = this.getVertices()
+		const startingVertexId = '0/0';
+		const startingPos = vertices[startingVertexId];
+		const startingDistance = getHypotenuse(
+			startingPos.x - position.x,
+			startingPos.y - position.y
+		);
+
+		function loop(vertexId, currentDistance) {
+			const [idY, idX] = vertexId.split('/').map((id) => Number(id));
+			const neighbourIds = [1, 0.5, 0.3, 0.7]
+				.reduce(
+					(acc, delta) => [
+						...acc,
+						[idY + delta, idX],
+						[idY - delta, idX],
+						[idY, idX + delta],
+						[idY, idX - delta],
+						[idY + delta, idX + delta],
+						[idY + delta, idX - delta],
+						[idY - delta, idX - delta],
+						[idY - delta, idX + delta]
+					],
+					[]
+				)
+				.map((id) => id.join('/'));
+
+			const { id: closestNeighbour, distance: newDistance } = neighbourIds.reduce(
+				(acc, id) => {
+					if (!vertices[id]) return acc;
+					const testPosition = vertices[id];
+					const distance = getHypotenuse(testPosition.x - position.x, testPosition.y - position.y);
+					if (distance < acc?.distance) return { id, distance };
+					return acc;
+				},
+				{ id: vertexId, distance: currentDistance }
+			);
+
+			return closestNeighbour === vertexId ? vertexId : loop(closestNeighbour, newDistance);
+		}
+
+		return loop(startingVertexId, startingDistance);
+	}
+
+    private getQuadsFromVertex(vertexId: string, selectionRadius = 1): ShapeRefs {
+		let selectedVertices = [vertexId];
+		let selectedQuads: ShapeRefs = [];
+
+		for (let i = 0; i < selectionRadius; i++) {
+			const newQuads = this.quads
+                .filter((quad) => quad.some((vId) => selectedVertices.includes(vId)))
+                .map(quad => [...quad]);
+			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
+			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
+		}
+
+		return selectedQuads;
+	}
+
+    private fitPolygon( quadGroup: ShapeRefs, radius: number, polygonSides = 4 ): Vertices | null {
 		// return null if a vertex is locked
 		if (
 			quadGroup.flat().some((vertexId) => this.vertices[vertexId]?.locked || this.vertices[vertexId]?.group)
@@ -627,7 +708,7 @@ export class GridManager {
 		};
 	} // wants major refactor
 
-    private relaxSubgrid(vertices: Vertices, edges: string[][], quadsToRelax: readonly string[][], stepNums = 10): Vertices {
+    private relaxSubgrid(vertices: Vertices, edges: MutableShapeRefs, quadsToRelax: ShapeRefs, stepNums = 10): Vertices {
 		const verticesToRelax: MutableVertices = {
 			...quadsToRelax
 				.flat()
