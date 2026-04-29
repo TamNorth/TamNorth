@@ -1,19 +1,19 @@
 function makePath(context, vertices, scale, origin) {
 	context.beginPath();
 	let firstVertex = null;
-	let paint = false
+	let paint = false;
 
-	vertices.forEach(({hidden = false, ...coord}, i) => {
-		const {x, y} = scaleVertex(coord, scale, origin)
+	vertices.forEach(({ hidden = false, ...coord }, i) => {
+		const { x, y } = scaleVertex(coord, scale, origin);
 		if (!x || !y) return;
 
-		if (!hidden && i === 0) firstVertex = { x, y }
+		if (!hidden && i === 0) firstVertex = { x, y };
 
 		if (hidden) {
-			paint = false
+			paint = false;
 		} else if (!paint) {
 			context.moveTo(x, y);
-			paint = true
+			paint = true;
 		} else {
 			context.lineTo(x, y);
 		}
@@ -22,58 +22,60 @@ function makePath(context, vertices, scale, origin) {
 	if (paint && firstVertex) context.lineTo(firstVertex.x, firstVertex.y);
 }
 
-export function outlineShapes({context, origin, shapes, scale = 1, colour, strokeRule}) {
+export function outlineShapes({ context, origin, shapes, scale = 1, colour, strokeRule }) {
 	const defaultColour = 'red';
 
 	shapes.forEach(({ vertices, colour: shapeColour }) => {
 		context.strokeStyle = colour ?? shapeColour ?? defaultColour;
 
-		makePath(context, vertices, scale, origin)
+		makePath(context, vertices, scale, origin);
 
 		if (strokeRule) {
-			strokeRule({context, vertices})
+			strokeRule({ context, vertices });
 		} else {
-			context.stroke()
-		};
-	})
+			context.stroke();
+		}
+	});
 }
 
-export function fillShapes({context, origin, shapes, scale = 1, colour, fillRule = null}) {
+export function fillShapes({ context, origin, shapes, scale = 1, colour, fillRule = null }) {
 	const defaultColour = 'red';
 
 	shapes.forEach(({ vertices, colour: shapeColour }) => {
 		context.fillStyle = colour ?? shapeColour ?? defaultColour;
 
-		makePath(context, vertices, scale, origin)
+		makePath(context, vertices, scale, origin);
 
 		if (fillRule) {
-			fillRule({context, vertices})
+			fillRule({ context, vertices });
 		} else {
-			context.fill()
-		};
-	})
+			context.fill();
+		}
+	});
 }
 
-export function paintVertices({context, origin, vertices, scale = 1, colour: colourOverride}) {
-	const rectSize = 10
-	const rectHalfSize = rectSize / 2
+export function paintVertices({ context, origin, vertices, scale = 1, colour: colourOverride }) {
+	const rectSize = 10;
+	const rectHalfSize = rectSize / 2;
 	const defaultColour = 'red';
 
-	vertices.filter(vertex => vertex).forEach(({ x: x0, y: y0, colour = null }) => {
-		if (!x0 || !y0) return;
-		context.fillStyle = colourOverride ?? colour ?? defaultColour;
+	vertices
+		.filter((vertex) => vertex)
+		.forEach(({ x: x0, y: y0, colour = null }) => {
+			if (!x0 || !y0) return;
+			context.fillStyle = colourOverride ?? colour ?? defaultColour;
 
-		const {x, y} = scaleVertex({x: x0, y: y0}, scale, origin)
+			const { x, y } = scaleVertex({ x: x0, y: y0 }, scale, origin);
 
-		context.fillRect(x - rectHalfSize, y - rectHalfSize, rectSize, rectSize);
-	})
+			context.fillRect(x - rectHalfSize, y - rectHalfSize, rectSize, rectSize);
+		});
 }
 
 export function scaleVertex(vertex, scale, origin) {
 	return {
 		x: vertex?.x * scale + origin.x,
-		y: vertex?.y * scale + origin.y,
-	}
+		y: vertex?.y * scale + origin.y
+	};
 }
 
 export function rainbowMist(canvas) {

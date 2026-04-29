@@ -1,34 +1,34 @@
-export function getBevelParams({hasBevel, shared, ...modes}) {
-        if (!hasBevel) {
-            const noBevel = {
-                "external-shadow": `
+export function getBevelParams({ hasBevel, shared, ...modes }) {
+	if (!hasBevel) {
+		const noBevel = {
+			'external-shadow': `
                     rgb(0, 0, 0, 0) 0 0 0 0
                 `,
-                "bevel-1": `
+			'bevel-1': `
                     rgb(0, 0, 0, 0) 0 0 0 0
                 `,
-                "bevel-2": `
+			'bevel-2': `
                     rgb(0, 0, 0, 0) 0 0 0 0
                 `,
-                "border-radius-tile": `0`,
-            }
-            return {dark: noBevel, light: noBevel}
-        } else {
-            const [dark, light] = Object.values(modes).map(mode => {
-                const {
-                    shadowLength,
-                    shadowDirectionX,
-                    shadowDirectionY,
-                    shadowVisibility,
-                    shadowColour,
-                    insetHighlightColour,
-                    bevelSize,
-                    bevelBlur,
-                    bevelVisibility
-                } = {...shared, ...mode}
+			'border-radius-tile': `0`
+		};
+		return { dark: noBevel, light: noBevel };
+	} else {
+		const [dark, light] = Object.values(modes).map((mode) => {
+			const {
+				shadowLength,
+				shadowDirectionX,
+				shadowDirectionY,
+				shadowVisibility,
+				shadowColour,
+				insetHighlightColour,
+				bevelSize,
+				bevelBlur,
+				bevelVisibility
+			} = { ...shared, ...mode };
 
-                return {
-                    "external-shadow": `
+			return {
+				'external-shadow': `
                         color-mix(in hsl, ${shadowColour} ${shadowVisibility}, transparent) 
                             calc(${shadowLength} * ${shadowDirectionX})
                             calc(${shadowLength} * ${shadowDirectionY}) 
@@ -36,7 +36,7 @@ export function getBevelParams({hasBevel, shared, ...modes}) {
                             0,
                         rgb(0, 0, 0, ${shadowVisibility}) 0 0 1px 1px
                     `,
-                    "bevel-1": `
+				'bevel-1': `
                         inset 
                             color-mix(in hsl, ${insetHighlightColour} ${bevelVisibility}, transparent) 
                             calc(${bevelSize} * ${shadowDirectionX}) 
@@ -50,7 +50,7 @@ export function getBevelParams({hasBevel, shared, ...modes}) {
                             ${bevelBlur} 
                             0
                     `,
-                    "bevel-2": `
+				'bevel-2': `
                         inset 
                             color-mix(in hsl, ${insetHighlightColour} ${bevelVisibility}, transparent) 
                             calc(${bevelSize} * ${0.5 * shadowDirectionX}) 
@@ -63,9 +63,9 @@ export function getBevelParams({hasBevel, shared, ...modes}) {
                             calc(${bevelSize} * ${-0.5 * shadowDirectionY}) 
                             ${bevelBlur} 
                             0`,
-                    "border-radius-tile": `calc(${bevelSize} * 0.5)`,
-                }
-            })
-            return {dark, light}
-        }
-    }
+				'border-radius-tile': `calc(${bevelSize} * 0.5)`
+			};
+		});
+		return { dark, light };
+	}
+}
