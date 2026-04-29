@@ -11,16 +11,9 @@ import {
 	sumDimensions
 } from '$lib/utils/mathsUtils.js';
 import { SvelteSet } from 'svelte/reactivity';
+import type { Coord, Shape, Shapes, Vertex, Vertices } from './types.ts';
 
-type Coord = { x: number; y: number };
 type Triangle = { id: Coord; vertices: Coord[]; pointsUp: boolean };
-type Vertex = {
-	readonly x: number;
-	readonly y: number;
-	readonly hidden?: boolean;
-	readonly locked?: boolean;
-	readonly group?: string | null;
-};
 type MutableVertex = {
 	x: number;
 	y: number;
@@ -28,12 +21,9 @@ type MutableVertex = {
 	locked?: boolean;
 	group?: string | null;
 };
-type Vertices = { readonly [index: string]: Vertex };
 type MutableVertices = { [index: string]: MutableVertex };
 type ShapeRefs = readonly string[][];
 type MutableShapeRefs = string[][];
-type Shape = { vertices: Vertex[] };
-type Shapes = Shape[];
 
 export class GridManager {
 	public constructor(
@@ -74,17 +64,15 @@ export class GridManager {
 		this.setQuads(quads);
 	} // Think about virtualising by hex... talk to Carmen - all on one big object with an indexing array? or separate objects?
 
-	public getShapesFromPosition(position: Coord, selectionRadius?: number | undefined): Shapes {
+	public getShapesFromPosition(position: Coord, selectionRadius: number = 0): Shapes {
+		if (!selectionRadius) {
+			const quad = this.getNearestQuad(position);
+			return quad ? [this.getQuadVertices(quad)] : [];
+		}
+
 		const vertexId = this.getNearestVertex(position);
 		const selectedQuads = this.getQuadsFromVertex(vertexId, selectionRadius);
 		return selectedQuads.length ? selectedQuads.map((quad) => this.getQuadVertices(quad)) : [];
-	}
-
-	public getNearestShape(position: Coord): Shape | null {
-		const quad = this.getNearestQuad(position);
-		const selectedShape = quad ? this.getQuadVertices(quad) : null;
-
-		return selectedShape ?? null;
 	}
 
 	public insertPolygon(position: Coord, polygonRadius: number, polygonSides: number): void {
@@ -129,8 +117,6 @@ export class GridManager {
 		const relaxedVertices = this.relaxSubgrid(quadsToRelax);
 		this.setVertices(relaxedVertices);
 	}
-
-	public;
 
 	/** PRIVATE METHODS */
 

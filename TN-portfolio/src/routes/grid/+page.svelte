@@ -5,46 +5,25 @@
 	import { fillShapes, outlineShapes, scaleVertex } from '$lib/shared/Canvas2D/utils.js';
 	import { untrack } from 'svelte';
 	import useTheme from '$lib/hooks/useTheme.svelte.js';
-	import { GridManager } from './engine.svelte.ts';
+	import { GridManager } from './gridManager.svelte.ts';
+	import { CanvasManager } from './canvasManager.svelte.ts';
 
 	const INITIAL_SCALE = 300;
 	const DEFAULT_GRID_SIZE = 4;
 	const POLYGON_SIDES = 4; //() => Math.floor(Math.random() * 3 + 4);
 	const POLYGON_RADIUS = POLYGON_SIDES < 5 ? 0.65 : 0.6;
+	const {
+		currentTheme: {
+			baseColours: {
+				'colour-warn': colourWarn,
+				'colour-error': colourError,
+				'colour-info': colourInfo,
+				'colour-positive': colourPositive
+			}
+		}
+	} = useTheme();
 
 	/* DEFINITIONS */
-
-	function paintQuad({ context, mousePos, scale, origin, colour, fillRule }) {
-		const singleQuad = gridManager.getNearestShape(mousePos, scale, origin);
-
-		return (
-			singleQuad &&
-			fillShapes({
-				context,
-				origin,
-				shapes: [singleQuad],
-				scale,
-				colour,
-				fillRule
-			})
-		);
-	}
-
-	function paintQuadGroup({ context, mousePos, scale, origin, colour, fillRule }) {
-		const selectedQuads = gridManager.getShapesFromPosition(mousePos);
-
-		return (
-			selectedQuads.length &&
-			fillShapes({
-				context,
-				origin,
-				shapes: selectedQuads,
-				scale,
-				colour,
-				fillRule
-			})
-		);
-	}
 
 	function canvasToGridPos(pos, scale, origin) {
 		return {
@@ -75,74 +54,15 @@
 				? canvasToGridPos({ x: mouseClick.x - offset.x, y: mouseClick.y - offset.y }, scale, origin)
 				: null
 		);
-		const context = $derived(canvas.getContext('2d'));
-		const overlayContext = $derived(overlayCanvas.getContext('2d'));
 
-		const {
-			currentTheme: {
-				baseColours: {
-					'colour-warn': colourWarn,
-					'colour-error': colourError,
-					'colour-info': colourInfo,
-					'colour-positive': colourPositive
-				}
-			}
-		} = useTheme();
+		const canvasManager = new CanvasManager(canvas, scale, origin);
+		const overlayCanvasManager = new CanvasManager(overlayCanvas, scale, origin);
 
 		/* PAINT CANVAS */
 
-		$effect(() => {
-			overlayContext.clearRect(0, 0, w, h);
-
-			function fillRule({ context, vertices }) {
-				const prevFillStyle = context.fillStyle;
-
-				if (vertices.some(({ locked, group }) => locked || group)) {
-					context.fillStyle = `${colourError}88`;
-					context.fill();
-					context.fillStyle = prevFillStyle;
-				} else {
-					context.fill();
-				}
-			}
-
-			paintQuadGroup({
-				context: overlayContext,
-				mousePos,
-				scale,
-				origin,
-				colour: `${colourPositive}88`,
-				fillRule
-			});
-			paintQuad({
-				context: overlayContext,
-				mousePos,
-				scale,
-				origin,
-				colour: `${colourInfo}88`,
-				fillRule
-			});
-		});
+		/* Draw grid */
 
 		$effect(() => {
-			if (mouseClickPos) {
-				if (mouseClick.button === 0) {
-					untrack(() => {
-						gridManager.insertPolygon(mouseClickPos, POLYGON_RADIUS, POLYGON_SIDES);
-					});
-				}
-
-				if (mouseClick.button === 2) {
-					untrack(() => gridManager.eraseModifications(mouseClickPos, 1));
-				}
-
-				mouseClickPos = null;
-			}
-		});
-
-		$effect(() => {
-			context.clearRect(0, 0, w, h);
-
 			// untrack(() => {
 			// 	// important! breaks reactivity dependency cycle in fitPolygon $effect
 			// 	mouseClickPos = null;
@@ -160,15 +80,51 @@
 				}
 			}
 
-			if (grid.length)
-				outlineShapes({
-					context,
-					origin,
-					shapes: grid,
-					scale,
-					colour: colourInfo,
-					strokeRule
-				});
+			if (grid.length) canvasManager.outlineShapes(grid, `${colourInfo}88`, strokeRule);
+		});
+
+		/* Highlight mouse position */
+
+		$effect(() => {
+			overlayCanvasManager.clearCanvas(w, h);
+
+			function fillRule({ context, vertices }) {
+				const prevFillStyle = context.fillStyle;
+
+				if (vertices.some(({ locked, group }) => locked || group)) {
+					context.fillStyle = `${colourError}88`;
+					context.fill();
+					context.fillStyle = prevFillStyle;
+				} else {
+					context.fill();
+				}
+			}
+
+			const multiQuads = gridManager.getShapesFromPosition(mousePos, 1);
+
+			if (multiQuads) overlayCanvasManager.fillShapes(multiQuads, `${colourPositive}88`, fillRule);
+
+			const singleQuad = gridManager.getShapesFromPosition(mousePos);
+
+			if (singleQuad) overlayCanvasManager.fillShapes(singleQuad, `${colourInfo}88`, fillRule);
+		});
+
+		/* Mouse click effects */
+
+		$effect(() => {
+			if (mouseClickPos) {
+				if (mouseClick.button === 0) {
+					untrack(() => {
+						gridManager.insertPolygon(mouseClickPos, POLYGON_RADIUS, POLYGON_SIDES);
+					});
+				}
+
+				if (mouseClick.button === 2) {
+					untrack(() => gridManager.eraseModifications(mouseClickPos, 1));
+				}
+
+				mouseClickPos = null;
+			}
 		});
 	};
 </script>
