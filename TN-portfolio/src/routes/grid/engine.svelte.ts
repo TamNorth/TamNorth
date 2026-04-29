@@ -22,46 +22,18 @@ export class GridManager {
 ) {
     this.makeHex()
     }
-    private vertices: MutableVertices = $state.raw({}) // make reactive state?
+    private vertices: MutableVertices = $state.raw({})
 
     private edges: MutableShapeRefs = $state.raw([])
 
     private quads: MutableShapeRefs = $state.raw([])
 
-    private grid = $derived(this.quads.map(quad => (
+    private grid: Shapes = $derived(this.quads.map(quad => (
             this.getQuadVertices(quad)
         )
     ))
 
-    private getQuadVertices(quad: string[]) {
-        return {vertices: quad.map(vertexId => ({...this.vertices[vertexId]}))}
-    }
-
     /** PUBLIC METHODS */
-
-    private getVertices(): MutableVertices {
-        return $state.snapshot(this.vertices)
-    } // return reactive $state
-
-    private getEdges(): ShapeRefs {
-        return $state.snapshot(this.edges)
-    }
-
-    private getQuads(): ShapeRefs {
-        return $state.snapshot(this.quads)
-    }
-
-    private setVertices(newVertices: MutableVertices) {
-        this.vertices = {...this.vertices, ...newVertices}
-    }
-
-    private setEdges(newEdges: ShapeRefs) {
-        this.edges = [...this.edges, ...newEdges]
-    }
-
-    private setQuads(newQuads: ShapeRefs) {
-        this.quads = [...this.quads, ...newQuads]
-    }
 
     public subscribeGrid() {
         return this.grid
@@ -79,7 +51,7 @@ export class GridManager {
         this.setVertices(relaxedVertices)
         this.setEdges(edges)
         this.setQuads(quads)
-	} // return $state.snapshot? Think about virtualising by hex... talk to Carmen - all on one big object with an indexing array? or separate objects?
+	} // Think about virtualising by hex... talk to Carmen - all on one big object with an indexing array? or separate objects?
 
     public getShapesFromVertex(position: Coord, selectionRadius?: number | undefined): Shapes {
         const vertexId = this.getNearestVertex(position)
@@ -196,6 +168,38 @@ export class GridManager {
 	}
 
     /** PRIVATE METHODS */
+
+    /** Getters & setters */
+
+    private getVertices(): MutableVertices {
+        return $state.snapshot(this.vertices)
+    }
+
+    private getEdges(): ShapeRefs {
+        return $state.snapshot(this.edges)
+    }
+
+    private getQuads(): ShapeRefs {
+        return $state.snapshot(this.quads)
+    }
+
+    private getQuadVertices(quad: string[]) {
+        return {vertices: quad.map(vertexId => ({...this.vertices[vertexId]}))}
+    }
+
+    private setVertices(newVertices: MutableVertices) {
+        this.vertices = {...this.vertices, ...newVertices}
+    }
+
+    private setEdges(newEdges: ShapeRefs) {
+        this.edges = [...this.edges, ...newEdges]
+    }
+
+    private setQuads(newQuads: ShapeRefs) {
+        this.quads = [...this.quads, ...newQuads]
+    }
+
+    /** Generate grid */
 
     private mergeShapes(shapes: readonly Triangle[], _remainingIndices: number[] = [], _mergedShapes: Coord[][] = []): Coord[][] {
 		// const shapesCopy = structuredClone(shapes)
@@ -461,6 +465,8 @@ export class GridManager {
 		return newVertices;
 	} // should use this.vertices (?) & this.edges
 
+    /** Modify grid */
+
     private getGridOutline(quads: ShapeRefs): Record<string, string[]> {
 		// get number of times each vertex is shared by a quad
 		const vertexCounts = quads.reduce((acc, quad) => {
@@ -478,70 +484,6 @@ export class GridManager {
 			},
 			{ cornerVertexIds: [], edgeVertexIds: [], middleVertexIds: [] } as Record<string, string[]>
 		);
-	}
-
-    private makeSpatialBuckets() {
-
-    }
-
-    private getNearestVertex(position: Coord): string {
-        const vertices = this.getVertices()
-		const startingVertexId = '0/0';
-		const startingPos = vertices[startingVertexId];
-		const startingDistance = getHypotenuse(
-			startingPos.x - position.x,
-			startingPos.y - position.y
-		);
-
-		function loop(vertexId, currentDistance) {
-			const [idY, idX] = vertexId.split('/').map((id) => Number(id));
-			const neighbourIds = [1, 0.5, 0.3, 0.7]
-				.reduce(
-					(acc, delta) => [
-						...acc,
-						[idY + delta, idX],
-						[idY - delta, idX],
-						[idY, idX + delta],
-						[idY, idX - delta],
-						[idY + delta, idX + delta],
-						[idY + delta, idX - delta],
-						[idY - delta, idX - delta],
-						[idY - delta, idX + delta]
-					],
-					[]
-				)
-				.map((id) => id.join('/'));
-
-			const { id: closestNeighbour, distance: newDistance } = neighbourIds.reduce(
-				(acc, id) => {
-					if (!vertices[id]) return acc;
-					const testPosition = vertices[id];
-					const distance = getHypotenuse(testPosition.x - position.x, testPosition.y - position.y);
-					if (distance < acc?.distance) return { id, distance };
-					return acc;
-				},
-				{ id: vertexId, distance: currentDistance }
-			);
-
-			return closestNeighbour === vertexId ? vertexId : loop(closestNeighbour, newDistance);
-		}
-
-		return loop(startingVertexId, startingDistance);
-	}
-
-    private getQuadsFromVertex(vertexId: string, selectionRadius = 1): ShapeRefs {
-		let selectedVertices = [vertexId];
-		let selectedQuads: ShapeRefs = [];
-
-		for (let i = 0; i < selectionRadius; i++) {
-			const newQuads = this.quads
-                .filter((quad) => quad.some((vId) => selectedVertices.includes(vId)))
-                .map(quad => [...quad]);
-			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
-			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
-		}
-
-		return selectedQuads;
 	}
 
     private fitPolygon( quadGroup: ShapeRefs, radius: number, polygonSides = 4 ): Vertices | null {
@@ -741,4 +683,70 @@ export class GridManager {
 
 		return relaxedVertices;
 	} // should use this.vertices & this.edges
+
+    /** Positional */
+
+    private makeSpatialBuckets() {
+
+    }
+
+    private getNearestVertex(position: Coord): string {
+        const vertices = this.getVertices()
+		const startingVertexId = '0/0';
+		const startingPos = vertices[startingVertexId];
+		const startingDistance = getHypotenuse(
+			startingPos.x - position.x,
+			startingPos.y - position.y
+		);
+
+		function loop(vertexId, currentDistance) {
+			const [idY, idX] = vertexId.split('/').map((id) => Number(id));
+			const neighbourIds = [1, 0.5, 0.3, 0.7]
+				.reduce(
+					(acc, delta) => [
+						...acc,
+						[idY + delta, idX],
+						[idY - delta, idX],
+						[idY, idX + delta],
+						[idY, idX - delta],
+						[idY + delta, idX + delta],
+						[idY + delta, idX - delta],
+						[idY - delta, idX - delta],
+						[idY - delta, idX + delta]
+					],
+					[]
+				)
+				.map((id) => id.join('/'));
+
+			const { id: closestNeighbour, distance: newDistance } = neighbourIds.reduce(
+				(acc, id) => {
+					if (!vertices[id]) return acc;
+					const testPosition = vertices[id];
+					const distance = getHypotenuse(testPosition.x - position.x, testPosition.y - position.y);
+					if (distance < acc?.distance) return { id, distance };
+					return acc;
+				},
+				{ id: vertexId, distance: currentDistance }
+			);
+
+			return closestNeighbour === vertexId ? vertexId : loop(closestNeighbour, newDistance);
+		}
+
+		return loop(startingVertexId, startingDistance);
+	}
+
+    private getQuadsFromVertex(vertexId: string, selectionRadius = 1): ShapeRefs {
+		let selectedVertices = [vertexId];
+		let selectedQuads: ShapeRefs = [];
+
+		for (let i = 0; i < selectionRadius; i++) {
+			const newQuads = this.quads
+                .filter((quad) => quad.some((vId) => selectedVertices.includes(vId)))
+                .map(quad => [...quad]);
+			selectedQuads = [...new Set([...selectedQuads, ...newQuads])];
+			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
+		}
+
+		return selectedQuads;
+	}
 }
