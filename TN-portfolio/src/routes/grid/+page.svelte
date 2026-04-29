@@ -167,7 +167,7 @@
 							POLYGON_RADIUS,
 							POLYGON_SIDES
 						);
-						currentGroupId++;
+						if (newId) currentGroupId++;
 					});
 				}
 
