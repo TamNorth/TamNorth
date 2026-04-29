@@ -13,7 +13,7 @@
 	let canvas = $state();
 	let overlayCanvas = $state();
 	let mousePosition = $state({ x: null, y: null });
-	let mouseClick = $state({ x: null, y: null });
+	let mouseClick = $state({ x: null, y: null, button: null });
 
 	function handleMouseMove(e) {
 		mousePosition.x = e.clientX;
@@ -21,8 +21,10 @@
 	}
 
 	function handleMouseClick(e) {
+		e.preventDefault();
 		mouseClick.x = e.clientX;
 		mouseClick.y = e.clientY;
+		mouseClick.button = e.buttons;
 	}
 
 	let w = $state(0);
@@ -57,6 +59,7 @@
 	width={w}
 	onmousemove={handleMouseMove}
 	onclick={handleMouseClick}
+	oncontextmenu={handleMouseClick}
 	class="canvas"
 	{style}
 ></canvas>
