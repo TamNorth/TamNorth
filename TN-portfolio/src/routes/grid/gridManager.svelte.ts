@@ -25,6 +25,8 @@ type MutableVertex = {
 type MutableVertices = { [index: string]: MutableVertex };
 type ShapeRefs = readonly string[][];
 type MutableShapeRefs = string[][];
+type NamedShapeRefs = { [index: string]: string[] };
+type NamedShapes = { [index: string]: Shape };
 
 export class GridManager {
 	public constructor(
@@ -41,15 +43,20 @@ export class GridManager {
 
 	private edges: MutableShapeRefs = $state.raw([]);
 
-	private quads: MutableShapeRefs = $state.raw([]);
+	private quads: NamedShapeRefs = $state.raw({});
 
-	private grid: Shapes = $derived(this.quads.map((quad) => this.getQuadVertices(quad)));
+	private grid: NamedShapes = $derived(
+		Object.entries(this.quads).reduce((acc, [id, quad]) => {
+			const vertices = this.getQuadVertices(quad);
+			return { ...acc, [id]: vertices };
+		}, {})
+	);
 
 	private groups: { [index: string]: string[] } = {};
 
 	/** PUBLIC METHODS */
 
-	public subscribeGrid(): Shapes {
+	public subscribeGrid(): NamedShapes {
 		return this.grid;
 	}
 
@@ -151,7 +158,7 @@ export class GridManager {
 		return $state.snapshot(this.edges);
 	}
 
-	private getQuads(): ShapeRefs {
+	private getQuads(): NamedShapeRefs {
 		return $state.snapshot(this.quads);
 	}
 
@@ -167,8 +174,8 @@ export class GridManager {
 		this.edges = [...this.edges, ...newEdges];
 	}
 
-	private setQuads(newQuads: ShapeRefs): void {
-		this.quads = [...this.quads, ...newQuads];
+	private setQuads(newQuads: NamedShapeRefs): void {
+		this.quads = { ...this.quads, ...newQuads };
 	}
 
 	/** Generate grid */
@@ -310,7 +317,7 @@ export class GridManager {
 	private interpolate(
 		shapes: readonly Coord[][],
 		size: number
-	): { vertices: Vertices; edges: ShapeRefs; quads: ShapeRefs } {
+	): { vertices: Vertices; edges: ShapeRefs; quads: NamedShapeRefs } {
 		const { vertices, edges, quads } = shapes.reduce(
 			(acc, shape) => {
 				let { mX, mY }: { mX: number; mY: number } = shape.reduce(
@@ -386,7 +393,23 @@ export class GridManager {
 			}
 		);
 
-		return { vertices, edges: Object.values(edges), quads };
+		const keyedQuads = quads.reduce((acc, quad) => {
+			const { xIndices, yIndices } = quad.reduce(
+				(acc, vertexId) => {
+					const [xIndex, yIndex] = vertexId.split('/').map((index) => Number(index));
+					acc.xIndices.push(xIndex);
+					acc.yIndices.push(yIndex);
+					return acc;
+				},
+				{ xIndices: [], yIndices: [] } as { xIndices: number[]; yIndices: number[] }
+			);
+			const xId = (Math.min(...xIndices) + Math.min(...xIndices)) / 2;
+			const yId = (Math.min(...yIndices) + Math.min(...yIndices)) / 2;
+			const id = `${xId}/${yId}`;
+			return { ...acc, [id]: quad };
+		}, {});
+
+		return { vertices, edges: Object.values(edges), quads: keyedQuads };
 	} // doesn't need to reurn vertices/edges/quads if modifies this... directly?
 
 	private normaliseGrid(vertices: Vertices): Vertices {
@@ -801,7 +824,7 @@ export class GridManager {
 		const selectedQuads: Set<string[]> = new SvelteSet();
 
 		for (let i = 0; i < selectionRadius; i++) {
-			const newQuads = this.getQuads().filter((quad) =>
+			const newQuads = Object.values(this.getQuads()).filter((quad) =>
 				quad.some((vId) => selectedVertices.includes(vId))
 			);
 			newQuads.forEach((quad) => selectedQuads.add(quad));

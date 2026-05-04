@@ -105,7 +105,9 @@
 				}
 			}
 
-			if (grid.length) canvasManager.outlineShapes(grid, `${colourInfo}88`, strokeRule);
+			const gridShapes = Object.values(grid);
+
+			if (gridShapes) canvasManager.outlineShapes(gridShapes, `${colourInfo}88`, strokeRule);
 		});
 
 		/* Highlight mouse position */
