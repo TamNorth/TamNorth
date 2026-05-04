@@ -10,7 +10,6 @@ import {
 	resolveVector,
 	sumDimensions
 } from '$lib/utils/mathsUtils.js';
-import { SvelteSet } from 'svelte/reactivity';
 import type { Coord, Shape, Shapes, Vertex, Vertices } from './types.ts';
 
 type Triangle = { id: Coord; vertices: Coord[]; pointsUp: boolean };
@@ -48,11 +47,9 @@ export class GridManager {
 	private grid: NamedShapes = $derived(
 		Object.entries(this.quads).reduce((acc, [id, quad]) => {
 			const vertices = this.getQuadVertices(quad);
-			return { ...acc, [id]: vertices };
-		}, {})
+			return { ...acc, [id]: { ...acc[id], ...vertices } };
+		}, {} as NamedShapes)
 	);
-
-	private groups: { [index: string]: string[] } = {};
 
 	/** PUBLIC METHODS */
 
@@ -90,18 +87,13 @@ export class GridManager {
 		polygonId: string,
 		polygonRadius: number,
 		polygonSides: number
-	): string | null {
+	): string[] | null {
 		const vertexId = this.getNearestVertex(position);
-		const selectedQuads = this.getQuadsFromVertex(vertexId);
-		const {
-			vertices: verticesToAdd,
-			groupId,
-			group
-		} = this.fitPolygon(selectedQuads, polygonRadius, polygonSides, polygonId) || {};
+		const selectedQuads = this.getNamedQuadsFromVertex(vertexId);
+		const verticesToAdd =
+			this.fitPolygon(Object.values(selectedQuads), polygonRadius, polygonSides, polygonId) || {};
 
-		if (!group || !groupId) return null;
-
-		this.groups[groupId] = group;
+		if (!verticesToAdd) return null;
 
 		const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
 
@@ -118,7 +110,7 @@ export class GridManager {
 
 		this.setVertices(relaxedVertices);
 
-		return groupId;
+		return Object.keys(selectedQuads);
 	}
 
 	public eraseModifications(position: Coord, radius: number): void {
@@ -571,7 +563,7 @@ export class GridManager {
 		radius: number,
 		polygonSides = 4,
 		groupId: string
-	): { vertices: Vertices; groupId: string; group: string[] } | null {
+	): Vertices | null {
 		// return null if a vertex is locked
 		if (
 			quadGroup
@@ -730,12 +722,8 @@ export class GridManager {
 		);
 
 		return {
-			vertices: {
-				...polygon,
-				[middleVertexId]: { ...this.vertices[middleVertexId], group, groupId, hidden: true }
-			},
-			groupId,
-			group
+			...polygon,
+			[middleVertexId]: { ...this.vertices[middleVertexId], group, groupId, hidden: true }
 		};
 	} // wants major refactor
 
@@ -819,19 +807,38 @@ export class GridManager {
 		return loop(startingVertexId, startingDistance);
 	}
 
-	private getQuadsFromVertex(vertexId: string, selectionRadius = 1): ShapeRefs {
-		let selectedVertices = [vertexId];
-		const selectedQuads: Set<string[]> = new SvelteSet();
+	private getNamedQuadsFromVertex(vertexId: string, selectionRadius = 1): NamedShapeRefs {
+		let selectedVertices: string[] = [vertexId];
+		let selectedQuads = {};
+		const quads = Object.entries(this.getQuads());
 
 		for (let i = 0; i < selectionRadius; i++) {
-			const newQuads = Object.values(this.getQuads()).filter((quad) =>
-				quad.some((vId) => selectedVertices.includes(vId))
-			);
-			newQuads.forEach((quad) => selectedQuads.add(quad));
-			selectedVertices = newQuads.flat().filter((vId) => !selectedVertices.includes(vId));
+			const newQuads: NamedShapeRefs = quads.reduce((acc, [id, quad]) => {
+				if (quad.some((vId) => selectedVertices.includes(vId))) {
+					return { ...acc, [id]: quad };
+				} else {
+					return acc;
+				}
+			}, {});
+
+			selectedQuads = { ...selectedQuads, ...newQuads };
+
+			selectedVertices = Object.values(newQuads).reduce((acc, quad) => {
+				quad.forEach((vId) => {
+					if (!selectedVertices.includes(vId)) {
+						acc.push(vId);
+					}
+				});
+				return acc;
+			}, [] as string[]);
 		}
 
-		return [...selectedQuads];
+		return selectedQuads;
+	}
+
+	private getQuadsFromVertex(vertexId: string, selectionRadius = 1): ShapeRefs {
+		const keyedQuads = this.getNamedQuadsFromVertex(vertexId, selectionRadius);
+		return Object.values(keyedQuads);
 	}
 
 	private getNearestQuad(position: Coord): string[] | null {
