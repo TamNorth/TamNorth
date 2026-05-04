@@ -43,6 +43,7 @@
 	let grid = $derived(gridManager.subscribeGrid());
 	let scale = $state(INITIAL_SCALE);
 	let currentGroupId = $state(1);
+	let quadGroups: { [index: string]: string[] } = $state({});
 
 	const canvasFn = ({
 		canvas,
@@ -157,19 +158,22 @@
 			});
 		});
 
-		/* Mouse click effects */
+		/* MOUSE CLICK EFFECTS */
 
 		$effect(() => {
 			if (mouseClick) {
 				if (mouseClick.button === 0) {
 					untrack(() => {
-						const newId = gridManager.insertPolygon(
+						const { quads: quadIds } = gridManager.insertPolygon(
 							mouseClickPos as Coord,
 							`${currentGroupId}`,
 							POLYGON_RADIUS,
 							POLYGON_SIDES
 						);
-						if (newId) currentGroupId++;
+						if (quadIds) {
+							quadGroups = { ...quadGroups, [currentGroupId]: quadIds };
+							currentGroupId++;
+						}
 					});
 				}
 

@@ -87,13 +87,13 @@ export class GridManager {
 		polygonId: string,
 		polygonRadius: number,
 		polygonSides: number
-	): string[] | null {
+	): { vertices: string[]; quads: string[] } | Record<string, never> {
 		const vertexId = this.getNearestVertex(position);
 		const selectedQuads = this.getNamedQuadsFromVertex(vertexId);
-		const verticesToAdd =
+		const { cornerIds, vertices: verticesToAdd } =
 			this.fitPolygon(Object.values(selectedQuads), polygonRadius, polygonSides, polygonId) || {};
 
-		if (!verticesToAdd) return null;
+		if (!cornerIds || !verticesToAdd) return {};
 
 		const quadsToRelax = this.getQuadsFromVertex(vertexId, this.relaxationRadius);
 
@@ -110,7 +110,7 @@ export class GridManager {
 
 		this.setVertices(relaxedVertices);
 
-		return Object.keys(selectedQuads);
+		return { vertices: cornerIds, quads: Object.keys(selectedQuads) };
 	}
 
 	public eraseModifications(position: Coord, radius: number): void {
@@ -563,7 +563,7 @@ export class GridManager {
 		radius: number,
 		polygonSides = 4,
 		groupId: string
-	): Vertices | null {
+	): { cornerIds: string[]; vertices: Vertices } | null {
 		// return null if a vertex is locked
 		if (
 			quadGroup
@@ -722,8 +722,11 @@ export class GridManager {
 		);
 
 		return {
-			...polygon,
-			[middleVertexId]: { ...this.vertices[middleVertexId], group, groupId, hidden: true }
+			cornerIds: cornerVertices.map(([vertexId, _]) => vertexId),
+			vertices: {
+				...polygon,
+				[middleVertexId]: { ...this.vertices[middleVertexId], group, groupId, hidden: true }
+			}
 		};
 	} // wants major refactor
 
