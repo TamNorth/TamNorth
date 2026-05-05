@@ -44,7 +44,7 @@
 <style>
 	.header {
 		--gap-spacing: var(--base-spacing);
-		font-family: 'Cinzel Decorative';
+		/* font-family: 'Cinzel Decorative'; */
 		position: fixed;
 		inset-inline: 0;
 		top: 0;
@@ -85,6 +85,7 @@
 	.home-button {
 		display: flex;
 		align-items: center;
+		font-family: var(--font-header);
 		font-size: x-large;
 		white-space: pre;
 	}

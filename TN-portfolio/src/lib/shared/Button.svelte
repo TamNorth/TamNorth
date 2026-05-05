@@ -11,5 +11,6 @@
 		padding: var(--base-spacing);
 		background-color: var(--background-colour-button);
 		cursor: pointer;
+		font-family: var(--font-subheader);
 	}
 </style>

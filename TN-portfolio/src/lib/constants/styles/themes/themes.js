@@ -1,4 +1,5 @@
 import * as cockpit from './cockpit.js';
+import * as retro from './retro.js';
 
 // function objectToCss(mode) {
 //     if (!!mode) return Object.entries(mode).map((property) => property.join(": ")).join("; ") + "; "
@@ -12,7 +13,7 @@ function formatCss(mode) {
 		);
 }
 
-export const themes = Object.entries({ cockpit }).reduce((acc, [themeName, themeObj]) => {
+export const themes = Object.entries({ cockpit, retro }).reduce((acc, [themeName, themeObj]) => {
 	const themeStyles = Object.entries(themeObj).reduce(
 		(acc, [key, { dark, light, shared }]) => {
 			const sharedVariables = formatCss(shared);

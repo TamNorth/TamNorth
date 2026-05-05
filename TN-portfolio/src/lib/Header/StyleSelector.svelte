@@ -1,5 +1,5 @@
 <script>
-	import useTheme from '$lib/hooks/useTheme.svelte.js';
+	import useTheme from '$lib/hooks/useTheme.svelte.ts';
 	import { Icon } from 'svelte-icons-pack';
 	import { BsMoonFill, BsSunFill } from 'svelte-icons-pack/bs';
 
@@ -9,7 +9,7 @@
 	let isDarkMode = $state(true);
 
 	$effect(() => {
-		const { currentTheme } = useTheme(themeNames[0], isDarkMode);
+		const { currentTheme } = useTheme(themeNames[1], isDarkMode);
 		activeTheme = currentTheme;
 	});
 
