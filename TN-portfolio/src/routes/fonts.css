@@ -1,8 +1,98 @@
 @font-face {
-	font-family: 'Cinzel Decorative', serif;
-	font-weight: 400;
+	font-family: 'synemono-regular';
+	src:
+		url('/fonts/synemono/synemono-regular-webfont.woff2') format('woff2'),
+		url('/fonts/synemono/synemono-regular-webfont.woff') format('woff');
+	font-weight: normal;
 	font-style: normal;
-	src: local('Cinzel Decorative')
-		url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&display=swap')
-		format('truetype');
+}
+
+@font-face {
+	font-family: 'quantico-bold';
+	src:
+		url('/fonts/quantico/quantico-bold-webfont.woff2') format('woff2'),
+		url('/fonts/quantico/quantico-bold-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'quantico-bold_italic';
+	src:
+		url('/fonts/quantico/quantico-bolditalic-webfont.woff2') format('woff2'),
+		url('/fonts/quantico/quantico-bolditalic-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'quantico-italic';
+	src:
+		url('/fonts/quantico/quantico-italic-webfont.woff2') format('woff2'),
+		url('/fonts/quantico/quantico-italic-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'quantico-regular';
+	src:
+		url('/fonts/quantico/quantico-regular-webfont.woff2') format('woff2'),
+		url('/fonts/quantico/quantico-regular-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'turretroad-bold';
+	src:
+		url('/fonts/turretroad/turretroad-bold-webfont.woff2') format('woff2'),
+		url('/fonts/turretroad/turretroad-bold-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'turretroad-extrabold';
+	src:
+		url('/fonts/turretroad/turretroad-extrabold-webfont.woff2') format('woff2'),
+		url('/fonts/turretroad/turretroad-extrabold-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'turretroad-extralight';
+	src:
+		url('/fonts/turretroad/turretroad-extralight-webfont.woff2') format('woff2'),
+		url('/fonts/turretroad/turretroad-extralight-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'turretroad-light';
+	src:
+		url('/fonts/turretroad/turretroad-light-webfont.woff2') format('woff2'),
+		url('/fonts/turretroad/turretroad-light-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'turretroad-medium';
+	src:
+		url('/fonts/turretroad/turretroad-medium-webfont.woff2') format('woff2'),
+		url('/fonts/turretroad/turretroad-medium-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'turretroad-regular';
+	src:
+		url('/fonts/turretroad/turretroad-regular-webfont.woff2') format('woff2'),
+		url('/fonts/turretroad/turretroad-regular-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
 }

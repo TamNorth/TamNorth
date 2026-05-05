@@ -2,11 +2,6 @@
 @import './fonts.css';
 @plugin '@tailwindcss/forms';
 :root {
-	/* FONTS */
-	--font-cinzel: 'Cinzel Decorative', serif;
-	--font-montserrat: 'Montserrat', sans-serif;
-	--font-bellefair: 'Bellefair', serif;
-
 	/* NUMBERS */
 	--gr: 1.618;
 
@@ -16,4 +11,6 @@
 
 	--header-height: calc(var(--base-spacing) * 3);
 	--page-width: calc(var(--base-text-size) * 50);
+
+	font-family: var(--font-base);
 }
