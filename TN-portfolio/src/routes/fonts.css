@@ -96,3 +96,48 @@
 	font-weight: normal;
 	font-style: normal;
 }
+
+@font-face {
+	font-family: 'tsukimirounded-bold';
+	src:
+		url('/fonts/tsukimi/tsukimirounded-bold-webfont.woff2') format('woff2'),
+		url('/fonts/tsukimi/tsukimirounded-bold-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'tsukimirounded-light';
+	src:
+		url('/fonts/tsukimi/tsukimirounded-light-webfont.woff2') format('woff2'),
+		url('/fonts/tsukimi/tsukimirounded-light-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'tsukimirounded-medium';
+	src:
+		url('/fonts/tsukimi/tsukimirounded-medium-webfont.woff2') format('woff2'),
+		url('/fonts/tsukimi/tsukimirounded-medium-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'tsukimirounded-regular';
+	src:
+		url('/fonts/tsukimi/tsukimirounded-regular-webfont.woff2') format('woff2'),
+		url('/fonts/tsukimi/tsukimirounded-regular-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'tsukimirounded-semibold';
+	src:
+		url('/fonts/tsukimi/tsukimirounded-semibold-webfont.woff2') format('woff2'),
+		url('/fonts/tsukimi/tsukimirounded-semibold-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
