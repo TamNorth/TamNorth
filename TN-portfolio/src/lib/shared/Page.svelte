@@ -13,7 +13,7 @@
 <style>
 	.background :global {
 		position: fixed;
-		background-color: var(--colours-b-0);
+		background-color: var(--colours-b0);
 		height: 100vh;
 		width: 100vw;
 		z-index: -1;
