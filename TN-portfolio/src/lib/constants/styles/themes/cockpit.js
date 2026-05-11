@@ -54,3 +54,12 @@ const bevel = getBevelParams({
 });
 
 export const variables = { colours, bevel };
+
+/* RULES */
+
+export const rules = `
+	.container {
+		border-radius: var(--bevel-border-radius-tile);
+		box-shadow: var(--bevel-external-shadow), var(--bevel-1);
+	}
+`;

@@ -1,6 +1,6 @@
 import base from './base.ts';
-import { variables as cockpit } from './cockpit.js';
-import { variables as retro } from './retro.js';
+import * as cockpit from './cockpit.js';
+import * as retro from './retro.js';
 
 function formatCss(mode) {
 	if (!!mode)
@@ -10,13 +10,18 @@ function formatCss(mode) {
 		);
 }
 
+const { variables, rules } = Object.entries({ cockpit, retro }).reduce(
+	(acc, [themeName, { variables, rules }]) => ({
+		variables: variables ? { ...acc.variables, [themeName]: variables } : acc.variables,
+		rules: rules ? { ...acc.rules, [themeName]: rules } : acc.rules
+	}),
+	{ variables: {}, rules: {} }
+);
+
 export const themes: Record<
 	string,
 	{ light: Record<string, string>; dark: Record<string, string> }
-> = Object.entries({
-	cockpit,
-	retro
-}).reduce((acc, [themeName, themeObj]) => {
+> = Object.entries(variables).reduce((acc, [themeName, themeObj]) => {
 	const themeStyles = Object.entries(themeObj).reduce(
 		(acc, [key, { dark, light, shared }]) => {
 			const sharedVariables = formatCss(shared);
@@ -36,3 +41,11 @@ export const themes: Record<
 
 	return { ...acc, [themeName]: themeStyles };
 }, {});
+
+export const themeRules = Object.entries(rules).reduce(
+	(acc, [themeName, themeRules]) => ({
+		...acc,
+		[themeName]: themeRules
+	}),
+	{}
+);

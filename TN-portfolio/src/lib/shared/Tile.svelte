@@ -2,15 +2,12 @@
 	let { children = () => {} } = $props();
 </script>
 
-<div class="bevel">
+<div class="container">
 	{@render children()}
 </div>
 
 <style>
-	.bevel {
-		border-radius: var(--bevel-border-radius-tile);
-		box-shadow: var(--bevel-external-shadow), var(--bevel-1);
-
+	div {
 		padding: var(--base-spacing);
 		background-color: var(--colours-b2);
 	}
