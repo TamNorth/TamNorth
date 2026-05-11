@@ -29,20 +29,6 @@ const colours = {
 	}
 };
 
-const componentColours = {
-	dark: {
-		button: '#2a2b2a'
-	},
-	light: {
-		b0: '#E6E8E6',
-		b1: '#CED0CE',
-		b2: '#9FB8AD',
-		b3: '#475841',
-		t0: '#3F403F',
-		t1: '#2a2b2a'
-	}
-};
-
 /* BOX-SHADOW */
 /* internal variables */
 const bevel = getBevelParams({
@@ -67,4 +53,4 @@ const bevel = getBevelParams({
 	}
 });
 
-export { colours, bevel };
+export const variables = { colours, bevel };

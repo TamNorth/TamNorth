@@ -1,6 +1,6 @@
 import base from './base.ts';
-import * as cockpit from './cockpit.js';
-import * as retro from './retro.js';
+import { variables as cockpit } from './cockpit.js';
+import { variables as retro } from './retro.js';
 
 function formatCss(mode) {
 	if (!!mode)
@@ -25,7 +25,10 @@ export const themes: Record<
 					...acc.dark,
 					[key]: { ...(base[key] || {}), ...sharedVariables, ...formatCss(dark) }
 				},
-				light: { ...acc.light, [key]: { ...sharedVariables, ...formatCss(light) } }
+				light: {
+					...acc.light,
+					[key]: { ...(base[key] || {}), ...sharedVariables, ...formatCss(light) }
+				}
 			};
 		},
 		{ dark: {}, light: {} }

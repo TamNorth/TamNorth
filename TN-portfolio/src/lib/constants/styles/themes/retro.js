@@ -67,4 +67,4 @@ const fonts = {
 /* BOX-SHADOW */
 /* internal variables */
 
-export { colours, fonts };
+export const variables = { colours, fonts };
