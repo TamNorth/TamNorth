@@ -1,4 +1,4 @@
-import { BASE_PROPERTIES } from './base.ts';
+import base from './base.ts';
 import * as cockpit from './cockpit.js';
 import * as retro from './retro.js';
 
@@ -9,8 +9,6 @@ function formatCss(mode) {
 			{}
 		);
 }
-
-export const baseProperties = BASE_PROPERTIES;
 
 export const themes: Record<
 	string,
@@ -23,7 +21,10 @@ export const themes: Record<
 		(acc, [key, { dark, light, shared }]) => {
 			const sharedVariables = formatCss(shared);
 			return {
-				dark: { ...acc.dark, [key]: { ...sharedVariables, ...formatCss(dark) } },
+				dark: {
+					...acc.dark,
+					[key]: { ...(base[key] || {}), ...sharedVariables, ...formatCss(dark) }
+				},
 				light: { ...acc.light, [key]: { ...sharedVariables, ...formatCss(light) } }
 			};
 		},

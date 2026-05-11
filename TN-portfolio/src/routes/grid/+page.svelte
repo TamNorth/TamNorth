@@ -14,9 +14,9 @@
 	const POLYGON_RADIUS = POLYGON_SIDES < 5 ? 0.65 : 0.6;
 
 	const colourText = $derived(theme.variables.colours?.['t-0']);
-	const colourError = '#ff0000';
-	const colourInfo = '#0000ff';
-	const colourPositive = '#00ff00';
+	const colourError = $derived(theme.variables.colours?.error);
+	const colourInfo = $derived(theme.variables.colours?.info);
+	const colourPositive = $derived(theme.variables.colours?.positive);
 
 	/* DEFINITIONS */
 

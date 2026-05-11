@@ -46,7 +46,6 @@ const componentColours = {
 /* BOX-SHADOW */
 /* internal variables */
 const bevel = getBevelParams({
-	hasBevel: true,
 	dark: {
 		shadowLength: '2px',
 		shadowDirectionX: -1,

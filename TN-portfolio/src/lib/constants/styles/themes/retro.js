@@ -1,5 +1,3 @@
-import { getBevelParams } from './utils.js';
-
 /* COLOURS */
 
 function coloursFromEndmembers({ dark, light, primary, secondary }, monochromeMixing) {
@@ -68,6 +66,5 @@ const fonts = {
 
 /* BOX-SHADOW */
 /* internal variables */
-const bevel = getBevelParams({ hasBevel: false });
 
-export { colours, fonts, bevel };
+export { colours, fonts };
