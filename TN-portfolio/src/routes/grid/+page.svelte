@@ -13,10 +13,12 @@
 	const POLYGON_SIDES = 4; //() => Math.floor(Math.random() * 3 + 4);
 	const POLYGON_RADIUS = POLYGON_SIDES < 5 ? 0.65 : 0.6;
 
-	const colourText = $derived(theme.variables.colours?.['t-0']);
-	const colourError = $derived(theme.variables.colours?.error);
-	const colourInfo = $derived(theme.variables.colours?.info);
-	const colourPositive = $derived(theme.variables.colours?.positive);
+	const {
+		t0: colourText,
+		error: colourError,
+		info: colourInfo,
+		positive: colourPositive
+	} = $derived(theme.variables?.colours || {});
 
 	/* DEFINITIONS */
 

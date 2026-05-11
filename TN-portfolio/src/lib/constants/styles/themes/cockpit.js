@@ -4,12 +4,12 @@ import { getBevelParams } from './utils.js';
 
 const colours = {
 	dark: {
-		'b-0': '#2a2b2a',
-		'b-1': '#3F403F',
-		'b-2': '#343c32',
-		'b-3': '#9FB8AD',
-		't-0': '#CED0CE',
-		't-1': '#E6E8E6',
+		b0: '#2a2b2a',
+		b1: '#3F403F',
+		b2: '#343c32',
+		b3: '#9FB8AD',
+		t0: '#CED0CE',
+		t1: '#E6E8E6',
 		error: '#B3001B',
 		alert: '#DD6031',
 		warn: '#FF8811',
@@ -20,12 +20,12 @@ const colours = {
 		temp3: '#DB504A'
 	},
 	light: {
-		'b-0': '#E6E8E6',
-		'b-1': '#CED0CE',
-		'b-2': '#9FB8AD',
-		'b-3': '#475841',
-		't-0': '#3F403F',
-		't-1': '#2a2b2a'
+		b0: '#E6E8E6',
+		b1: '#CED0CE',
+		b2: '#9FB8AD',
+		b3: '#475841',
+		t0: '#3F403F',
+		t1: '#2a2b2a'
 	}
 };
 
@@ -34,12 +34,12 @@ const componentColours = {
 		button: '#2a2b2a'
 	},
 	light: {
-		'b-0': '#E6E8E6',
-		'b-1': '#CED0CE',
-		'b-2': '#9FB8AD',
-		'b-3': '#475841',
-		't-0': '#3F403F',
-		't-1': '#2a2b2a'
+		b0: '#E6E8E6',
+		b1: '#CED0CE',
+		b2: '#9FB8AD',
+		b3: '#475841',
+		t0: '#3F403F',
+		t1: '#2a2b2a'
 	}
 };
 

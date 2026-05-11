@@ -40,11 +40,11 @@
 
 <style>
 	:global(:root) {
-		color: var(--colours-t-0, #000);
-		background-color: var(--colours-b-0, #fff);
+		color: var(--colours-t0, #000);
+		background-color: var(--colours-b0, #fff);
 
 		h1 {
-			color: var(--colours-t-1, #000);
+			color: var(--colours-t1, #000);
 		}
 	}
 </style>
