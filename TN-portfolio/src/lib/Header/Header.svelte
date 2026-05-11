@@ -85,7 +85,7 @@
 	.home-button {
 		display: flex;
 		align-items: center;
-		font-family: var(--font-header);
+		font-family: var(--fonts-header);
 		font-size: x-large;
 		white-space: pre;
 	}

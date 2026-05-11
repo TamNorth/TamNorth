@@ -3,25 +3,20 @@
 	import Canvas2D from '$lib/shared/Canvas2D/Canvas2D.svelte';
 	import Tile from '$lib/shared/Tile.svelte';
 	import { untrack } from 'svelte';
-	import useTheme from '$lib/hooks/useTheme.svelte.js';
 	import { GridManager } from './gridManager.svelte.ts';
 	import { CanvasManager } from './canvasManager.svelte.ts';
 	import type { Coord, Vertex } from './types.ts';
+	import theme from '$lib/hooks/useTheme.svelte.ts';
 
 	const INITIAL_SCALE = 75;
 	const DEFAULT_GRID_SIZE = 4;
 	const POLYGON_SIDES = 4; //() => Math.floor(Math.random() * 3 + 4);
 	const POLYGON_RADIUS = POLYGON_SIDES < 5 ? 0.65 : 0.6;
-	const {
-		currentTheme: {
-			baseColours: {
-				// 'colour-warn': colourWarn,
-				'colour-error': colourError,
-				'colour-info': colourInfo,
-				'colour-positive': colourPositive
-			}
-		}
-	} = useTheme();
+
+	const colourText = $derived(theme.variables.colours?.['t-0']);
+	const colourError = '#ff0000';
+	const colourInfo = '#0000ff';
+	const colourPositive = '#00ff00';
 
 	/* DEFINITIONS */
 
@@ -108,7 +103,7 @@
 
 			const gridShapes = Object.values(grid);
 
-			if (gridShapes) canvasManager.outlineShapes(gridShapes, `${colourInfo}88`, strokeRule);
+			if (gridShapes) canvasManager.outlineShapes(gridShapes, `${colourText}88`, strokeRule);
 		});
 
 		/* Highlight mouse position */
@@ -218,6 +213,7 @@
 			flex-direction: column;
 			text-align: center;
 			gap: var(--base-spacing);
+			font-family: var(--fonts-subheader);
 		}
 	}
 </style>

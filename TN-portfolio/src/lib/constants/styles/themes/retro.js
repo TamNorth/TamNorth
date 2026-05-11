@@ -5,27 +5,27 @@ import { getBevelParams } from './utils.js';
 function coloursFromEndmembers({ dark, light, primary, secondary }, monochromeMixing) {
 	return {
 		dark: {
-			'colour-b-0': dark,
-			'colour-b-1': `color-mix(in hsl, ${dark} 97.5%, ${monochromeMixing ? 'white' : light})`,
-			'colour-b-2': `color-mix(in hsl, ${dark} 95%, ${monochromeMixing ? 'white' : light})`,
-			'colour-b-3': `color-mix(in hsl, ${dark} 92.5%, ${monochromeMixing ? 'white' : light})`,
-			'colour-t-1': `color-mix(in hsl, ${light} 95%, ${monochromeMixing ? 'black' : dark})`,
-			'colour-t-0': light
+			'b-0': dark,
+			'b-1': `color-mix(in hsl, ${dark} 97.5%, ${monochromeMixing ? 'white' : light})`,
+			'b-2': `color-mix(in hsl, ${dark} 95%, ${monochromeMixing ? 'white' : light})`,
+			'b-3': `color-mix(in hsl, ${dark} 92.5%, ${monochromeMixing ? 'white' : light})`,
+			't-1': `color-mix(in hsl, ${light} 95%, ${monochromeMixing ? 'black' : dark})`,
+			't-0': light
 		},
 		light: {
-			'colour-b-0': light,
-			'colour-b-1': `color-mix(in hsl, ${light} 97.5%, ${monochromeMixing ? 'black' : dark})`,
-			'colour-b-2': `color-mix(in hsl, ${light} 95%, ${monochromeMixing ? 'black' : dark})`,
-			'colour-b-3': `color-mix(in hsl, ${light} 92.5%, ${monochromeMixing ? 'black' : dark})`,
-			'colour-t-1': `color-mix(in hsl, ${dark} 95%, ${monochromeMixing ? 'white' : light})`,
-			'colour-t-0': dark
+			'b-0': light,
+			'b-1': `color-mix(in hsl, ${light} 97.5%, ${monochromeMixing ? 'black' : dark})`,
+			'b-2': `color-mix(in hsl, ${light} 95%, ${monochromeMixing ? 'black' : dark})`,
+			'b-3': `color-mix(in hsl, ${light} 92.5%, ${monochromeMixing ? 'black' : dark})`,
+			't-1': `color-mix(in hsl, ${dark} 95%, ${monochromeMixing ? 'white' : light})`,
+			't-0': dark
 		}
 	};
 }
 
-const baseColours = coloursFromEndmembers(
+const colours = coloursFromEndmembers(
 	{
-		dark: '#131313',
+		dark: '#0f0f0f',
 		light: '#e8cff3'
 	},
 	false
@@ -60,9 +60,9 @@ const baseColours = coloursFromEndmembers(
 
 const fonts = {
 	shared: {
-		'font-base': 'quantico-regular',
-		'font-header': 'synemono-regular',
-		'font-subheader': 'turretroad-bold'
+		base: 'quantico-regular',
+		header: 'synemono-regular',
+		subheader: 'turretroad-bold'
 	}
 };
 
@@ -70,4 +70,4 @@ const fonts = {
 /* internal variables */
 const bevel = getBevelParams({ hasBevel: false });
 
-export { baseColours, fonts, bevel };
+export { colours, fonts, bevel };

@@ -4,10 +4,10 @@ export function getBevelParams({ hasBevel, shared, ...modes }) {
 			'external-shadow': `
                     rgb(0, 0, 0, 0) 0 0 0 0
                 `,
-			'bevel-1': `
+			1: `
                     rgb(0, 0, 0, 0) 0 0 0 0
                 `,
-			'bevel-2': `
+			2: `
                     rgb(0, 0, 0, 0) 0 0 0 0
                 `,
 			'border-radius-tile': `0`
@@ -36,7 +36,7 @@ export function getBevelParams({ hasBevel, shared, ...modes }) {
                             0,
                         rgb(0, 0, 0, ${shadowVisibility}) 0 0 1px 1px
                     `,
-				'bevel-1': `
+				1: `
                         inset 
                             color-mix(in hsl, ${insetHighlightColour} ${bevelVisibility}, transparent) 
                             calc(${bevelSize} * ${shadowDirectionX}) 
@@ -50,7 +50,7 @@ export function getBevelParams({ hasBevel, shared, ...modes }) {
                             ${bevelBlur} 
                             0
                     `,
-				'bevel-2': `
+				2: `
                         inset 
                             color-mix(in hsl, ${insetHighlightColour} ${bevelVisibility}, transparent) 
                             calc(${bevelSize} * ${0.5 * shadowDirectionX}) 

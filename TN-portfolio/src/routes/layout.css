@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import './fonts.css';
+@import '../app.css';
 @plugin '@tailwindcss/forms';
+
 :root {
 	/* NUMBERS */
 	--gr: 1.618;
@@ -11,6 +13,4 @@
 
 	--header-height: calc(var(--base-spacing) * 3);
 	--page-width: calc(var(--base-text-size) * 50);
-
-	font-family: var(--font-base);
 }

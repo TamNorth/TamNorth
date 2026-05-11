@@ -21,7 +21,7 @@
 	type="button"
 	class="clickable {active ? 'active' : ''}"
 	onclick={onClick}
-	style="--light-base-colour: var(--colour-{colour}); --size-factor: {size};"
+	style="--light-base-colour: var(--colours-{colour}); --size-factor: {size};"
 >
 	{@render children()}
 </button>
@@ -33,7 +33,7 @@
 
 		border-radius: 50%;
 		box-shadow:
-			var(--external-shadow),
+			var(--bevel-external-shadow),
 			var(--bevel-2),
 			inset rgb(0, 0, 0, 0.6) 0 0 20px 10px;
 
@@ -43,7 +43,8 @@
 		&:active,
 		&.active {
 			background-color: color-mix(in hsl, var(--light-base-colour) 75%, white);
-			--external-shadow: color-mix(in hsl, var(--light-base-colour) 50%, transparent) 0 0 15px 5px;
+			--bevel-external-shadow: color-mix(in hsl, var(--light-base-colour) 50%, transparent) 0 0 15px
+				5px;
 		}
 	}
 </style>

@@ -8,10 +8,10 @@
 
 <style>
 	.bevel {
-		border-radius: var(--border-radius-tile);
-		box-shadow: var(--external-shadow), var(--bevel-1);
+		border-radius: var(--bevel-border-radius-tile);
+		box-shadow: var(--bevel-external-shadow), var(--bevel-1);
 
 		padding: var(--base-spacing);
-		background-color: var(--colour-b-2);
+		background-color: var(--colours-b-2);
 	}
 </style>

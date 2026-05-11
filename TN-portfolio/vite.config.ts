@@ -2,9 +2,22 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
+import generateCss from './src/lib/scripts/generateCss.ts';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
+	plugins: [
+		tailwindcss(),
+		sveltekit(),
+		{
+			name: 'theme-synthesiser',
+			buildStart() {
+				generateCss();
+			},
+			handleHotUpdate() {
+				generateCss();
+			}
+		}
+	],
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

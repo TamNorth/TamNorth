@@ -1,9 +1,23 @@
-import { themes } from '../constants/styles/themes/themes.js';
+import { themes } from '../constants/styles/themes/themes.ts';
 
-export default function useTheme(themeName: string | null = null, isDarkMode: boolean = true) {
-	const themeNames = Object.keys(themes);
-	const currentThemeName = themeName ?? themeNames[0];
-	const currentTheme = $derived(themes[currentThemeName]?.[isDarkMode ? 'dark' : 'light']);
+let themeName = $state('retro-dark');
+const [style, mode] = $derived(themeName.split('-'));
+const currentTheme = $derived(themes[style][mode]);
 
-	return { themeNames, currentTheme };
-}
+export default {
+	get name() {
+		return themeName;
+	},
+	set name(newThemeName) {
+		themeName = newThemeName;
+	},
+	set darkMode(isDarkMode: boolean) {
+		themeName = [style, isDarkMode ? 'dark' : 'light'].join('-');
+	},
+	set style(newStyle: string) {
+		themeName = [newStyle, mode].join('-');
+	},
+	get variables() {
+		return currentTheme;
+	}
+};

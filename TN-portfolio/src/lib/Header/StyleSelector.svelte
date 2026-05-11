@@ -1,26 +1,32 @@
 <script>
-	import useTheme from '$lib/hooks/useTheme.svelte.ts';
 	import { Icon } from 'svelte-icons-pack';
 	import { BsMoonFill, BsSunFill } from 'svelte-icons-pack/bs';
-
-	const { themeNames } = useTheme();
-
-	let activeTheme = $state({});
+	import { themes } from '../constants/styles/themes/themes.ts';
+	import theme from '../hooks/useTheme.svelte.ts';
 	let isDarkMode = $state(true);
+	const themeNames = Object.keys(themes);
 
 	$effect(() => {
-		const { currentTheme } = useTheme(themeNames[1], isDarkMode);
-		activeTheme = currentTheme;
+		theme.darkMode = isDarkMode;
+		document.documentElement.setAttribute('data-theme', theme.name);
 	});
 
-	$effect(() =>
-		Object.values(activeTheme).forEach((themeObj) => {
-			Object.entries(themeObj).forEach(([propertyName, value]) =>
-				document.documentElement.style.setProperty(`--${propertyName}`, value)
-			);
-		})
-	);
+	function handleThemeChange(themeName) {
+		theme.style = themeName;
+		document.documentElement.setAttribute('data-theme', theme.name);
+	}
 </script>
+
+{#each themeNames as themeName (themeName)}
+	<button
+		class="header-button"
+		onclick={() => handleThemeChange(themeName)}
+		// aria-label="toggle theme"
+	>
+		<!-- <Icon src={isDarkMode ? BsSunFill : BsMoonFill} /> -->
+		{themeName}
+	</button>
+{/each}
 
 <button
 	class="header-button"
@@ -34,11 +40,11 @@
 
 <style>
 	:global(:root) {
-		color: var(--colour-t-0, #000);
-		background-color: var(--colour-b-0, #fff);
+		color: var(--colours-t-0, #000);
+		background-color: var(--colours-b-0, #fff);
 
 		h1 {
-			color: var(--colour-t-1, #000);
+			color: var(--colours-t-1, #000);
 		}
 	}
 </style>

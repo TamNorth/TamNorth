@@ -1,9 +1,6 @@
+import { BASE_PROPERTIES } from './base.ts';
 import * as cockpit from './cockpit.js';
 import * as retro from './retro.js';
-
-// function objectToCss(mode) {
-//     if (!!mode) return Object.entries(mode).map((property) => property.join(": ")).join("; ") + "; "
-// }
 
 function formatCss(mode) {
 	if (!!mode)
@@ -13,7 +10,15 @@ function formatCss(mode) {
 		);
 }
 
-export const themes = Object.entries({ cockpit, retro }).reduce((acc, [themeName, themeObj]) => {
+export const baseProperties = BASE_PROPERTIES;
+
+export const themes: Record<
+	string,
+	{ light: Record<string, string>; dark: Record<string, string> }
+> = Object.entries({
+	cockpit,
+	retro
+}).reduce((acc, [themeName, themeObj]) => {
 	const themeStyles = Object.entries(themeObj).reduce(
 		(acc, [key, { dark, light, shared }]) => {
 			const sharedVariables = formatCss(shared);
