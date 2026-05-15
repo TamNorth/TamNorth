@@ -2,12 +2,12 @@
 	let { children = () => {} } = $props();
 </script>
 
-<div class="container">
+<div class="tile">
 	{@render children()}
 </div>
 
 <style>
-	div {
+	.tile {
 		padding: var(--base-spacing);
 		background-color: var(--colours-b2);
 	}

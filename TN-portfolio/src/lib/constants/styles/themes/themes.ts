@@ -1,6 +1,7 @@
 import base from './base.ts';
 import * as cockpit from './cockpit.js';
 import * as retro from './retro.js';
+import * as plexus from './plexus.js';
 
 function formatCss(mode) {
 	if (!!mode)
@@ -10,7 +11,7 @@ function formatCss(mode) {
 		);
 }
 
-const { variables, rules } = Object.entries({ cockpit, retro }).reduce(
+const { variables, rules } = Object.entries({ cockpit, retro, plexus }).reduce(
 	(acc, [themeName, { variables, rules }]) => ({
 		variables: variables ? { ...acc.variables, [themeName]: variables } : acc.variables,
 		rules: rules ? { ...acc.rules, [themeName]: rules } : acc.rules
