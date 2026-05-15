@@ -1,0 +1,130 @@
+:root[data-theme="cockpit-dark"] {
+   --colours-b0: #2a2b2a; 
+   --colours-b1: #3F403F; 
+   --colours-b2: #343c32; 
+   --colours-b3: #9FB8AD; 
+   --colours-t0: #CED0CE; 
+   --colours-t1: #E6E8E6; 
+   --colours-error: #B3001B; 
+   --colours-alert: #DD6031; 
+   --colours-warn: #FF8811; 
+   --colours-positive: #29BF12; 
+   --colours-info: #507DBC; 
+   --colours-temp: #5E0B15; 
+   --colours-temp2: #A8763E; 
+   --colours-temp3: #DB504A; 
+   --bevel-1: inset                             color-mix(in hsl, rgb(255, 200, 150) 20%, transparent)                             calc(2px * -1)                             calc(2px * 1)                             2px                             0,                        inset                             color-mix(in hsl, black 50%, transparent)                             calc(2px * 1)                             calc(2px * -1)                             2px                             0; 
+   --bevel-2: inset                             color-mix(in hsl, rgb(255, 200, 150) 20%, transparent)                             calc(2px * -0.5)                             calc(2px * 0.5)                             2px                             calc(2px * 0.5),                        inset                             color-mix(in hsl, black 50%, transparent)                             calc(2px * 0.5)                             calc(2px * -0.5)                             2px                             0; 
+   --bevel-external-shadow: color-mix(in hsl, black 50%, transparent)                             calc(2px * -1)                            calc(2px * 1)                             3px                             0,                        rgb(0, 0, 0, 50%) 0 0 1px 1px; 
+   --bevel-radius-tile: 0; 
+   --bevel-border-radius-tile: calc(2px * 0.5); 
+}
+
+:root[data-theme="cockpit-light"] {
+   --colours-b0: #E6E8E6; 
+   --colours-b1: #CED0CE; 
+   --colours-b2: #9FB8AD; 
+   --colours-b3: #475841; 
+   --colours-t0: #3F403F; 
+   --colours-t1: #2a2b2a; 
+   --colours-error: #ff0000; 
+   --colours-alert: #ff7700; 
+   --colours-warn: #ffff00; 
+   --colours-positive: #00ff00; 
+   --colours-info: #0000ff; 
+   --bevel-1: inset                             color-mix(in hsl, rgb(253, 255, 150) 20%, transparent)                             calc(2px * 1)                             calc(2px * 1)                             2px                             0,                        inset                             color-mix(in hsl, black 50%, transparent)                             calc(2px * -1)                             calc(2px * -1)                             2px                             0; 
+   --bevel-2: inset                             color-mix(in hsl, rgb(253, 255, 150) 20%, transparent)                             calc(2px * 0.5)                             calc(2px * 0.5)                             2px                             calc(2px * 0.5),                        inset                             color-mix(in hsl, black 50%, transparent)                             calc(2px * -0.5)                             calc(2px * -0.5)                             2px                             0; 
+   --bevel-external-shadow: color-mix(in hsl, black 50%, transparent)                             calc(2px * 1)                            calc(2px * 1)                             3px                             0,                        rgb(0, 0, 0, 50%) 0 0 1px 1px; 
+   --bevel-radius-tile: 0; 
+   --bevel-border-radius-tile: calc(2px * 0.5); 
+}
+
+:root[data-theme="retro-dark"] {
+   --colours-b0: #0f0f0f; 
+   --colours-b1: color-mix(in hsl, #0f0f0f 97.5%, #e8cff3); 
+   --colours-b2: color-mix(in hsl, #0f0f0f 95%, #e8cff3); 
+   --colours-b3: color-mix(in hsl, #0f0f0f 92.5%, #e8cff3); 
+   --colours-t0: #e8cff3; 
+   --colours-t1: color-mix(in hsl, #e8cff3 95%, #0f0f0f); 
+   --colours-error: #ff0000; 
+   --colours-alert: #ff7700; 
+   --colours-warn: #ffff00; 
+   --colours-positive: #00ff00; 
+   --colours-info: #0000ff; 
+   --fonts-base: quantico-regular; 
+   --fonts-header: synemono-regular; 
+   --fonts-subheader: turretroad-bold; 
+}
+
+:root[data-theme="retro-light"] {
+   --colours-b0: #e8cff3; 
+   --colours-b1: color-mix(in hsl, #e8cff3 97.5%, #0f0f0f); 
+   --colours-b2: color-mix(in hsl, #e8cff3 95%, #0f0f0f); 
+   --colours-b3: color-mix(in hsl, #e8cff3 92.5%, #0f0f0f); 
+   --colours-t0: #0f0f0f; 
+   --colours-t1: color-mix(in hsl, #0f0f0f 95%, #e8cff3); 
+   --colours-error: #ff0000; 
+   --colours-alert: #ff7700; 
+   --colours-warn: #ffff00; 
+   --colours-positive: #00ff00; 
+   --colours-info: #0000ff; 
+   --fonts-base: quantico-regular; 
+   --fonts-header: synemono-regular; 
+   --fonts-subheader: turretroad-bold; 
+}
+
+:root[data-theme="plexus-dark"] {
+   --colours-b0: #2a2b2a; 
+   --colours-b1: #3F403F; 
+   --colours-b2: #343c32; 
+   --colours-b3: #9FB8AD; 
+   --colours-t0: #CED0CE; 
+   --colours-t1: #F3F3CF; 
+   --colours-error: #ff0000; 
+   --colours-alert: #ff7700; 
+   --colours-warn: #ffff00; 
+   --colours-positive: #00ff00; 
+   --colours-info: #0000ff; 
+   --fonts-base: quantico-regular; 
+   --fonts-header: synemono-regular; 
+   --fonts-subheader: turretroad-bold; 
+}
+
+:root[data-theme="plexus-light"] {
+   --colours-b0: #E6E8E6; 
+   --colours-b1: #CED0CE; 
+   --colours-b2: #9FB8AD; 
+   --colours-b3: #475841; 
+   --colours-t0: #3F403F; 
+   --colours-t1: #2a2b2a; 
+   --colours-error: #ff0000; 
+   --colours-alert: #ff7700; 
+   --colours-warn: #ffff00; 
+   --colours-positive: #00ff00; 
+   --colours-info: #0000ff; 
+   --fonts-base: quantico-regular; 
+   --fonts-header: synemono-regular; 
+   --fonts-subheader: turretroad-bold; 
+}
+
+:root[data-theme^="cockpit"] {
+
+	.tile {
+		border-radius: var(--bevel-border-radius-tile);
+		box-shadow: var(--bevel-external-shadow), var(--bevel-1);
+	}
+
+}
+
+:root[data-theme^="plexus"] {
+
+	background: red;
+
+	.tile {
+		background-color: black, inherit;
+		background-clip: padding-box, border-area; 
+		background-attachment: scroll, fixed;
+		border: 5px;
+	}
+
+}
