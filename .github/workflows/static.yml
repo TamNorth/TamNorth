@@ -44,7 +44,7 @@ jobs:
 
       - name: Publish WASM (CI - trimmed + AOT)
         # publish dotnet Src to web/wasm-temp
-        run: dotnet publish ./TN-portfolio/dotnet/Src.csproj -c Release -r browser-wasm --self-contained=false /p:PublishTrimmed=true /p:PublishAot=true -o ./TN-portfolio/web/wasm-temp
+        run: dotnet publish ./TN-portfolio/dotnet/Src/Src.csproj -c Release -r browser-wasm --self-contained=false /p:PublishTrimmed=true /p:PublishAot=true -o ./TN-portfolio/web/wasm-temp
 
       - name: Copy WASM to static
         working-directory: ./TN-portfolio/web
