@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# dotnet
+TN-portfolio/dotnet/Api/bin/*
+TN-portfolio/dotnet/Api/obj/*
+TN-portfolio/dotnet/Src/obj/*
+TN-portfolio/dotnet/Src/bin/*

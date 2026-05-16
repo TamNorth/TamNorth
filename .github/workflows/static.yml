@@ -28,22 +28,44 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
       - name: install dependencies
         run: npm install
         working-directory: "./TN-portfolio/web"
+
+      - name: Publish WASM (CI - trimmed + AOT)
+        # publish dotnet Src to web/wasm-temp
+        run: dotnet publish ./TN-portfolio/dotnet/Src.csproj -c Release -r browser-wasm --self-contained=false /p:PublishTrimmed=true /p:PublishAot=true -o ./TN-portfolio/web/wasm-temp
+
+      - name: Copy WASM to static
+        working-directory: ./TN-portfolio/web
+        run: |
+          rm -rf static/wasm
+          mkdir -p static/wasm
+          cp -r wasm-temp/* static/wasm/
+
       - name: build app
         run: npm run build
         working-directory: "./TN-portfolio/web"
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
           # Upload vite build
-          path: "./TN-portfolio/web/build/"
+          path: "./TN-portfolio/web/build/" # needs to be dist, not build?
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
